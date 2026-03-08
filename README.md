@@ -1,6 +1,6 @@
 # ODIPA Website
 
-Official website for **ODIPA — Online Digital Information Privacy & Awareness**, a 501(c)(3) nonprofit organization dedicated to consumer privacy education, policy advocacy, research, and open-source technology.
+Official website for **ODIPA — Organization for Digital Information Privacy & Awareness**, a 501(c)(3) nonprofit organization dedicated to consumer privacy education, policy advocacy, research, and open-source technology.
 
 🌐 **Live site:** [odipa.org](https://odipa.org)
 
@@ -8,7 +8,7 @@ Official website for **ODIPA — Online Digital Information Privacy & Awareness*
 
 ## AI-Assisted Development
 
-This codebase was developed by ODIPA using AI-assisted development (Claude by Anthropic). AI authorship is increasingly standard practice across the software industry and does not affect the legal validity, functionality, or open-source status of this code. ODIPA maintains this repository, accepts contributions, and is responsible for its accuracy and ongoing maintenance.
+This codebase was developed by ODIPA using AI-assisted development. AI authorship is increasingly standard practice across the software industry and does not affect the legal validity, functionality, or open-source status of this code. ODIPA maintains this repository, accepts contributions, and is responsible for its accuracy and ongoing maintenance.
 
 This website is not part of any ODIPA commercial product or affiliate entity. It is the official public-facing presence of a 501(c)(3) nonprofit organization.
 
@@ -55,8 +55,8 @@ ODIPA educates consumers and organizations about digital information privacy —
 
 ```bash
 # Clone the repo
-git clone https://github.com/odipa/odipa-website.git
-cd odipa-website
+git clone https://github.com/odipa/ODIPA-MAIN-SITE.git
+cd ODIPA-MAIN-SITE
 
 # Install dependencies
 npm install
@@ -83,7 +83,7 @@ This generates a fully static site in the `/out` directory, ready for deployment
 ## Project Structure
 
 ```
-odipa-website/
+ODIPA-MAIN-SITE/
 ├── app/
 │   ├── layout.tsx                    # Root layout — nav, footer, metadata, Plausible
 │   ├── page.tsx                      # Home page
@@ -200,7 +200,7 @@ No consent banner is required.
 **By cloning, forking, or contributing to this repository, you acknowledge that you have read this disclaimer.**
 
 ### AI-generated content
-Portions of this codebase and website content were generated with AI assistance (Claude by Anthropic). While ODIPA reviews all AI-generated content for accuracy and mission alignment before publication, AI-generated content may contain errors, omissions, or outdated information. ODIPA does not warrant that any AI-generated content on this site is complete, accurate, or current.
+Portions of this codebase and website content were generated with AI assistance. While ODIPA reviews all AI-generated content for accuracy and mission alignment before publication, AI-generated content may contain errors, omissions, or outdated information. ODIPA does not warrant that any AI-generated content on this site is complete, accurate, or current.
 
 ### Not legal or financial advice
 Nothing on the ODIPA website constitutes legal advice, financial advice, regulatory compliance guidance, or a legal opinion. Website content is provided for general educational and informational purposes only. Do not rely on content from this site as a substitute for advice from a qualified attorney, accountant, or compliance professional. ODIPA is a nonprofit education organization, not a law firm or financial institution.
@@ -236,4 +236,4 @@ Content (text, images, ODIPA branding, program descriptions, and organizational 
 - **Partnerships:** partnerships@odipa.org
 - **Development:** dev@odipa.org
 - **Transparency / document requests:** transparency@odipa.org
-- **Website issues:** Open a [GitHub Issue](https://github.com/odipa/odipa-website/issues)
+- **Website issues:** Open a [GitHub Issue](https://github.com/odipa/ODIPA-MAIN-SITE/issues)

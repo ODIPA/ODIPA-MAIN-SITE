@@ -1,0 +1,16 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/get-involved/layout,_N_T_/get-involved/contribute-code/layout,_N_T_/get-involved/contribute-code/page,_N_T_/get-involved/contribute-code/"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/get-involved/contribute-code/__PAGE__",
+    "/get-involved/contribute-code",
+    "/get-involved",
+    "/_index",
+    "/_head"
+  ]
+}

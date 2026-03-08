@@ -1,7 +1,7 @@
 {
-  "name": "odipa-website",
+  "name": "ODIPA-MAIN-SITE",
   "version": "1.0.0",
-  "description": "Official website for ODIPA — Online Digital Information Privacy & Awareness. A 501(c)(3) nonprofit organization.",
+  "description": "Official website for ODIPA — Organization for Digital Information Privacy & Awareness. A 501(c)(3) nonprofit organization.",
   "private": true,
   "scripts": {
     "dev": "next dev",

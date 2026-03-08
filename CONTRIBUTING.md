@@ -5,7 +5,7 @@ Thank you for your interest in contributing to ODIPA's open-source website. This
 ## Before You Start
 
 1. **Read the [README](README.md)** to understand the tech stack and project structure
-2. **Check existing [Issues](https://github.com/odipa/odipa-website/issues)** to avoid duplicating work
+2. **Check existing [Issues](https://github.com/odipa/ODIPA-MAIN-SITE/issues)** to avoid duplicating work
 3. **Open an Issue** to discuss significant changes before starting work
 
 ## Ways to Contribute
@@ -48,8 +48,8 @@ See the Development Setup section below.
 ## Development Setup
 
 ```bash
-git clone https://github.com/odipa/odipa-website.git
-cd odipa-website
+git clone https://github.com/odipa/ODIPA-MAIN-SITE.git
+cd ODIPA-MAIN-SITE
 npm install
 npm run dev
 ```

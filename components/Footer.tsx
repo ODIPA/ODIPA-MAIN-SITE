@@ -72,10 +72,10 @@ export default function Footer() {
 
             <div className="flex flex-wrap gap-3">
               <span className="inline-block border border-white/[0.12] px-3.5 py-1.5 rounded font-mono text-[10px] tracking-[1px] text-white/40">
-                501(c)(3) TAX-EXEMPT ORGANIZATION
+                501(c)(3) TAX-EXEMPT ORGANIZATION — EIN: 33-2725121
               </span>
               <a
-                href="https://github.com/odipa/odipa-website"
+                href="https://github.com/odipa/ODIPA-MAIN-SITE"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 border border-white/[0.12] px-3.5 py-1.5 rounded font-mono text-[10px] tracking-[1px] text-white/40 hover:text-white/70 hover:border-white/30 transition-all no-underline"
@@ -157,7 +157,7 @@ export default function Footer() {
                 </svg>
               </a>
               {/* GitHub */}
-              <a href="https://github.com/odipa/odipa-website" target="_blank" rel="noopener noreferrer"
+              <a href="https://github.com/odipa/ODIPA-MAIN-SITE" target="_blank" rel="noopener noreferrer"
                 aria-label="ODIPA on GitHub"
                 className="w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">

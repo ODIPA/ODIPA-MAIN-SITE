@@ -1,0 +1,220 @@
+{
+  "version": 3,
+  "pages404": true,
+  "appType": "app",
+  "caseSensitive": false,
+  "basePath": "",
+  "redirects": [
+    {
+      "source": "/:file((?!\\.well-known(?:/.*)?)(?:[^/]+/)*[^/]+\\.\\w+)/",
+      "destination": "/:file",
+      "internal": true,
+      "priority": true,
+      "missing": [
+        {
+          "type": "header",
+          "key": "x-nextjs-data"
+        }
+      ],
+      "statusCode": 308,
+      "regex": "^(?:/((?!\\.well-known(?:/.*)?)(?:[^/]+/)*[^/]+\\.\\w+))/$"
+    },
+    {
+      "source": "/:notfile((?!\\.well-known(?:/.*)?)(?:[^/]+/)*[^/\\.]+)",
+      "destination": "/:notfile/",
+      "internal": true,
+      "priority": true,
+      "statusCode": 308,
+      "regex": "^(?:/((?!\\.well-known(?:/.*)?)(?:[^/]+/)*[^/\\.]+))$"
+    }
+  ],
+  "headers": [],
+  "rewrites": {
+    "beforeFiles": [],
+    "afterFiles": [],
+    "fallback": []
+  },
+  "dynamicRoutes": [],
+  "staticRoutes": [
+    {
+      "page": "/",
+      "regex": "^/(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/(?:/)?$"
+    },
+    {
+      "page": "/_global-error",
+      "regex": "^/_global\\-error(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/_global\\-error(?:/)?$"
+    },
+    {
+      "page": "/_not-found",
+      "regex": "^/_not\\-found(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/_not\\-found(?:/)?$"
+    },
+    {
+      "page": "/about",
+      "regex": "^/about(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/about(?:/)?$"
+    },
+    {
+      "page": "/annual-report",
+      "regex": "^/annual\\-report(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/annual\\-report(?:/)?$"
+    },
+    {
+      "page": "/become-a-sponsor",
+      "regex": "^/become\\-a\\-sponsor(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/become\\-a\\-sponsor(?:/)?$"
+    },
+    {
+      "page": "/board-application",
+      "regex": "^/board\\-application(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/board\\-application(?:/)?$"
+    },
+    {
+      "page": "/contact",
+      "regex": "^/contact(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/contact(?:/)?$"
+    },
+    {
+      "page": "/donate",
+      "regex": "^/donate(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/donate(?:/)?$"
+    },
+    {
+      "page": "/get-involved/contribute-code",
+      "regex": "^/get\\-involved/contribute\\-code(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/get\\-involved/contribute\\-code(?:/)?$"
+    },
+    {
+      "page": "/get-involved/corporate-partner",
+      "regex": "^/get\\-involved/corporate\\-partner(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/get\\-involved/corporate\\-partner(?:/)?$"
+    },
+    {
+      "page": "/get-involved/get-certified",
+      "regex": "^/get\\-involved/get\\-certified(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/get\\-involved/get\\-certified(?:/)?$"
+    },
+    {
+      "page": "/get-involved/volunteer",
+      "regex": "^/get\\-involved/volunteer(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/get\\-involved/volunteer(?:/)?$"
+    },
+    {
+      "page": "/press",
+      "regex": "^/press(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/press(?:/)?$"
+    },
+    {
+      "page": "/privacy-policy",
+      "regex": "^/privacy\\-policy(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/privacy\\-policy(?:/)?$"
+    },
+    {
+      "page": "/programs/advocacy-policy",
+      "regex": "^/programs/advocacy\\-policy(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/programs/advocacy\\-policy(?:/)?$"
+    },
+    {
+      "page": "/programs/awareness-campaigns",
+      "regex": "^/programs/awareness\\-campaigns(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/programs/awareness\\-campaigns(?:/)?$"
+    },
+    {
+      "page": "/programs/community-building",
+      "regex": "^/programs/community\\-building(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/programs/community\\-building(?:/)?$"
+    },
+    {
+      "page": "/programs/corporate-certification",
+      "regex": "^/programs/corporate\\-certification(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/programs/corporate\\-certification(?:/)?$"
+    },
+    {
+      "page": "/programs/educational-outreach",
+      "regex": "^/programs/educational\\-outreach(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/programs/educational\\-outreach(?:/)?$"
+    },
+    {
+      "page": "/programs/international-cooperation",
+      "regex": "^/programs/international\\-cooperation(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/programs/international\\-cooperation(?:/)?$"
+    },
+    {
+      "page": "/programs/open-source-development",
+      "regex": "^/programs/open\\-source\\-development(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/programs/open\\-source\\-development(?:/)?$"
+    },
+    {
+      "page": "/programs/research-publications",
+      "regex": "^/programs/research\\-publications(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/programs/research\\-publications(?:/)?$"
+    },
+    {
+      "page": "/robots.txt",
+      "regex": "^/robots\\.txt(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/robots\\.txt(?:/)?$"
+    },
+    {
+      "page": "/sitemap.xml",
+      "regex": "^/sitemap\\.xml(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/sitemap\\.xml(?:/)?$"
+    },
+    {
+      "page": "/sponsor-research",
+      "regex": "^/sponsor\\-research(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/sponsor\\-research(?:/)?$"
+    },
+    {
+      "page": "/transparency",
+      "regex": "^/transparency(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/transparency(?:/)?$"
+    }
+  ],
+  "dataRoutes": [],
+  "rsc": {
+    "header": "rsc",
+    "varyHeader": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+    "prefetchHeader": "next-router-prefetch",
+    "didPostponeHeader": "x-nextjs-postponed",
+    "contentTypeHeader": "text/x-component",
+    "suffix": ".rsc",
+    "prefetchSegmentHeader": "next-router-segment-prefetch",
+    "prefetchSegmentSuffix": ".segment.rsc",
+    "prefetchSegmentDirSuffix": ".segments",
+    "clientParamParsing": false,
+    "dynamicRSCPrerender": false
+  },
+  "rewriteHeaders": {
+    "pathHeader": "x-nextjs-rewritten-path",
+    "queryHeader": "x-nextjs-rewritten-query"
+  }
+}

@@ -114,7 +114,7 @@ const organizationSchema = {
   taxID: '33-2725121',
   email: 'info@odipa.org',
   sameAs: [
-    'https://github.com/odipa/odipa-website',
+    'https://github.com/odipa/ODIPA-MAIN-SITE',
     'https://twitter.com/odipa_org',
     'https://linkedin.com/company/odipa',
   ],

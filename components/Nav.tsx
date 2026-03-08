@@ -60,7 +60,7 @@ export default function Nav() {
         ))}
         <li>
           <a
-            href="https://github.com/odipa/odipa-website"
+            href="https://github.com/odipa/ODIPA-MAIN-SITE"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 text-white/60 hover:text-white transition-colors no-underline"
