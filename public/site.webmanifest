@@ -1,0 +1,26 @@
+{
+  "name": "ODIPA — Online Digital Information Privacy & Awareness",
+  "short_name": "ODIPA",
+  "description": "A 501(c)(3) nonprofit educating consumers and organizations about digital information privacy.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0B1F3A",
+  "theme_color": "#0B1F3A",
+  "icons": [
+    {
+      "src": "/favicon-16x16.png",
+      "sizes": "16x16",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}

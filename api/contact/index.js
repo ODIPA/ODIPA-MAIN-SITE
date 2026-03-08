@@ -1,0 +1,66 @@
+/**
+ * ODIPA Contact Form — Azure Function
+ * POST /api/contact
+ * Validates, sanitizes, and emails to info@odipa.org (or topic-routed alias).
+ * No data is stored anywhere. Reply-to is set to the submitter's address.
+ */
+
+const { sendFormEmail, respond, clean } = require('../_shared/mailer')
+
+const TOPIC_ROUTING = {
+  general:       'info@odipa.org',
+  programs:      'education@odipa.org',
+  volunteer:     'volunteer@odipa.org',
+  partnerships:  'partnerships@odipa.org',
+  certification: 'certification@odipa.org',
+  press:         'press@odipa.org',
+  research:      'research@odipa.org',
+  dev:           'dev@odipa.org',
+  privacy:       'privacy@odipa.org',
+  donate:        'donate@odipa.org',
+}
+
+module.exports = async function handler(context, req) {
+  // Handle CORS preflight
+  if (req.method === 'OPTIONS') return respond(context, 200, {})
+
+  if (req.method !== 'POST') return respond(context, 405, { error: 'Method not allowed' })
+
+  try {
+    const body = req.body || {}
+
+    // Validate required fields
+    const topic   = clean(body.topic, 50)
+    const name    = clean(body.name, 100)
+    const email   = clean(body.email, 200)
+    const message = clean(body.message, 2000)
+
+    if (!name)    return respond(context, 400, { error: 'Name is required' })
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+      return respond(context, 400, { error: 'Valid email is required' })
+    if (!message || message.length < 10)
+      return respond(context, 400, { error: 'Message is required' })
+
+    const toAddress = TOPIC_ROUTING[topic] || TOPIC_ROUTING.general
+    const topicLabel = clean(body['Topic'] || topic || 'General Inquiry', 100)
+
+    await sendFormEmail({
+      to:      toAddress,
+      subject: `Contact Form: ${topicLabel} — from ${name}`,
+      replyTo: email,
+      fields: {
+        'Topic':        topicLabel,
+        'Name':         name,
+        'Email':        email,
+        'Organization': clean(body.organization, 200) || '—',
+        'Message':      message,
+        'Routed to':    toAddress,
+      },
+    })
+
+    respond(context, 200, { ok: true })
+  } catch (err) {
+    context.log.error('Contact form error:', err.message)
+    respond(context, 500, { error: 'Failed to send. Please try again.' })
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "name": "odipa-api",
+  "version": "1.0.0",
+  "description": "ODIPA Azure Functions — self-hosted form handlers, no third-party data storage",
+  "scripts": {
+    "start": "func start",
+    "test": "node tests/smoke.js"
+  },
+  "dependencies": {
+    "nodemailer": "^6.9.13"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
