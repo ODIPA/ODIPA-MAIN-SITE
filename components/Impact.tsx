@@ -4,9 +4,9 @@ import { useEffect, useRef, useState } from 'react'
 import SectionHeader from './SectionHeader'
 
 const stats = [
-  { target: 4.5, suffix: 'B', label: 'Records exposed in data breaches globally in 2023 alone' },
-  { target: 79, suffix: '%', label: 'Of Americans seriously concerned about how their data is collected and used' },
-  { target: 9.48, suffix: 'M', prefix: '$', label: 'Average cost of a data breach in financial services — highest of any industry' },
+  { target: 16, suffix: 'B+', label: 'Credentials exposed in a single 2025 data compilation — one of the largest ever documented' },
+  { target: 99, suffix: '%', label: 'Of organizations have sensitive data dangerously exposed to AI tools and unsanctioned apps' },
+  { target: 10.22, suffix: 'M', prefix: '$', label: 'Average cost of a U.S. data breach in 2025 — an all-time high for any region (IBM)' },
   { target: 13, suffix: 'yr', label: 'Consecutive years financial services has led all industries in breach costs' },
   { target: 50, suffix: '+', label: 'Different US state privacy laws now in effect or pending' },
   { target: 77, suffix: '%', label: 'Of ODIPA\'s services delivered completely free to the public we serve' },
