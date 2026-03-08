@@ -2,16 +2,6 @@
  * ODIPA Privacy Tool Submission — Azure Function
  * POST /api/tool-submit
  *
- * On a valid submission:
- *   1. Sends a notification email to dev@odipa.org (self-hosted SMTP, no Formspree)
- *   2. Opens a GitHub Issue in odipa/odipa-privacy-tools with label "tool-review"
- *      so the widget at /get-involved/contribute-code picks it up automatically.
- *
- * Required Azure environment variables:
- *   SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM  (see api/ENV_SETUP.md)
- *   GITHUB_TOKEN   — Personal Access Token with repo:issues:write scope
- *                    Generate at github.com/settings/tokens
- *                    Only needs "Issues" permission on odipa/odipa-privacy-tools
  */
 
 const { sendFormEmail, respond, clean } = require('../_shared/mailer')

@@ -1,14 +1,7 @@
 /**
  * ODIPA Shared Mailer
- * All email is sent via your own SMTP — no third party ever stores submissions.
+ * All email is sent via SMTP — no third party ever stores submissions.
  *
- * Required Azure environment variables:
- *   SMTP_HOST    e.g. smtp.office365.com
- *   SMTP_PORT    587 (STARTTLS recommended) or 465 (SSL)
- *   SMTP_USER    e.g. noreply@odipa.org
- *   SMTP_PASS    App password (NOT your login password)
- *   SMTP_FROM    e.g. ODIPA <noreply@odipa.org>
- *   ALLOWED_ORIGIN  e.g. https://odipa.org
  */
 
 const nodemailer = require('nodemailer')

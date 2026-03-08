@@ -2,20 +2,6 @@
  * ODIPA Newsletter Signup — Azure Function
  * POST /api/newsletter
  *
- * Stores email in your own system via email notification.
- * Optionally forwards to Brevo (formerly Sendinblue) or Mailchimp
- * if NEWSLETTER_PROVIDER env var is set.
- *
- * Required env vars (always):
- *   SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM, ALLOWED_ORIGIN
- *
- * Optional env vars (to forward to an ESP):
- *   NEWSLETTER_PROVIDER   'brevo' | 'mailchimp'
- *   BREVO_API_KEY         Your Brevo API key
- *   BREVO_LIST_ID         Your Brevo contact list ID (integer)
- *   MAILCHIMP_API_KEY     Your Mailchimp API key (key-dc format)
- *   MAILCHIMP_LIST_ID     Your Mailchimp audience/list ID
- *   MAILCHIMP_DC          Your Mailchimp datacenter prefix (e.g. 'us21')
  */
 
 const { sendFormEmail, respond, clean } = require('../_shared/mailer')
