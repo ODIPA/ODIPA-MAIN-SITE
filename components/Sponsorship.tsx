@@ -189,36 +189,6 @@ export default function Sponsorship() {
           <p className="text-center font-mono text-[10px] text-white/25 mt-6">
             These percentages describe how ODIPA delivers services — not how we spend money. A separate financial breakdown is available upon request.          </p>
         </div>
-
-        {/* Corporate sponsors strip */}
-        <div className="reveal mt-4 bg-white border border-slate-200 rounded-2xl px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-6">
-          <div className="flex flex-col sm:flex-row items-center gap-6">
-            <div className="font-mono text-[10px] text-slate-400 uppercase tracking-[2px] whitespace-nowrap">Corporate Sponsors</div>
-            <div className="w-px h-6 bg-slate-200 hidden sm:block" />
-            <div className="flex items-center gap-6 flex-wrap justify-center">
-              {/* Avallis */}
-              <a href="https://avallis.io" target="_blank" rel="noopener noreferrer"
-                className="group flex items-center gap-2.5 no-underline opacity-70 hover:opacity-100 transition-opacity">
-                <img
-                  src="/images/avallis-logo.png"
-                  alt="Avallis"
-                  className="w-8 h-8 rounded-lg object-cover flex-shrink-0"
-                />
-                <span className="font-mono text-[12px] font-semibold text-navy tracking-wide">avallis.io</span>
-              </a>
-              {/* Placeholder slot */}
-              <div className="flex items-center gap-2 opacity-30">
-                <div className="w-8 h-8 rounded-lg border border-dashed border-slate-300" />
-                <span className="font-mono text-[11px] text-slate-400">Your brand</span>
-              </div>
-            </div>
-          </div>
-          <a href="/become-a-sponsor"
-            className="flex-shrink-0 inline-block bg-gold hover:bg-gold-light text-navy font-bold text-[13px] px-5 py-2.5 rounded-lg transition-colors no-underline whitespace-nowrap">
-            Become a Sponsor
-          </a>
-        </div>
-
       </div>
     </section>
   )
