@@ -64,7 +64,7 @@ function FieldLabel({ children, required }: { children: React.ReactNode; require
 }
 
 function Input({
-  id, type = 'text', placeholder, value, onChange, required,
+  id, type = 'text', placeholder, value, onChange, onBlur,required,
 }: {
   id: string; type?: string; placeholder?: string;
   value: string; onChange: (v: string) => void; onBlur?: (v: string) => void; required?: boolean
