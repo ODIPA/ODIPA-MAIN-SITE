@@ -26,7 +26,7 @@ const stack = [
   { label: 'Analytics', value: 'Plausible (cookieless, privacy-first)' },
   { label: 'Hosting', value: 'Azure Static Web Apps + GitHub Actions CI/CD' },
   { label: 'License', value: 'MIT — free for all uses with attribution' },
-  { label: 'Repo', value: 'github.com/odipa/odipa-website' },
+  { label: 'Repo', value: 'github.com/odipa/ODIPA-MAIN-SITE' },
 ]
 
 const steps = [
@@ -79,7 +79,7 @@ export default function ContributeCodePage() {
               className="inline-block border border-white/25 hover:border-white/50 text-white font-medium text-[14px] px-7 py-3.5 rounded-lg transition-colors no-underline">
               Submit Your Tool
             </a>
-            <a href="https://github.com/odipa/odipa-website" target="_blank" rel="noopener noreferrer"
+            <a href="https://github.com/odipa/ODIPA-MAIN-SITE" target="_blank" rel="noopener noreferrer"
               className="inline-flex items-center gap-2 border border-white/15 hover:border-white/35 text-white/60 hover:text-white font-medium text-[14px] px-7 py-3.5 rounded-lg transition-colors no-underline">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                 <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
@@ -187,7 +187,7 @@ export default function ContributeCodePage() {
               <p className="text-[14px] text-white/55">Your first PR — or first tool submission — is waiting.</p>
             </div>
             <div className="flex gap-3 flex-wrap flex-shrink-0">
-              <a href="https://github.com/odipa/odipa-website" target="_blank" rel="noopener noreferrer"
+              <a href="https://github.com/odipa/ODIPA-MAIN-SITE" target="_blank" rel="noopener noreferrer"
                 className="inline-block bg-gold hover:bg-gold-light text-navy font-bold text-[14px] px-6 py-3 rounded-lg transition-colors no-underline">
                 Fork on GitHub
               </a>
@@ -233,7 +233,7 @@ export default function ContributeCodePage() {
               </div>
             </div>
 
-            <a href="https://github.com/odipa/odipa-website" target="_blank" rel="noopener noreferrer"
+            <a href="https://github.com/odipa/ODIPA-MAIN-SITE" target="_blank" rel="noopener noreferrer"
               className="mt-5 flex items-center justify-center gap-2 w-full bg-navy text-white font-semibold text-[13px] py-3 rounded-lg hover:opacity-90 transition-opacity no-underline">
               <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
                 <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
