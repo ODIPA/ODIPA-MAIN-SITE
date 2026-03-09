@@ -96,7 +96,6 @@ module.exports = async function handler(context, req) {
     respond(context, 200, { ok: true })
   } catch (err) {
     context.log.error('Newsletter signup error:', err.message)
-//    respond(context, 500, { error: 'Signup failed. Please try again.' })
-    respond(context, 500, { error: err.message })
+    respond(context, 500, { error: 'Signup failed. Please try again.' })
   }
 }
