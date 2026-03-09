@@ -1,5 +1,5 @@
 /**
- * ODIPA Shared Mailer — Azure Communication Services
+ * ODIPA Shared Mailer — Communication Services
  * All email is sent via ACS — fully Azure-native, no third party ever
  * stores or processes form submissions.
  **/
@@ -10,8 +10,7 @@ function getClient() {
   const connectionString = process.env.COMMUNICATION_SERVICES_CONNECTION_STRING
   if (!connectionString) {
     throw new Error(
-      'COMMUNICATION_SERVICES_CONNECTION_STRING is not set. ' +
-      'Add it in Azure Portal → Static Web App → Configuration → Application settings.'
+      'COMMUNICATION_SERVICES_CONNECTION_STRING is not set. '
     )
   }
   return new EmailClient(connectionString)
@@ -21,8 +20,7 @@ function getSender() {
   const sender = process.env.ACS_SENDER_EMAIL
   if (!sender) {
     throw new Error(
-      'ACS_SENDER_EMAIL is not set. ' +
-      'Add your verified ACS sender address in Azure Configuration.'
+      'ACS_SENDER_EMAIL is not set. '
     )
   }
   return sender
@@ -49,7 +47,7 @@ async function sendFormEmail({ to, subject, replyTo, fields }) {
     ...Object.entries(fields).map(([k, v]) => `${k}: ${v}`),
     '─'.repeat(60),
     `Submitted: ${new Date().toUTCString()}`,
-    'Delivered by ODIPA Azure Function via ACS. No third party processed this submission.',
+    'Delivered by ODIPA\'s Communication Services. No third party processed this submission.',
   ].join('\n')
 
   const rows = Object.entries(fields)
@@ -68,7 +66,7 @@ async function sendFormEmail({ to, subject, replyTo, fields }) {
 <body style="margin:0;padding:0;background:#f5f4f1;font-family:-apple-system,BlinkMacSystemFont,sans-serif;">
 <div style="max-width:660px;margin:32px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.08);">
   <div style="background:#0B1F3A;padding:20px 28px;">
-    <div style="color:#C8920A;font-family:monospace;font-size:10px;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px;">ODIPA · Azure Communication Services</div>
+    <div style="color:#C8920A;font-family:monospace;font-size:10px;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px;">ODIPA · Communication Services</div>
     <div style="color:#fff;font-size:18px;font-weight:700;">${esc(subject)}</div>
   </div>
   <div style="padding:20px 28px 4px;">
@@ -79,7 +77,7 @@ async function sendFormEmail({ to, subject, replyTo, fields }) {
   <table style="width:100%;border-collapse:collapse;margin:12px 0 20px;">${rows}</table>
   <div style="padding:14px 28px;background:#f5f4f1;border-top:1px solid #eee;">
     <p style="margin:0;font-size:11px;color:#aaa;font-family:monospace;">
-      Delivered by ODIPA&apos;s Azure Function via ACS. No third party processed or stored this submission.
+      Delivered by ODIPA&apos;s Communication Services. No third party processed or stored this submission.
     </p>
   </div>
 </div></body></html>`
