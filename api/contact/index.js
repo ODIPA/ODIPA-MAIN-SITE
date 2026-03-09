@@ -31,9 +31,10 @@ module.exports = async function handler(context, req) {
 
     // Validate required fields
     const topic   = clean(body.topic, 50)
-    const name    = clean(body.name, 100)
-    const email   = clean(body.email, 200)
-    const message = clean(body.message, 2000)
+    const name    = clean(body['Name'] || body.name, 100)
+    const email   = clean(body['Email'] || body.email, 200)
+    const organization = clean(body['Organization'] || body.organization, 200) || '—'
+    const message = clean(body['Message'] || body.message, 2000) || '—'
 
     if (!name)    return respond(context, 400, { error: 'Name is required' })
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
@@ -53,7 +54,7 @@ module.exports = async function handler(context, req) {
         'Topic':        topicLabel,
         'Name':         name,
         'Email':        email,
-        'Organization': clean(body.organization, 200) || '—',
+        'Organization': organization,
         'Message':      message,
         'Routed to':    toAddress,
         'Consented':    consent,
