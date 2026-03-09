@@ -21,6 +21,7 @@ module.exports = async function handler(context, req) {
     const website    = clean(body['Website'] || body.website, 300) || '—'
     const hearAbout  = clean(body['How They Heard'] || body.hearAbout, 200) || '—'
     const message    = clean(body['Message'] || body.message, 2000) || '—'
+    const consent    = clean(body['Consented'] || body.consent, 10) || 'No'
 
     if (!contactName) return respond(context, 400, { error: 'Contact name is required' })
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
@@ -41,7 +42,7 @@ module.exports = async function handler(context, req) {
         'Tier Interest':  tier,
         'Hear About':     hearAbout,
         'Message':        message,
-        'Consented':      clean(body.Consented, 10),
+        'Consented':      consent,
       },
     })
 
