@@ -12,11 +12,15 @@ module.exports = async function handler(context, req) {
   try {
     const body = req.body || {}
 
-    const orgName     = clean(body['Organization Name'] || body.orgName, 200)
-    const contactName = clean(body['Contact Name'] || body.contactName, 100)
-    const email       = clean(body['Email'] || body.email, 254).toLowerCase()
-    const tier        = clean(body['Sponsorship Tier'] || body.tier, 100)
-    const consent     = body.consent !== false  // treat missing as true if other fields present
+    const orgName     = clean(body['Organization Name'] || body.orgName, 200) || '—'
+    const contactName = clean(body['Contact Name'] || body.contactName, 100) || '—'
+    const email       = clean(body['Email'] || body.email, 254).toLowerCase() || '—'
+    const tier        = clean(body['Sponsorship Tier'] || body.tier, 100) || '—'
+    const title      = clean(body['Job Title'] || body.title, 100) || '—' 
+    const phone      = clean(body['Phone'] || body.phone, 50) || '—'
+    const website    = clean(body['Website'] || body.website, 300) || '—'
+    const hearAbout  = clean(body['How They Heard'] || body.hearAbout, 200) || '—'
+    const message    = clean(body['Message'] || body.message, 2000) || '—'
 
     if (!contactName) return respond(context, 400, { error: 'Contact name is required' })
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
@@ -31,13 +35,13 @@ module.exports = async function handler(context, req) {
         'Contact Name':   contactName,
         'Email':          email,
         'Organization':   orgName,
-        'Title':          clean(body.title, 100) || '—',
-        'Phone':          clean(body.phone, 50) || '—',
-        'Website':        clean(body.website, 300) || '—',
-        'Tier Interest':  tier,//clean(body.tier, 100) || '—',
-        'Hear About':     clean(body.hearAbout, 200) || '—',
-        'Message':        clean(body.message, 2000) || '—',
-        'Consented':      consent ? 'Yes' : 'No',
+        'Title':          title,
+        'Phone':          phone,
+        'Website':        website,
+        'Tier Interest':  tier,
+        'Hear About':     hearAbout,
+        'Message':        message,
+        'Consented':      clean(body.Consented, 10),
       },
     })
 
