@@ -12,9 +12,11 @@ module.exports = async function handler(context, req) {
   try {
     const body = req.body || {}
 
-    const contactName = clean(body.contactName, 100)
-    const email       = clean(body.email, 200)
-    const orgName     = clean(body.orgName, 200)
+    const orgName     = clean(body['Organization Name'] || body.orgName, 200)
+    const contactName = clean(body['Contact Name'] || body.contactName, 100)
+    const email       = clean(body['Email'] || body.email, 254).toLowerCase()
+    const tier        = clean(body['Sponsorship Tier'] || body.tier, 100)
+    const consent     = body.consent !== false  // treat missing as true if other fields present
 
     if (!contactName) return respond(context, 400, { error: 'Contact name is required' })
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
@@ -32,9 +34,10 @@ module.exports = async function handler(context, req) {
         'Title':          clean(body.title, 100) || '—',
         'Phone':          clean(body.phone, 50) || '—',
         'Website':        clean(body.website, 300) || '—',
-        'Tier Interest':  clean(body.tier, 100) || '—',
+        'Tier Interest':  tier,//clean(body.tier, 100) || '—',
         'Hear About':     clean(body.hearAbout, 200) || '—',
         'Message':        clean(body.message, 2000) || '—',
+        'Consented':      consent ? 'Yes' : 'No',
       },
     })
 
