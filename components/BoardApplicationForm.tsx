@@ -266,6 +266,7 @@ export default function BoardApplicationForm() {
           'Time Commitment':     form.commitment,
           'Conflicts':           form.conflict,
           'References':          form.references,
+          'Consented':           form.consent ? 'Yes' : 'No',    
         }),
       })
       setFormState(res.ok ? 'success' : 'error')

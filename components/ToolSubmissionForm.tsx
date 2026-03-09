@@ -157,6 +157,7 @@ export default function ToolSubmissionForm() {
           'Contributor Email':form.authorEmail,
           'GitHub Handle':    form.authorHandle || '—',
           'Organization':     form.org || '—',
+          'Agreed to Standards': form.agree ? 'Yes' : 'No',
         }),
       })
       setState(res.ok ? 'success' : 'error')

@@ -66,13 +66,14 @@ module.exports = async function handler(context, req) {
   try {
     const body = req.body || {}
 
-    const toolName    = clean(body['Tool Name'], 200)
-    const authorEmail = clean(body['Contributor Email'], 200)
-    const authorName  = clean(body['Contributor Name'], 100)
-    const github      = clean(body['GitHub URL'], 300)
-    const description = clean(body['Description'], 2000)
-    const category    = clean(body['Category'], 100)
-    const lang        = clean(body['Language'], 100)
+    const toolName    = clean(body['Tool Name'], 200) || '—'
+    const authorEmail = clean(body['Contributor Email'], 200) || '—'
+    const authorName  = clean(body['Contributor Name'], 100) || '—'
+    const github      = clean(body['GitHub URL'], 300) 
+    const description = clean(body['Description'], 2000) || '—'
+    const category    = clean(body['Category'], 100) || '—'
+    const lang        = clean(body['Language'], 100) || '—'
+    const agree       = clean(body['Agreed to Standards'], 10) || 'No'
 
     if (!toolName) return respond(context, 400, { error: 'Tool name is required' })
     if (!authorEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(authorEmail))
@@ -101,6 +102,7 @@ module.exports = async function handler(context, req) {
           'Contributor Email': authorEmail,
           'GitHub Handle':     clean(body['GitHub Handle'], 100) || '—',
           'Organization':      clean(body['Organization'], 200) || '—',
+          'Agreed to Standards': agree,
         },
       }),
       openGitHubIssue({ toolName, github, description, authorName, authorEmail, category, lang }),

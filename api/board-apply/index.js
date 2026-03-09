@@ -16,6 +16,7 @@ module.exports = async function handler(context, req) {
     const lastName  = clean(body['Last Name']  || body.lastName,  100)
     const email     = clean(body['Email']       || body.email,     200)
     const position  = clean(body['Position Applied'] || body.seat, 100)
+    const name      = clean(body['Name'] || `${firstName} ${lastName}`, 200)
 
     if (!firstName) return respond(context, 400, { error: 'First name is required' })
     if (!lastName)  return respond(context, 400, { error: 'Last name is required' })
@@ -29,7 +30,7 @@ module.exports = async function handler(context, req) {
       replyTo: email,
       fields: {
         'Position':            position,
-        'Name':                `${firstName} ${lastName}`,
+        'Name':                name,
         'Email':               email,
         'Phone':               clean(body['Phone'] || body.phone, 50) || '—',
         'LinkedIn':            clean(body['LinkedIn'] || body.linkedin, 300) || '—',
@@ -43,6 +44,7 @@ module.exports = async function handler(context, req) {
         'Time Commitment':     clean(body['Time Commitment'] || body.commitment, 1000) || '—',
         'Conflicts':           clean(body['Conflicts'] || body.conflict, 1000) || '—',
         'References':          clean(body['References'] || body.references, 1000) || '—',
+        'Consented':           clean(body['Consented'] || body.consent, 10) || 'No',
       },
     })
 

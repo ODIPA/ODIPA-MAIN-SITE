@@ -34,7 +34,7 @@ module.exports = async function handler(context, req) {
     const name    = clean(body.name, 100)
     const email   = clean(body.email, 200)
     const message = clean(body.message, 2000)
-
+    
     if (!name)    return respond(context, 400, { error: 'Name is required' })
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
       return respond(context, 400, { error: 'Valid email is required' })
@@ -55,6 +55,7 @@ module.exports = async function handler(context, req) {
         'Organization': clean(body.organization, 200) || '—',
         'Message':      message,
         'Routed to':    toAddress,
+        'Consented':    clean(body.consent, 10) || 'No',
       },
     })
 

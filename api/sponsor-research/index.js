@@ -40,6 +40,7 @@ module.exports = async function handler(context, req) {
         'Audience':          clean(body.audience, 500) || '—',
         'Hear About':        clean(body.hearAbout, 200) || '—',
         'Additional Notes':  clean(body.notes, 2000) || '—',
+        'Consented':         clean(body.consent, 10) || 'No',
       },
     })
 

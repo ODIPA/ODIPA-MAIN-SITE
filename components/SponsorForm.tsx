@@ -165,6 +165,7 @@ export default function SponsorForm() {
           'Sponsorship Tier':  TIERS.find(t => t.value === form.tier)?.label ?? form.tier,
           'How They Heard':    form.hearAbout,
           'Message':           form.message,
+          'Consented':         form.consent ? 'Yes' : 'No',
         }),
       })
       if (res.ok) {

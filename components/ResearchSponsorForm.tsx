@@ -345,6 +345,7 @@ export default function ResearchSponsorForm({ preselect }: { preselect?: string 
           audience: form.audience,
           hearAbout: form.hearAbout,
           notes: form.notes,
+          consent: form.consent ? 'Yes' : 'No',
         }),
       })
       if (res.ok) {

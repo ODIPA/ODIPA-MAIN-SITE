@@ -108,6 +108,7 @@ export default function ContactForm() {
           'Message':      form.message,
           '_replyto':     form.email,
           '_subject':     `ODIPA Contact: ${selectedTopic?.label ?? form.topic}`,
+          'Consented':    form.consent ? 'Yes' : 'No',
         }),
       })
       if (res.ok) { setState('success'); setForm(INITIAL) }
