@@ -633,7 +633,7 @@ export default function ResearchSponsorForm({ preselect }: { preselect?: string 
               tax-deductible to the extent permitted by law — consult your tax advisor.
             </p>
             <span className="font-mono text-[10px] text-gold-light bg-white/5 border border-white/10 px-3 py-1.5 rounded">
-              EIN: 33-2725122
+              EIN: 33-2725121
             </span>
           </div>
 

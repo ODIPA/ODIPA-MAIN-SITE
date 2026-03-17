@@ -133,7 +133,7 @@ export default function DonateWidget() {
                 </div>
                 <div className="bg-white/5 border border-white/10 rounded-lg px-4 py-3">
                   <div className="font-mono text-[10px] text-gold-light uppercase tracking-[1px] mb-1">EIN</div>
-                  <div className="text-[14px] text-white font-semibold">33-2725122</div>
+                  <div className="text-[14px] text-white font-semibold">33-2725121</div>
                 </div>
               </div>
             </div>
@@ -341,7 +341,7 @@ export default function DonateWidget() {
               receipt for your records immediately after donating.
             </p>
             <div className="font-mono text-[11px] text-slate-400 space-y-1">
-              <div>EIN: 33-2725122</div>
+              <div>EIN: 33-2725121</div>
               <div>Organization: ODIPA</div>
               <div>Status: 501(c)(3) Tax-Exempt</div>
             </div>

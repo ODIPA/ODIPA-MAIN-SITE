@@ -65,7 +65,7 @@ export default function ThankYouPage() {
           <div className="inline-flex flex-wrap justify-center gap-6 bg-white/5 border border-white/10 rounded-xl px-6 py-4">
             {[
               { label: 'Organization', value: 'ODIPA' },
-              { label: 'EIN', value: '33-2725122' },
+              { label: 'EIN', value: '33-2725121' },
               { label: 'Status', value: '501(c)(3) Tax-Exempt' },
             ].map((item) => (
               <div key={item.label} className="text-center">
@@ -86,7 +86,7 @@ export default function ThankYouPage() {
           <div>
             <div className="font-semibold text-navy text-[14px] mb-1">Your receipt is on its way</div>
             <p className="text-[13px] text-slate-500 leading-relaxed">
-              PayPal has sent a donation receipt to your email address. This receipt serves as your official tax record for contributions to ODIPA (EIN: 33-2725122), a 501(c)(3) tax-exempt nonprofit. Keep it for your tax records.
+              PayPal has sent a donation receipt to your email address. This receipt serves as your official tax record for contributions to ODIPA (EIN: 33-2725121), a 501(c)(3) tax-exempt nonprofit. Keep it for your tax records.
             </p>
             <p className="text-[12px] text-slate-400 mt-2">
               Did not receive it? Check your spam folder or contact{' '}
