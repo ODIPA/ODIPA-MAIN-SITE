@@ -117,7 +117,7 @@ export default function Footer() {
             <div className="font-mono text-[10px] text-white/30 uppercase tracking-[2px] mb-2">Follow ODIPA</div>
             <div className="flex items-center gap-4">
               {/* LinkedIn */}
-              <a href="https://linkedin.com/company/odipa" target="_blank" rel="noopener noreferrer"
+              <a href="https://linkedin.com/company/odipaorg" target="_blank" rel="noopener noreferrer"
                 aria-label="ODIPA on LinkedIn"
                 className="w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
