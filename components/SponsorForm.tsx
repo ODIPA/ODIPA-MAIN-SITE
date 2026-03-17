@@ -121,6 +121,7 @@ export default function SponsorForm() {
   const [form, setForm] = useState<AppFormData>(INITIAL)
   const [state, setState] = useState<FormState>('idle')
   const [errors, setErrors] = useState<Partial<Record<keyof AppFormData, string>>>({})
+  const [honeypot, setHoneypot] = useState('')
 
   function set(field: keyof AppFormData) {
     return (value: string | boolean) =>
@@ -149,6 +150,7 @@ export default function SponsorForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (honeypot) return
     if (!validate()) return
     setState('submitting')
     try {
@@ -161,6 +163,7 @@ export default function SponsorForm() {
           'Job Title':         form.title,
           'Email':             form.email,
           'Phone':             form.phone,
+          _hp: honeypot,
           'Website':           form.website,
           'Sponsorship Tier':  TIERS.find(t => t.value === form.tier)?.label ?? form.tier,
           'How They Heard':    form.hearAbout,
@@ -400,6 +403,17 @@ export default function SponsorForm() {
                 </p>
               </div>
 
+          {/* Honeypot — hidden from real users, bots fill it in */}
+          <input
+            type="text"
+            name="website"
+            value={honeypot}
+            onChange={e => setHoneypot(e.target.value)}
+            tabIndex={-1}
+            autoComplete="off"
+            aria-hidden="true"
+            style={{ position: 'absolute', left: '-9999px', opacity: 0, height: 0, width: 0 }}
+          />
             </form>
           )}
         </div>

@@ -295,6 +295,7 @@ export default function ResearchSponsorForm({ preselect }: { preselect?: string 
   const [form, setForm] = useState<AppFormData>({ ...INITIAL, tier: preselect ?? '' })
   const [state, setState] = useState<FormState>('idle')
   const [errors, setErrors] = useState<Partial<Record<keyof AppFormData, string>>>({})
+  const [honeypot, setHoneypot] = useState('')
 
   function set(field: keyof AppFormData) {
     return (value: string | boolean) =>
@@ -326,6 +327,7 @@ export default function ResearchSponsorForm({ preselect }: { preselect?: string 
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (honeypot) return
     if (!validate()) return
     setState('submitting')
     try {
@@ -338,6 +340,7 @@ export default function ResearchSponsorForm({ preselect }: { preselect?: string 
           title: form.title,
           email: form.email,
           phone: form.phone,
+          _hp: honeypot,
           website: form.website,
           tier: selectedTier?.label ?? form.tier,
           researchTopic: form.researchTopic,
@@ -618,6 +621,17 @@ export default function ResearchSponsorForm({ preselect }: { preselect?: string 
                 </p>
               </div>
 
+          {/* Honeypot — hidden from real users, bots fill it in */}
+          <input
+            type="text"
+            name="website"
+            value={honeypot}
+            onChange={e => setHoneypot(e.target.value)}
+            tabIndex={-1}
+            autoComplete="off"
+            aria-hidden="true"
+            style={{ position: 'absolute', left: '-9999px', opacity: 0, height: 0, width: 0 }}
+          />
             </form>
           )}
         </div>
@@ -633,7 +647,7 @@ export default function ResearchSponsorForm({ preselect }: { preselect?: string 
               tax-deductible to the extent permitted by law — consult your tax advisor.
             </p>
             <span className="font-mono text-[10px] text-gold-light bg-white/5 border border-white/10 px-3 py-1.5 rounded">
-              EIN: 33-2725121
+              EIN: 33-2725122
             </span>
           </div>
 

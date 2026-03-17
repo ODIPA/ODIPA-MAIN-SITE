@@ -60,6 +60,8 @@ export default function ContactForm() {
   const [form, setForm] = useState<AppFormData>(INITIAL)
   const [state, setState] = useState<FormState>('idle')
   const [errors, setErrors] = useState<Partial<Record<keyof AppFormData, string>>>({})
+  const [honeypot, setHoneypot] = useState('')
+  const [honeypot, setHoneypot] = useState('')
 
   // Pre-select topic from ?topic= query param (e.g. /contact?topic=certification)
   useEffect(() => {
@@ -94,6 +96,9 @@ export default function ContactForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (honeypot) return
+    if (honeypot) return
+    e.preventDefault()
     if (!validate()) return
     setState('submitting')
     try {
@@ -106,6 +111,8 @@ export default function ContactForm() {
           'Email':        form.email,
           'Organization': form.organization || '—',
           'Message':      form.message,
+          _hp: honeypot,
+          _hp: honeypot,
           '_replyto':     form.email,
           '_subject':     `ODIPA Contact: ${selectedTopic?.label ?? form.topic}`,
           'Consented':    form.consent ? 'Yes' : 'No',
@@ -335,6 +342,17 @@ export default function ContactForm() {
             </p>
           </div>
 
+          {/* Honeypot — hidden from real users, bots fill it in */}
+          <input
+            type="text"
+            name="website"
+            value={honeypot}
+            onChange={e => setHoneypot(e.target.value)}
+            tabIndex={-1}
+            autoComplete="off"
+            aria-hidden="true"
+            style={{ position: 'absolute', left: '-9999px', opacity: 0, height: 0, width: 0 }}
+          />
         </form>
 
         {/* Sidebar */}

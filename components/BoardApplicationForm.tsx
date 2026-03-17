@@ -177,6 +177,7 @@ export default function BoardApplicationForm() {
   const [form, setForm] = useState<AppFormData>(INIT)
   const [errors, setErrors] = useState<Partial<Record<keyof AppFormData, string>>>({})
   const [formState, setFormState] = useState<FormState>('idle')
+  const [honeypot, setHoneypot] = useState('')
 
   const selectedSeat = OPEN_SEATS.find(s => s.id === form.seat)
 
@@ -242,6 +243,7 @@ export default function BoardApplicationForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (honeypot) return
     if (!validate(4)) return
     setFormState('submitting')
     try {
@@ -251,6 +253,7 @@ export default function BoardApplicationForm() {
         body: JSON.stringify({
           _subject: `Board Application: ${selectedSeat?.title} — ${form.firstName} ${form.lastName}`,
           _replyto: form.email,
+          _hp: honeypot,
           'Position Applied':    selectedSeat?.title,
           'Name':                `${form.firstName} ${form.lastName}`,
           'Email':               form.email,
@@ -634,6 +637,17 @@ export default function BoardApplicationForm() {
             </div>
           )}
 
+          {/* Honeypot — hidden from real users, bots fill it in */}
+          <input
+            type="text"
+            name="website"
+            value={honeypot}
+            onChange={e => setHoneypot(e.target.value)}
+            tabIndex={-1}
+            autoComplete="off"
+            aria-hidden="true"
+            style={{ position: 'absolute', left: '-9999px', opacity: 0, height: 0, width: 0 }}
+          />
         </form>
       </div>
     </div>

@@ -11,6 +11,12 @@ module.exports = async function handler(context, req) {
 
   try {
     const body = req.body || {}
+    // Honeypot check — bots fill in hidden fields, humans don't
+    if (body._hp) {
+      context.log.warn('Honeypot triggered — discarding bot submission')
+      return respond(context, 200, { ok: true })
+    }
+
 
     const contactName = clean(body.contactName, 100)
     const email       = clean(body.email, 200)

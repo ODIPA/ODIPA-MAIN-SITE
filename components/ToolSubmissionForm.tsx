@@ -84,6 +84,7 @@ export default function ToolSubmissionForm() {
   const [form, setForm] = useState<AppFormData>(INIT)
   const [errors, setErrors] = useState<Partial<Record<keyof AppFormData, string>>>({})
   const [state, setState] = useState<State>('idle')
+  const [honeypot, setHoneypot] = useState('')
 
   function set<K extends keyof AppFormData>(field: K) {
     return (val: AppFormData[K]) => {
@@ -134,6 +135,7 @@ export default function ToolSubmissionForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (honeypot) return
     if (!validateStep(3)) return
     setState('submitting')
     try {
@@ -143,6 +145,7 @@ export default function ToolSubmissionForm() {
         body: JSON.stringify({
           _subject:     `Tool Submission: ${form.name}`,
           _replyto:     form.authorEmail,
+          _hp: honeypot,
           'Tool Name':        form.name,
           'Tagline':          form.tagline,
           'Description':      form.description,
@@ -420,6 +423,17 @@ export default function ToolSubmissionForm() {
             </div>
           </div>
         )}
+          {/* Honeypot — hidden from real users, bots fill it in */}
+          <input
+            type="text"
+            name="website"
+            value={honeypot}
+            onChange={e => setHoneypot(e.target.value)}
+            tabIndex={-1}
+            autoComplete="off"
+            aria-hidden="true"
+            style={{ position: 'absolute', left: '-9999px', opacity: 0, height: 0, width: 0 }}
+          />
       </form>
     </div>
   )
