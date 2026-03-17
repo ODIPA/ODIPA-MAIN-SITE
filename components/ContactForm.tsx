@@ -61,8 +61,7 @@ export default function ContactForm() {
   const [state, setState] = useState<FormState>('idle')
   const [errors, setErrors] = useState<Partial<Record<keyof AppFormData, string>>>({})
   const [honeypot, setHoneypot] = useState('')
-  const [honeypot, setHoneypot] = useState('')
-
+ 
   // Pre-select topic from ?topic= query param (e.g. /contact?topic=certification)
   useEffect(() => {
     const t = searchParams.get('topic')
@@ -97,7 +96,6 @@ export default function ContactForm() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (honeypot) return
-    if (honeypot) return
     e.preventDefault()
     if (!validate()) return
     setState('submitting')
@@ -111,7 +109,6 @@ export default function ContactForm() {
           'Email':        form.email,
           'Organization': form.organization || '—',
           'Message':      form.message,
-          _hp: honeypot,
           _hp: honeypot,
           '_replyto':     form.email,
           '_subject':     `ODIPA Contact: ${selectedTopic?.label ?? form.topic}`,
