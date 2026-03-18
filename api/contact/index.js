@@ -6,6 +6,7 @@
  */
 
 const { sendFormEmail, respond, clean } = require('../_shared/mailer')
+const { checkRateLimit, getClientIp } = require('../_shared/rateLimiter')
 
 const TOPIC_ROUTING = {
   general:       'info@odipa.org',
@@ -27,6 +28,13 @@ module.exports = async function handler(context, req) {
   if (req.method !== 'POST') return respond(context, 405, { error: 'Method not allowed' })
 
   try {
+    
+    // Rate limiting
+    const ip = getClientIp(req)
+    const rl = checkRateLimit(ip, 'contact', { max: 5, windowMs: 60000 })
+    if (rl.limited) {
+      return respond(context, 429, { error: 'Too many requests. Please wait a moment and try again.' })
+    }
     const body = req.body || {}
     // Honeypot check — bots fill in hidden fields, humans don't
     if (body._hp) {

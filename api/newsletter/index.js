@@ -5,6 +5,7 @@
  */
 
 const { sendFormEmail, respond, clean } = require('../_shared/mailer')
+const { checkRateLimit, getClientIp } = require('../_shared/rateLimiter')
 
 // ─── Optional ESP helpers ─────────────────────────────────────────────────────
 
@@ -64,9 +65,22 @@ module.exports = async function handler(context, req) {
   if (req.method !== 'POST')   return respond(context, 405, { error: 'Method not allowed' })
 
   try {
+    
+    // Rate limiting
+    const ip = getClientIp(req)
+    const rl = checkRateLimit(ip, 'newsletter', { max: 3, windowMs: 60000 })
+    if (rl.limited) {
+      return respond(context, 429, { error: 'Too many requests. Please wait a moment and try again.' })
+    }
     const body  = req.body || {}
     const email = clean(body.email, 254).toLowerCase()
     const name  = clean(body.name, 100)
+
+    // Honeypot check — bots fill in hidden fields, humans don't
+    if (body._hp) {
+      context.log.warn('Honeypot triggered — discarding bot submission')
+      return respond(context, 200, { ok: true }) // return 200 so bot doesn't retry
+    }
 
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return respond(context, 400, { error: 'A valid email address is required.' })

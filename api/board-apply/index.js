@@ -4,12 +4,20 @@
  */
 
 const { sendFormEmail, respond, clean } = require('../_shared/mailer')
+const { checkRateLimit, getClientIp } = require('../_shared/rateLimiter')
 
 module.exports = async function handler(context, req) {
   if (req.method === 'OPTIONS') return respond(context, 200, {})
   if (req.method !== 'POST')   return respond(context, 405, { error: 'Method not allowed' })
 
   try {
+    
+    // Rate limiting
+    const ip = getClientIp(req)
+    const rl = checkRateLimit(ip, 'board-apply', { max: 3, windowMs: 300000 })
+    if (rl.limited) {
+      return respond(context, 429, { error: 'Too many requests. Please wait a moment and try again.' })
+    }
     const body = req.body || {}
     // Honeypot check — bots fill in hidden fields, humans don't
     if (body._hp) {
