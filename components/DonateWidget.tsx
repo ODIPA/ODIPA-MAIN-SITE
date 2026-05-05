@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { Lock, Receipt, RefreshCw, CreditCard, Clock } from 'lucide-react'
 
-const GIVE_LIVELY_SLUG = process.env.NEXT_PUBLIC_GIVE_LIVELY_SLUG || ''
+const GIVE_LIVELY_SLUG = process.env.NEXT_PUBLIC_GIVE_LIVELY_SLUG || 'odipa'
 const PAYPAL_BUTTON_ID  = '4JEJNVYCA27M6'
 
 const IMPACT_ITEMS = [
