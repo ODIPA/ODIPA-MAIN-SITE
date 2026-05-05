@@ -20,11 +20,13 @@ export default function NewsletterSignup({ variant = 'footer', source = 'Website
   const [name,  setName]      = useState('')
   const [state, setState]     = useState<State>('idle')
   const [error, setError]     = useState('')
+  const [honeypot, setHoneypot] = useState('')
 
   const fmtEmail = (v: string) => v.toLowerCase().replace(/\s/g, '')
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (honeypot) return // silently discard bot submissions
     const trimmed = email.trim()
     if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
       setError('Please enter a valid email address.')
@@ -36,7 +38,7 @@ export default function NewsletterSignup({ variant = 'footer', source = 'Website
       const res = await fetch(API_ENDPOINT, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ email: trimmed, name: name.trim(), source }),
+        body:    JSON.stringify({ email: trimmed, name: name.trim(), source, _hp: honeypot }),
       })
       if (res.ok) {
         setState('success')
@@ -103,6 +105,17 @@ export default function NewsletterSignup({ variant = 'footer', source = 'Website
                 {error || 'Signup failed. Please try again.'}
               </p>
             )}
+            {/* Honeypot — hidden from real users, bots fill it in */}
+            <input
+              type="text"
+              name="website"
+              value={honeypot}
+              onChange={e => setHoneypot(e.target.value)}
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden="true"
+              style={{ position: 'absolute', left: '-9999px', opacity: 0, height: 0, width: 0 }}
+            />
             <p className="text-[10px] text-white/25 leading-relaxed">
               No spam, ever. Unsubscribe any time. We never sell your data.{' '}
               <a href="/privacy-policy" className="underline hover:text-white/50 transition-colors">Privacy Policy</a>
@@ -179,6 +192,17 @@ export default function NewsletterSignup({ variant = 'footer', source = 'Website
                     {error || 'Signup failed. Please try again.'}
                   </p>
                 )}
+                {/* Honeypot */}
+                <input
+                  type="text"
+                  name="website"
+                  value={honeypot}
+                  onChange={e => setHoneypot(e.target.value)}
+                  tabIndex={-1}
+                  autoComplete="off"
+                  aria-hidden="true"
+                  style={{ position: 'absolute', left: '-9999px', opacity: 0, height: 0, width: 0 }}
+                />
                 <p className="text-[11px] text-white/25 leading-relaxed">
                   No spam. Unsubscribe anytime. We never sell your data.{' '}
                   <a href="/privacy-policy" className="underline hover:text-white/45 transition-colors">Privacy Policy</a>
@@ -247,6 +271,17 @@ export default function NewsletterSignup({ variant = 'footer', source = 'Website
               {error || 'Signup failed. Please try again.'}
             </p>
           )}
+          {/* Honeypot */}
+          <input
+            type="text"
+            name="website"
+            value={honeypot}
+            onChange={e => setHoneypot(e.target.value)}
+            tabIndex={-1}
+            autoComplete="off"
+            aria-hidden="true"
+            style={{ position: 'absolute', left: '-9999px', opacity: 0, height: 0, width: 0 }}
+          />
           <p className="text-[10px] text-slate-400">
             No spam. Unsubscribe anytime.{' '}
             <a href="/privacy-policy" className="underline hover:text-slate-600 transition-colors">Privacy Policy</a>

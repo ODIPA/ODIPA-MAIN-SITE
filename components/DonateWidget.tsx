@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { Lock, Receipt, RefreshCw, CreditCard, Clock } from 'lucide-react'
 
-const GIVE_LIVELY_SLUG = 'REPLACE_WITH_YOUR_SLUG'
+const GIVE_LIVELY_SLUG = process.env.NEXT_PUBLIC_GIVE_LIVELY_SLUG || ''
 const PAYPAL_BUTTON_ID  = '4JEJNVYCA27M6'
 
 const IMPACT_ITEMS = [
@@ -59,7 +59,7 @@ export default function DonateWidget() {
   useEffect(() => {
     if (method !== 'givelively') return
     const script = document.createElement('script')
-    script.src = `https://secure.givelively.org/widgets/nonprofit/${GIVE_LIVELY_SLUG}/donate.js`
+    script.src = `https://secure.givelively.org/widgets/branded_donation/${GIVE_LIVELY_SLUG}.js`
     script.async = true
     document.body.appendChild(script)
     return () => {
@@ -154,7 +154,7 @@ export default function DonateWidget() {
           <div className="flex gap-3 mb-5">
             {([
               { id: 'paypal',     label: 'PayPal',      sub: 'Live — donate now', live: true  },
-              { id: 'givelively', label: 'Give Lively', sub: '0% fees — coming soon', live: false },
+              { id: 'givelively', label: 'Give Lively', sub: '0% platform fees', live: true },
             ] as { id: Method; label: string; sub: string; live: boolean }[]).map((m) => (
               <button
                 key={m.id}
@@ -218,9 +218,9 @@ export default function DonateWidget() {
             </div>
           )}
 
-          {/* Give Lively — Coming Soon */}
+          {/* Give Lively — LIVE */}
           {method === 'givelively' && (
-            <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm opacity-50 pointer-events-none select-none">
+            <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
               <div className="bg-navy px-5 sm:px-8 py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
                   <div className="font-display text-[18px] font-bold text-white">Donate via Give Lively</div>
@@ -228,18 +228,21 @@ export default function DonateWidget() {
                     Secure · Tax-Deductible · 0% Platform Fees
                   </div>
                 </div>
-                <div className="flex items-center gap-2 bg-gold/20 border border-gold/30 px-3 py-1.5 rounded-lg self-start sm:self-auto">
-                  <Clock className="w-3.5 h-3.5 text-gold" />
-                  <span className="text-[11px] text-gold font-mono font-semibold">Coming Soon</span>
+                <div className="flex items-center gap-2 bg-green-500/20 border border-green-400/30 px-3 py-1.5 rounded-lg self-start sm:self-auto">
+                  <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                  <span className="text-[11px] text-green-300 font-mono font-semibold">Live</span>
                 </div>
               </div>
-              <div className="p-8 text-center min-h-[200px] flex flex-col items-center justify-center gap-4">
-                <Clock className="w-10 h-10 text-slate-300" />
-                <div>
-                  <div className="font-semibold text-navy text-[15px] mb-1">Give Lively integration coming soon</div>
-                  <div className="text-[13px] text-slate-400">Give Lively account setup is in progress. Check back shortly.</div>
-                </div>
+
+              {/* Give Lively branded widget renders here */}
+              <div className="p-2">
+                <div
+                  id="give-lively-widget"
+                  className="gl-branded-donation-widget"
+                  data-widget-src={`https://secure.givelively.org/donate/${GIVE_LIVELY_SLUG}?ref=sd_widget`}
+                />
               </div>
+
               <div className="px-8 py-5 bg-slate-50 border-t border-slate-100 flex flex-wrap gap-4 items-center">
                 {[
                   { icon: <Lock className="w-3.5 h-3.5" />, label: 'Secure checkout' },
@@ -313,7 +316,7 @@ export default function DonateWidget() {
               <div className="border-t border-white/10 pt-4">
                 <div className="flex items-center gap-2 mb-1.5">
                   <span className="font-semibold text-gold-light text-[13px]">Give Lively</span>
-                  <span className="font-mono text-[9px] bg-gold/20 text-gold px-1.5 py-0.5 rounded-full">Coming Soon</span>
+                  <span className="font-mono text-[9px] bg-green-500/20 text-green-300 px-1.5 py-0.5 rounded-full">Live</span>
                 </div>
                 <ul className="space-y-2">
                   {[
