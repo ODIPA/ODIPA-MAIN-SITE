@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { Lock, Receipt, RefreshCw, CreditCard, Clock } from 'lucide-react'
 
@@ -55,15 +55,30 @@ export default function DonateWidget() {
     }
   }, [method])
 
-  // Load Give Lively SDK
+  // Load Give Lively SDK — must load AFTER widget div is in DOM
+  const glWidgetRef = useRef<HTMLDivElement>(null)
+
   useEffect(() => {
     if (method !== 'givelively') return
-    const script = document.createElement('script')
-    script.src = `https://secure.givelively.org/widgets/branded_donation/${GIVE_LIVELY_SLUG}.js`
-    script.async = true
-    document.body.appendChild(script)
+    if (!GIVE_LIVELY_SLUG) return
+
+    // Remove any existing Give Lively script to avoid duplicates
+    const existing = document.getElementById('gl-script')
+    if (existing) existing.remove()
+
+    // Small delay to ensure React has rendered the widget div
+    const timer = setTimeout(() => {
+      const script = document.createElement('script')
+      script.id = 'gl-script'
+      script.src = `https://secure.givelively.org/widgets/branded_donation/${GIVE_LIVELY_SLUG}.js`
+      script.async = true
+      document.getElementsByTagName('head')[0].appendChild(script)
+    }, 100)
+
     return () => {
-      if (document.body.contains(script)) document.body.removeChild(script)
+      clearTimeout(timer)
+      const s = document.getElementById('gl-script')
+      if (s) s.remove()
     }
   }, [method])
 
@@ -237,6 +252,7 @@ export default function DonateWidget() {
               {/* Give Lively branded widget renders here */}
               <div className="p-2">
                 <div
+                  ref={glWidgetRef}
                   id="give-lively-widget"
                   className="gl-branded-donation-widget"
                   data-widget-src={`https://secure.givelively.org/donate/${GIVE_LIVELY_SLUG}?ref=sd_widget`}
