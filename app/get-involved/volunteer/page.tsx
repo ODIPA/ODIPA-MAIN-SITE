@@ -77,8 +77,8 @@ const roles = [
 
 const process = [
   { num: '01', title: 'Apply', desc: 'Submit your volunteer application below with your background, skills, and availability.' },
-  { num: '02', title: 'Intro Call', desc: 'A 20-minute call with our volunteer coordinator to discuss your interests and match you with the right role.' },
-  { num: '03', title: 'Onboarding', desc: 'Complete a short onboarding process — background context, tools access, and intro to your team lead.' },
+  { num: '02', title: 'Intro Call', desc: 'A 20-minute call with our founder to discuss your interests and match you with the right role.' },
+  { num: '03', title: 'Onboarding', desc: 'Complete a short onboarding process covering background context, tools access, and your first assignment.' },
   { num: '04', title: 'Contribute', desc: 'Start making an impact. Most volunteers contribute remotely on a flexible schedule.' },
 ]
 
@@ -88,7 +88,7 @@ const faqs = [
   { q: 'Do I need privacy expertise to volunteer?', a: 'Not necessarily. While some roles require specific expertise (e.g., privacy law, software development), others need general skills like writing, translation, or community organizing. We train volunteers on privacy fundamentals.' },
   { q: 'What credentials do I need to be a Certification Assessor?', a: 'Assessors must hold at least one active, recognized credential relevant to privacy or information security — such as CIPP/US, CIPP/E, CIPM, CISA, CISSP, QSA, CHPC, or CAMS. Credentials must be current and in good standing. Lapsed credentials require renewal before assessor assignments resume. If you are working toward a credential, apply now and we will match you to an assessor shadow role while you complete certification.' },
   { q: 'Is there a background check?', a: 'Volunteers in roles involving direct community outreach or certification program work may be asked to complete a basic background check. This will be communicated clearly during onboarding.' },
-  { q: 'Can I volunteer as part of a corporate social responsibility program?', a: 'Yes. Many of our volunteers are supported by their employers through CSR programs. If your company offers volunteer time off (VTO) or skills-based volunteering programs, ODIPA qualifies. Contact volunteer@odipa.org for a corporate volunteer letter.' },
+  { q: 'Can I volunteer as part of a corporate social responsibility program?', a: 'Yes. As a 501(c)(3), ODIPA qualifies for employer CSR programs. If your company offers volunteer time off (VTO) or skills-based volunteering, contact volunteer@odipa.org for a corporate volunteer letter.' },
 ]
 
 export default function VolunteerPage() {

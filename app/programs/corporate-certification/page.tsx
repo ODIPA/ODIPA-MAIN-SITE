@@ -87,7 +87,7 @@ const methodologySteps = [
   {
     num: '01',
     title: 'Credential Matching',
-    desc: 'Every assessment is staffed by assessors holding credentials directly relevant to the organization\'s industry and applicable frameworks. A healthcare applicant is assessed by a CHPC/CIPP-credentialed assessor; a financial services applicant by CAMS/CIPP assessors.',
+    desc: 'Every assessment must be staffed by assessors holding credentials directly relevant to the organization\'s industry and applicable frameworks. A healthcare applicant is assessed by a CHPC/CIPP-credentialed assessor; a financial services applicant by CAMS/CIPP assessors.',
   },
   {
     num: '02',
@@ -97,17 +97,17 @@ const methodologySteps = [
   {
     num: '03',
     title: 'Independent Review Panel',
-    desc: 'Certification decisions are made by a minimum two-assessor panel. No single assessor can unilaterally certify or deny an organization. Decisions are documented and retained.',
+    desc: 'Certification decisions require a minimum two-assessor panel. No single assessor can unilaterally certify or deny an organization, and no certification is issued until a full panel is seated. Decisions are documented and retained.',
   },
   {
     num: '04',
     title: 'Conflicts of Interest Policy',
-    desc: 'Assessors may not evaluate organizations they have a financial, employment, or advisory relationship with. All assessors sign ODIPA\'s conflict-of-interest disclosure annually.',
+    desc: 'Assessors may not evaluate organizations they have a financial, employment, or advisory relationship with. Every assessor must sign ODIPA\'s conflict-of-interest disclosure annually before taking assignments.',
   },
   {
     num: '05',
     title: 'Continuing Education',
-    desc: 'ODIPA assessors maintain active credentials and complete continuing education on evolving privacy law. Credential lapses result in suspension from the assessor panel pending renewal.',
+    desc: 'Assessors are required to maintain active credentials and complete continuing education on evolving privacy law. Credential lapses result in suspension from assessor assignments pending renewal.',
   },
   {
     num: '06',

@@ -96,7 +96,6 @@ export default function ContactForm() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (honeypot) return
-    e.preventDefault()
     if (!validate()) return
     setState('submitting')
     try {
@@ -104,6 +103,7 @@ export default function ContactForm() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
         body: JSON.stringify({
+          topic:          form.topic,
           'Topic':        selectedTopic?.label ?? form.topic,
           'Name':         form.name,
           'Email':        form.email,

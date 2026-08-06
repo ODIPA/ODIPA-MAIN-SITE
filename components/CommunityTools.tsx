@@ -210,7 +210,7 @@ function ToolCard({ tool }: { tool: typeof APPROVED_TOOLS[0] }) {
         <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor" className="flex-shrink-0">
           <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm3.78-9.72a.75.75 0 0 0-1.06-1.06L6.75 9.19 5.28 7.72a.75.75 0 0 0-1.06 1.06l2 2a.75.75 0 0 0 1.06 0l4.5-4.5z"/>
         </svg>
-        ODIPA Reviewed &amp; Approved · {tool.approvedDate}
+        ODIPA Built &amp; Maintained · {tool.approvedDate}
       </div>
     </div>
   )
@@ -241,8 +241,8 @@ export default function CommunityTools() {
             <span className="block w-5 h-px bg-blue-brand" />Community Privacy Tools
           </div>
           <p className="text-[14px] text-slate-500 max-w-[480px]">
-            {APPROVED_TOOLS.length} open-source tools built and donated by the ODIPA community.
-            All tools are reviewed, security-audited, and approved before listing.
+            {APPROVED_TOOLS.length} open-source tools built and maintained by ODIPA.
+            Community submissions are welcome. Every submitted tool is reviewed, security-audited, and approved before listing.
           </p>
         </div>
         <Link href="#submit-tool"

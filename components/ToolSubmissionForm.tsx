@@ -73,8 +73,8 @@ const inputCls = "w-full px-4 py-3 rounded-lg border border-slate-200 bg-white t
 
 const APPROVAL_STEPS = [
   { num: '01', title: 'Submit',         time: 'Immediate', desc: 'Fill out the form. We acknowledge receipt within 2 business days.', icon: <Send className="w-5 h-5" /> },
-  { num: '02', title: 'Initial Review', time: '1–2 weeks', desc: 'ODIPA dev team reviews code quality, documentation, and stated purpose.', icon: <Search className="w-5 h-5" /> },
-  { num: '03', title: 'Security Audit', time: '1–3 weeks', desc: 'Volunteer security engineers run dependency scans, static analysis, and manual review.', icon: <Shield className="w-5 h-5" /> },
+  { num: '02', title: 'Initial Review', time: '1–2 weeks', desc: 'ODIPA reviews code quality, documentation, and stated purpose.', icon: <Search className="w-5 h-5" /> },
+  { num: '03', title: 'Security Audit', time: '1–3 weeks', desc: 'A security review covering dependency scans, static analysis, and manual code review, conducted by ODIPA with volunteer security reviewers as the program grows.', icon: <Shield className="w-5 h-5" /> },
   { num: '04', title: 'Board Approval', time: '1 week',    desc: 'ODIPA board confirms the tool aligns with our mission and community standards.', icon: <BadgeCheck className="w-5 h-5" /> },
   { num: '05', title: 'Listed',         time: 'Ongoing',   desc: 'Your tool appears in the Community Privacy Tools directory and is promoted to our community.', icon: <Rocket className="w-5 h-5" /> },
 ]
@@ -178,7 +178,7 @@ export default function ToolSubmissionForm() {
         <h3 className="font-display text-[24px] font-bold text-navy mb-3">Tool Submitted!</h3>
         <p className="text-[14px] text-slate-500 leading-[1.8] mb-2">
           We&apos;ve received your submission for <strong className="text-navy">{form.name}</strong>.
-          Our team will acknowledge receipt within 2 business days and begin the review process.
+          We will acknowledge receipt within 2 business days and begin the review process.
         </p>
         <p className="text-[13px] text-slate-400 mb-7">Review typically takes 4–6 weeks end-to-end.</p>
         <div className="flex justify-center gap-3">

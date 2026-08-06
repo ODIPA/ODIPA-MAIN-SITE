@@ -20,8 +20,9 @@ import { useEffect, useState } from 'react'
 const GITHUB_OWNER = 'odipa'
 const GITHUB_REPO  = 'odipa-privacy-tools'   // The repo where tool submissions are tracked as Issues
 
-// Fallback counts shown while loading or on API error
-const FALLBACK = { review: 3, audit: 1, approved: 6 }
+// Fallback counts shown while loading or on API error.
+// review/audit default to 0 so we never display an invented queue.
+const FALLBACK = { review: 0, audit: 0, approved: 6 }
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface Counts {
@@ -142,7 +143,7 @@ export default function ToolReviewStatus() {
         </a>
         {status === 'fallback' && (
           <p className="font-mono text-[9px] text-amber-400/60 leading-relaxed">
-            Live counts unavailable — showing cached data.
+            Live counts unavailable. Review and audit queues shown as zero until GitHub data loads.
           </p>
         )}
         {status === 'live' && updated && (
