@@ -14,7 +14,7 @@ const filledSeats = [
   {
     name: 'Jasper Vale',
     title: 'Chair, Board of Directors',
-    bio: "VP of Software Development with 15+ years in enterprise software, banking technology, and privacy-first architecture. ODIPA's founding Board Chair.",
+    bio: "Software Engineering Leader with 15+ years in enterprise software, banking technology, and privacy-first architecture. ODIPA's founding Board Chair.",
     initials: 'JV',
     isChair: true,
   },
