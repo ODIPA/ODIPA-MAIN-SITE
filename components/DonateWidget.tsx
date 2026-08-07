@@ -155,7 +155,7 @@ export default function DonateWidget() {
 
             {/* Logo watermark */}
             <div className="hidden lg:flex justify-center items-center opacity-10">
-              <Image src="/logo-dark.png" alt="" width={300} height={100} className="w-[280px] h-auto object-contain" aria-hidden />
+              <Image src="/logo-dark-md.png" alt="" width={559} height={224} className="w-[280px] h-auto object-contain" aria-hidden />
             </div>
           </div>
         </div>

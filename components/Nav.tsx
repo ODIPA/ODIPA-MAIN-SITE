@@ -34,11 +34,11 @@ export default function Nav() {
       {/* Brand — logo image on dark nav */}
       <a href={isHome ? '#hero' : '/'} className="flex items-center gap-3 no-underline group">
         <Image
-          src="/logo-dark.png"
+          src="/logo-dark-sm.png"
           alt="ODIPA — Organization for Digital Information Privacy & Awareness"
-          width={160}
-          height={40}
-          className="h-12 w-auto object-contain transition-opacity duration-200 group-hover:opacity-80"
+          width={280}
+          height={112}
+          className={`${scrolled ? 'h-11' : 'h-14'} w-auto object-contain transition-all duration-300 group-hover:opacity-80`}
           priority
         />
         <span className="font-mono text-[9px] text-gold-light uppercase tracking-[2px] hidden sm:block">

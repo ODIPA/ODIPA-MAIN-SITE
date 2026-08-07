@@ -48,7 +48,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 pb-12 border-b border-white/[0.06] mb-8">
           {/* Brand */}
           <div className="lg:col-span-2">
-            <Image src="/logo-dark.png" alt="ODIPA" width={180} height={46} className="h-14 w-auto object-contain mb-2" />
+            <Image src="/logo-dark-sm.png" alt="ODIPA" width={280} height={112} className="h-14 w-auto object-contain mb-2" />
             <div className="font-mono text-[12px] text-gold-light tracking-[1px] mb-4">
               Organization for Digital Information Privacy &amp; Awareness
             </div>

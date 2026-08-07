@@ -59,10 +59,10 @@ export default function CookieConsent() {
           {/* Header */}
           <div className="flex items-center gap-3 mb-4">
             <Image
-              src="/logo-dark.png"
+              src="/logo-dark-sm.png"
               alt="ODIPA"
-              width={80}
-              height={27}
+              width={280}
+              height={112}
               className="h-7 w-auto object-contain opacity-90"
             />
             <div className="h-5 w-px bg-white/10" />

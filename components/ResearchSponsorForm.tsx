@@ -641,7 +641,7 @@ export default function ResearchSponsorForm({ preselect }: { preselect?: string 
 
           {/* Logo + status */}
           <div className="bg-navy rounded-2xl p-6 flex flex-col items-start gap-4">
-            <Image src="/logo-dark.png" alt="ODIPA" width={120} height={40} className="h-10 w-auto" />
+            <Image src="/logo-dark-sm.png" alt="ODIPA" width={280} height={112} className="h-10 w-auto" />
             <p className="text-[13px] text-white/60 leading-relaxed">
               ODIPA is a 501(c)(3) tax-exempt nonprofit. Research sponsorships may be
               tax-deductible to the extent permitted by law — consult your tax advisor.

@@ -18,8 +18,8 @@ export default function DonateCTA() {
         <Image
           src="/logo-dark.png"
           alt=""
-          width={700}
-          height={233}
+          width={1280}
+          height={634}
           className="w-[700px] h-auto object-contain"
         />
       </div>

@@ -179,7 +179,7 @@ export default function ContactForm() {
               </p>
             </div>
             <div className="hidden lg:flex justify-center opacity-[0.08]">
-              <Image src="/logo-dark.png" alt="" width={280} height={90} className="w-[260px] h-auto" aria-hidden />
+              <Image src="/logo-dark-md.png" alt="" width={559} height={224} className="w-[260px] h-auto" aria-hidden />
             </div>
           </div>
         </div>
