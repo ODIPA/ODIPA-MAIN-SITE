@@ -63,7 +63,7 @@ export default function NewsletterSignup({ variant = 'footer', source = 'Website
           <div className="flex items-center gap-3 py-3">
             <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
             <div>
-              <p className="text-[14px] font-semibold text-white">You&apos;re subscribed!</p>
+              <p className="text-[14px] font-semibold text-white">Almost there, check your inbox!</p>
               <p className="text-[12px] text-white/50">We&apos;ll send you privacy news and ODIPA updates.</p>
             </div>
           </div>

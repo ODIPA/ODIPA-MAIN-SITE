@@ -1,9 +1,10 @@
 {
   "name": "odipa-api",
   "version": "1.0.0",
-  "description": "ODIPA Azure Functions — self-hosted form handlers, no third-party data storage",
+  "description": "ODIPA Azure Functions \u2014 self-hosted form handlers, no third-party data storage",
   "scripts": {},
   "dependencies": {
-    "@azure/communication-email": "^1.1.0"
+    "@azure/communication-email": "^1.1.0",
+    "@azure/data-tables": "^13.2.2"
   }
 }

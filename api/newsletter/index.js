@@ -4,7 +4,8 @@
  *
  */
 
-const { sendFormEmail, respond, clean } = require('../_shared/mailer')
+const { sendFormEmail, sendHtmlEmail, respond, clean } = require('../_shared/mailer')
+const { upsertPending, confirmLink, unsubscribeLink } = require('../_shared/subscribers')
 const { checkRateLimit, getClientIp } = require('../_shared/rateLimiter')
 
 // ─── Optional ESP helpers ─────────────────────────────────────────────────────
@@ -85,6 +86,30 @@ module.exports = async function handler(context, req) {
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return respond(context, 400, { error: 'A valid email address is required.' })
     }
+    // First-party persistence + double opt-in.
+    // The subscriber is stored as pending and receives a confirmation email.
+    // Only confirmed subscribers ever receive the newsletter.
+    const record = await upsertPending({ email, name, source: clean(body.source, 100) || 'Website' })
+    if (record.status !== 'confirmed') {
+      const cLink = confirmLink(email)
+      const uLink = unsubscribeLink(email)
+      await sendHtmlEmail({
+        to: email,
+        subject: 'Confirm your ODIPA newsletter subscription',
+        html: `
+          <div style="font-family:Arial,Helvetica,sans-serif;max-width:520px;margin:0 auto;color:#1C2536">
+            <h2 style="color:#0B1F3A">Confirm your subscription</h2>
+            <p>Thanks for signing up for the ODIPA newsletter. One click confirms it was really you.</p>
+            <p style="margin:28px 0">
+              <a href="${cLink}" style="background:#B98A2E;color:#0B1F3A;font-weight:bold;padding:12px 22px;border-radius:8px;text-decoration:none">Confirm subscription</a>
+            </p>
+            <p style="font-size:12px;color:#667">If you did not sign up, ignore this email and nothing further will be sent.
+            You can unsubscribe at any time using the link in every newsletter, or <a href="${uLink}">right now</a>.</p>
+            <p style="font-size:12px;color:#667">ODIPA is a 501(c)(3) nonprofit. Your address is stored by ODIPA only and is never shared or sold.</p>
+          </div>`,
+      })
+    }
+
 
     // Always send internal notification
     await sendFormEmail({

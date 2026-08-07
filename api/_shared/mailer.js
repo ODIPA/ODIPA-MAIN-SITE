@@ -106,4 +106,15 @@ function respond(context, status, body) {
   }
 }
 
-module.exports = { sendFormEmail, respond, clean }
+async function sendHtmlEmail({ to, subject, html }) {
+  const client = getClient()
+  const sender = getSender()
+  const poller = await client.beginSend({
+    senderAddress: sender,
+    content: { subject, html },
+    recipients: { to: [{ address: to }] },
+  })
+  await poller.pollUntilDone()
+}
+
+module.exports = { sendFormEmail, sendHtmlEmail, respond, clean }
