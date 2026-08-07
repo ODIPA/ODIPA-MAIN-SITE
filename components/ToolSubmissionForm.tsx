@@ -198,9 +198,13 @@ export default function ToolSubmissionForm() {
   return (
     <div id="submit-tool">
       {/* Approval process */}
-      <div className="inline-flex items-center gap-2.5 font-mono text-[11px] text-blue-brand uppercase tracking-[3px] mb-4">
+      <div className="inline-flex items-center gap-2.5 font-mono text-[11px] text-blue-brand uppercase tracking-[3px] mb-2">
         <span className="block w-5 h-px bg-blue-brand" />Approval Process
       </div>
+      <p className="text-[12px] text-slate-500 mb-4">
+        Full details of every listing status, including the Needs Help community project tier,
+        are in our <a href="/get-involved/tool-listing-policy" className="text-blue-brand underline">Tool Listing Policy</a>.
+      </p>
       <div className="overflow-x-auto -mx-6 px-6 sm:mx-0 sm:px-0">
         <div className="grid grid-cols-5 gap-px bg-slate-200 rounded-xl overflow-hidden mb-10 min-w-[480px] sm:min-w-0">
           {APPROVAL_STEPS.map((s, i) => (

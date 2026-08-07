@@ -6,7 +6,32 @@ import Link from 'next/link'
 // ─── Seed data — approved community tools ────────────────────────────────────
 // Add approved tools here after they clear the review process.
 // Each tool that passes review gets added to this array.
-const APPROVED_TOOLS = [
+type Tool = {
+  id: string
+  name: string
+  tagline: string
+  desc: string
+  category: string
+  author: string
+  authorHandle: string
+  lang: string
+  platform: string[]
+  license: string
+  github: string
+  docs: string
+  stars: number
+  featured: boolean
+  approvedDate?: string
+  tags: string[]
+  // 'approved' tools passed the full review process. 'needs-help' tools are
+  // community projects featured for contribution. They are experimental and
+  // not reviewed, a project to help build, not a tool we recommend using yet.
+  status?: 'approved' | 'needs-help'
+  // For needs-help projects, where contributors should go (usually the issues page)
+  contribute?: string
+}
+
+const APPROVED_TOOLS: Tool[] = [
   {
     id: 'cookie-harvester',
     name: 'Cookie Harvester & Analyzer',
@@ -117,8 +142,39 @@ const APPROVED_TOOLS = [
   },
 ]
 
-const CATEGORIES = ['All', ...Array.from(new Set(APPROVED_TOOLS.map(t => t.category)))]
-const LANGS = ['All Languages', ...Array.from(new Set(APPROVED_TOOLS.map(t => t.lang)))]
+// ─── Community projects (Needs Help) ─────────────────────────────────────────
+// Projects here are featured for community contribution with author consent.
+// They have NOT passed review. The card shows a Needs Help badge, an
+// experimental notice, and a Contribute call to action instead of approval.
+// A project graduates to APPROVED_TOOLS after the gaps close and it passes
+// the full review process.
+const COMMUNITY_PROJECTS: Tool[] = [
+  // Staged entry. Enable after the author confirms participation.
+  // {
+  //   id: 'elm-chat',
+  //   name: 'elm.chat',
+  //   tagline: 'Disposable encrypted chat rooms with no accounts or server-side transcript.',
+  //   desc: 'An AGPL web messenger for account-free, temporary conversations. Browser clients encrypt content before a relay forwards ciphertext. Early stage. Message authentication and replay protection are the headline community challenge before this tool can be reviewed and approved.',
+  //   category: 'Encryption / Anonymization',
+  //   author: 'Shawn Bure',
+  //   authorHandle: '@shawnbure',
+  //   lang: 'TypeScript',
+  //   platform: ['Web App', 'Cross-platform'],
+  //   license: 'AGPL-3.0',
+  //   github: 'https://github.com/odipa/elm-chat',
+  //   docs: 'https://elm.chat/security-and-limitations',
+  //   contribute: 'https://github.com/odipa/elm-chat/issues',
+  //   stars: 0,
+  //   featured: false,
+  //   status: 'needs-help',
+  //   tags: ['encryption', 'messaging', 'ephemeral', 'TypeScript', 'needs help'],
+  // },
+]
+
+const ALL_TOOLS: Tool[] = [...APPROVED_TOOLS, ...COMMUNITY_PROJECTS]
+
+const CATEGORIES = ['All', ...Array.from(new Set(ALL_TOOLS.map(t => t.category)))]
+const LANGS = ['All Languages', ...Array.from(new Set(ALL_TOOLS.map(t => t.lang)))]
 
 const LANG_COLORS: Record<string, string> = {
   Python:     'bg-blue-100 text-blue-700',
@@ -139,7 +195,7 @@ function StarIcon({ n }: { n: number }) {
   )
 }
 
-function ToolCard({ tool }: { tool: typeof APPROVED_TOOLS[0] }) {
+function ToolCard({ tool }: { tool: Tool }) {
   return (
     <div className={`bg-white rounded-xl border-2 p-6 flex flex-col gap-4 hover:shadow-md transition-all group ${
       tool.featured ? 'border-gold/40 hover:border-gold' : 'border-slate-200 hover:border-blue-brand/30'
@@ -154,6 +210,11 @@ function ToolCard({ tool }: { tool: typeof APPROVED_TOOLS[0] }) {
             {tool.featured && (
               <span className="font-mono text-[10px] text-gold bg-gold/10 border border-gold/30 px-2 py-0.5 rounded-full flex items-center gap-1">
                 ✦ Featured
+              </span>
+            )}
+            {tool.status === 'needs-help' && (
+              <span className="font-mono text-[10px] text-amber-700 bg-amber-50 border border-amber-300 px-2 py-0.5 rounded-full flex items-center gap-1">
+                ⚑ Needs Help
               </span>
             )}
           </div>
@@ -205,13 +266,31 @@ function ToolCard({ tool }: { tool: typeof APPROVED_TOOLS[0] }) {
         </div>
       </div>
 
-      {/* ODIPA badge */}
-      <div className="flex items-center gap-1.5 text-[10px] font-mono text-green-600 bg-green-50 border border-green-200 rounded-lg px-3 py-1.5">
-        <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor" className="flex-shrink-0">
-          <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm3.78-9.72a.75.75 0 0 0-1.06-1.06L6.75 9.19 5.28 7.72a.75.75 0 0 0-1.06 1.06l2 2a.75.75 0 0 0 1.06 0l4.5-4.5z"/>
-        </svg>
-        ODIPA Built &amp; Maintained · {tool.approvedDate}
-      </div>
+      {/* Status badge */}
+      {tool.status === 'needs-help' ? (
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-1.5 text-[10px] font-mono text-amber-700 bg-amber-50 border border-amber-300 rounded-lg px-3 py-1.5">
+            <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor" className="flex-shrink-0">
+              <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0zm0 4a.75.75 0 0 0-.75.75v3.5a.75.75 0 0 0 1.5 0v-3.5A.75.75 0 0 0 8 4zm0 8a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
+            </svg>
+            Needs Help · Community Project · Not yet reviewed
+          </div>
+          <p className="text-[11px] text-slate-500 leading-snug">
+            Experimental. A project to help build, not a tool we recommend using yet.
+          </p>
+          <a href={tool.contribute || tool.github} target="_blank" rel="noopener noreferrer"
+            className="font-mono text-[11px] font-semibold text-amber-800 bg-amber-100 hover:bg-amber-200 border border-amber-300 rounded-lg px-3 py-1.5 text-center no-underline transition-colors">
+            Contribute on GitHub →
+          </a>
+        </div>
+      ) : (
+        <div className="flex items-center gap-1.5 text-[10px] font-mono text-green-600 bg-green-50 border border-green-200 rounded-lg px-3 py-1.5">
+          <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor" className="flex-shrink-0">
+            <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm3.78-9.72a.75.75 0 0 0-1.06-1.06L6.75 9.19 5.28 7.72a.75.75 0 0 0-1.06 1.06l2 2a.75.75 0 0 0 1.06 0l4.5-4.5z"/>
+          </svg>
+          ODIPA Built &amp; Maintained · {tool.approvedDate}
+        </div>
+      )}
     </div>
   )
 }
@@ -222,14 +301,18 @@ export default function CommunityTools() {
   const [lang, setLang] = useState('All Languages')
 
   const filtered = useMemo(() => {
-    return APPROVED_TOOLS.filter(t => {
+    return ALL_TOOLS.filter(t => {
       const q = search.toLowerCase()
       const matchSearch = !q || t.name.toLowerCase().includes(q) ||
         t.desc.toLowerCase().includes(q) || t.tags.some(tag => tag.toLowerCase().includes(q))
       const matchCat  = category === 'All' || t.category === category
       const matchLang = lang === 'All Languages' || t.lang === lang
       return matchSearch && matchCat && matchLang
-    }).sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0) || b.stars - a.stars)
+    }).sort((a, b) =>
+      ((a.status === 'needs-help' ? 1 : 0) - (b.status === 'needs-help' ? 1 : 0)) ||
+      ((b.featured ? 1 : 0) - (a.featured ? 1 : 0)) ||
+      (b.stars - a.stars)
+    )
   }, [search, category, lang])
 
   return (
