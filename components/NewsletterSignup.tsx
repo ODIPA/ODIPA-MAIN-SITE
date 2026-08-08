@@ -64,7 +64,7 @@ export default function NewsletterSignup({ variant = 'footer', source = 'Website
             <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
             <div>
               <p className="text-[14px] font-semibold text-white">Almost there, check your inbox!</p>
-              <p className="text-[12px] text-white/50">We&apos;ll send you privacy news and ODIPA updates.</p>
+              <p className="text-[12px] text-white/50">Click the confirmation link we just sent to finish subscribing.</p>
             </div>
           </div>
         ) : (
@@ -137,8 +137,8 @@ export default function NewsletterSignup({ variant = 'footer', source = 'Website
                 <CheckCircle className="w-6 h-6 text-green-400" />
               </div>
               <div>
-                <p className="font-display text-[20px] font-bold text-white">You&apos;re on the list!</p>
-                <p className="text-[14px] text-white/55">Expect privacy news, research releases, and ODIPA updates — never spam.</p>
+                <p className="font-display text-[20px] font-bold text-white">Almost there, check your inbox!</p>
+                <p className="text-[14px] text-white/55">Click the confirmation link we just sent to start receiving privacy news, research releases, and ODIPA updates. Never spam.</p>
               </div>
             </div>
           ) : (
@@ -226,8 +226,8 @@ export default function NewsletterSignup({ variant = 'footer', source = 'Website
         <div className="flex items-start gap-3 py-2">
           <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="font-semibold text-[14px] text-navy">Subscribed!</p>
-            <p className="text-[12px] text-slate-500 mt-0.5">We&apos;ll keep you updated on privacy news and ODIPA releases.</p>
+            <p className="font-semibold text-[14px] text-navy">Almost there, check your inbox!</p>
+            <p className="text-[12px] text-slate-500 mt-0.5">Click the confirmation link we just sent to finish subscribing.</p>
           </div>
         </div>
       ) : (
