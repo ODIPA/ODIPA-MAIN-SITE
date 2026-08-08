@@ -159,12 +159,21 @@ export default function NewsletterAdminDashboard() {
   }
 
   async function generateDraft() {
-    setBusy('generate'); setComposerMsg('Researching real breaches, laws, and tips with web search. This can take up to a minute.')
-    try {
-      const d = await adminPost('/api/newsletter-generate', { month, extraNotes })
-      setBreaches(d.breaches || []); setLaws(d.laws || []); setTips(d.tips || [])
-      setComposerMsg('Draft researched. Verify every item and source link, add your Research Releases, then test and send. You are the editor, the AI only drafts.')
-    } catch (e: any) { setComposerMsg(e.message) }
+    setBusy('generate'); setComposerMsg('Researching breaches, laws, and tips in parallel with web search. Sections appear as each finishes, usually within 30 seconds.')
+    const setters: Record<string, (i: Item[]) => void> = { breaches: setBreaches, laws: setLaws, tips: setTips }
+    const results = await Promise.allSettled(
+      (['breaches', 'laws', 'tips'] as const).map(async section => {
+        const d = await adminPost('/api/newsletter-generate', { section, month, extraNotes })
+        setters[section](d.items || [])
+        return section
+      })
+    )
+    const failed = results
+      .map((r, i) => (r.status === 'rejected' ? ['breaches', 'laws', 'tips'][i] : null))
+      .filter(Boolean)
+    setComposerMsg(failed.length === 0
+      ? 'Draft researched. Verify every item and source link, add your Research Releases, then test and send. You are the editor, the AI only drafts.'
+      : `Done with issues. These sections failed and can be retried by clicking the button again: ${failed.join(', ')}. Successful sections are filled in.`)
     setBusy('')
   }
 

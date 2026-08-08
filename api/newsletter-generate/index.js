@@ -1,12 +1,28 @@
 /**
  * ODIPA Newsletter Generate, POST /api/newsletter-generate
  * Admin-only. Requires header x-admin-key matching NEWSLETTER_ADMIN_KEY.
- * Body: { month, extraNotes? }
- * Uses the Anthropic API with server side web search to research real,
- * current items for the monthly digest. Returns structured sections for
- * human review in the composer. Nothing is ever sent automatically.
+ * Body: { section: 'breaches' | 'laws' | 'tips', month, extraNotes? }
+ * Researches ONE digest section per call using the Anthropic API with web
+ * search. Single-section calls stay well under the Static Web Apps
+ * 45 second limit. The dashboard fires the three sections in parallel.
+ * Nothing is ever sent automatically, a human reviews in the composer.
  */
 const { respond, clean } = require('../_shared/mailer')
+
+const SECTIONS = {
+  breaches: {
+    ask: '2 to 3 significant data breaches or exposures from roughly the past month. Each item must include the source URL.',
+    label: 'Breach Alerts',
+  },
+  laws: {
+    ask: '2 to 3 new or advancing privacy laws or regulations, state, federal, or international. Each item must include the source URL.',
+    label: 'New Privacy Laws',
+  },
+  tips: {
+    ask: '2 to 3 practical data protection tips for consumers or small organizations, tied to current events where natural. Tips may omit the url.',
+    label: 'Practical Tips',
+  },
+}
 
 module.exports = async function handler(context, req) {
   if (req.method === 'OPTIONS') return respond(context, 200, {})
@@ -20,20 +36,20 @@ module.exports = async function handler(context, req) {
     if (!apiKey) return respond(context, 400, { error: 'ANTHROPIC_API_KEY is not configured in app settings.' })
 
     const body = req.body || {}
+    const section = SECTIONS[String(body.section || '')]
+    if (!section) return respond(context, 400, { error: 'section must be breaches, laws, or tips.' })
     const month = clean(body.month, 40) || new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' })
-    const extraNotes = clean(body.extraNotes, 2000)
+    const extraNotes = clean(body.extraNotes, 1000)
 
     const system = [
-      'You research and draft sections of the ODIPA Privacy Monthly Digest, the email newsletter of a California 501(c)(3) digital privacy education nonprofit.',
-      'Use web search to find real, recent, verifiable items. Every item must come from an actual source found in search, with its URL. Never invent a breach, law, statistic, or date. If search yields fewer solid items than asked, return fewer.',
-      'Voice: plain, direct, practical, written for consumers and small organizations who care about privacy but are not experts.',
+      `You research one section, ${section.label}, of the ODIPA Privacy Monthly Digest, the email newsletter of a California 501(c)(3) digital privacy education nonprofit.`,
+      'Use web search, at most 3 searches, to find real, recent, verifiable items. Every item must come from an actual source found in search. Never invent a breach, law, statistic, or date. If search yields fewer solid items than asked, return fewer.',
+      'Voice: plain, direct, practical, for consumers and small organizations who are not experts.',
       'Hard rules: never use em dashes anywhere. Do not use colons inside sentences. Two to three sentences per summary.',
-      'After your research, end your reply with ONLY a JSON object, no markdown fences, in exactly this shape:',
-      '{"breaches":[{"title":"","summary":"","url":""}],"laws":[{"title":"","summary":"","url":""}],"tips":[{"title":"","summary":"","url":""}]}',
-      'breaches: 2 to 4 significant data breaches or exposures from roughly the past month. laws: 2 to 3 new or advancing privacy laws or regulations. tips: 2 to 3 practical data protection tips, tied to the news where natural (tips may omit url).',
+      'End your reply with ONLY a JSON array, no markdown fences, in exactly this shape:',
+      '[{"title":"","summary":"","url":""}]',
+      `Items wanted: ${section.ask}`,
     ].join(' ')
-
-    const userMsg = `Research and draft the ${month} issue of the ODIPA Privacy Monthly Digest.${extraNotes ? ` Editor notes to consider, use only if verifiable or clearly editorial guidance. ${extraNotes}` : ''}`
 
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -44,9 +60,9 @@ module.exports = async function handler(context, req) {
       },
       body: JSON.stringify({
         model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-5',
-        max_tokens: 4000,
+        max_tokens: 1500,
         system,
-        messages: [{ role: 'user', content: userMsg }],
+        messages: [{ role: 'user', content: `Research the ${section.label} section for the ${month} issue.${extraNotes ? ` Editor notes. ${extraNotes}` : ''}` }],
         tools: [{ type: 'web_search_20250305', name: 'web_search' }],
       }),
     })
@@ -58,24 +74,19 @@ module.exports = async function handler(context, req) {
     const data = await res.json()
     const text = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n')
     const cleaned = text.replace(/```json|```/g, '')
-    const start = cleaned.indexOf('{')
-    const end = cleaned.lastIndexOf('}')
+    const start = cleaned.indexOf('[')
+    const end = cleaned.lastIndexOf(']')
     if (start < 0 || end <= start) return respond(context, 502, { error: 'Generation returned an unexpected format. Try again.' })
 
-    let draft
-    try { draft = JSON.parse(cleaned.slice(start, end + 1)) } catch (e) {
+    let items
+    try { items = JSON.parse(cleaned.slice(start, end + 1)) } catch (e) {
       return respond(context, 502, { error: 'Generated JSON could not be parsed. Try again.' })
     }
-    const norm = arr => (Array.isArray(arr) ? arr : []).map(i => ({
+    const norm = (Array.isArray(items) ? items : []).map(i => ({
       title: clean(i.title, 200), summary: clean(i.summary, 600), url: clean(i.url, 500),
     })).filter(i => i.title && i.summary)
 
-    return respond(context, 200, {
-      month,
-      breaches: norm(draft.breaches),
-      laws: norm(draft.laws),
-      tips: norm(draft.tips),
-    })
+    return respond(context, 200, { section: String(body.section), month, items: norm })
   } catch (err) {
     context.log.error('newsletter-generate error:', err.message)
     return respond(context, 500, { error: 'Generation failed' })

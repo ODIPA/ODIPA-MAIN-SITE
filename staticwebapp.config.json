@@ -2,7 +2,9 @@
   "routes": [
     {
       "route": "/api/*",
-      "allowedRoles": ["anonymous"]
+      "allowedRoles": [
+        "anonymous"
+      ]
     },
     {
       "route": "/logo-dark.png",
@@ -30,7 +32,13 @@
   ],
   "navigationFallback": {
     "rewrite": "/index.html",
-    "exclude": ["/_next/*", "/images/*", "/api/*", "/*.{css,js,ico,png,jpg,svg,webp}", "/*.html"]
+    "exclude": [
+      "/_next/*",
+      "/images/*",
+      "/api/*",
+      "/*.{css,js,ico,png,jpg,svg,webp}",
+      "/*.html"
+    ]
   },
   "globalHeaders": {
     "X-Content-Type-Options": "nosniff",
@@ -43,5 +51,8 @@
   },
   "mimeTypes": {
     ".json": "text/json"
+  },
+  "platform": {
+    "apiRuntime": "node:20"
   }
 }
