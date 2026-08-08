@@ -32,10 +32,10 @@ function realItems(items: Item[]) {
 function assembleHtml(month: string, sections: { heading: string; items: Item[] }[]) {
   let html = `<p style="font-size:14px;color:#667">Your ${esc(month)} roundup of what happened in digital privacy and what to do about it.</p>`
   for (const sec of sections) {
-    sec = { ...sec, items: realItems(sec.items) }
-    if (sec.items.length === 0) continue
+    const items = realItems(sec.items)
+    if (items.length === 0) continue
     html += `<h2 style="color:#0B1F3A;font-size:19px;border-bottom:2px solid #B98A2E;padding-bottom:6px;margin-top:28px">${esc(sec.heading)}</h2>`
-    for (const it of sec.items) {
+    for (const it of items) {
       html += `<h3 style="color:#0B1F3A;font-size:15px;margin:16px 0 4px">${esc(it.title)}</h3>`
       html += `<p style="font-size:14px;line-height:1.7;color:#1C2536;margin:0">${esc(it.summary)}`
       if (it.url) html += ` <a href="${esc(it.url)}" style="color:#B98A2E">Source</a>`
