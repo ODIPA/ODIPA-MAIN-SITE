@@ -22,7 +22,13 @@ function wrapEmail(bodyHtml, unsubLink) {
       <div style="font-family:monospace;font-size:10px;letter-spacing:2px;color:#B98A2E;margin-top:8px">PRIVACY MONTHLY DIGEST</div>
     </div>
     ${bodyHtml}
-    <div style="border-top:1px solid #E4E1D8;margin-top:32px;padding-top:16px;font-size:12px;color:#667">
+    <div style="background:#F3E8CF;border-radius:8px;padding:18px 20px;margin-top:32px;text-align:center">
+      <p style="font-size:14px;color:#0B1F3A;margin:0 0 12px;font-weight:bold">Privacy education is free because people like you support it.</p>
+      <a href="https://www.odipa.org/donate" style="background:#B98A2E;color:#0B1F3A;font-weight:bold;padding:10px 18px;border-radius:8px;text-decoration:none;display:inline-block;margin:0 6px 6px 0">Donate</a>
+      <a href="https://www.odipa.org/get-involved/volunteer" style="border:2px solid #0B1F3A;color:#0B1F3A;font-weight:bold;padding:8px 18px;border-radius:8px;text-decoration:none;display:inline-block;margin:0 0 6px 0">Volunteer</a>
+      <p style="font-size:12px;color:#667;margin:8px 0 0">All our tools are free and open source at <a href="https://www.odipa.org/programs/open-source-development" style="color:#B98A2E">odipa.org</a>.</p>
+    </div>
+    <div style="border-top:1px solid #E4E1D8;margin-top:24px;padding-top:16px;font-size:12px;color:#667">
       <p>You are receiving this because you confirmed your subscription at odipa.org.</p>
       <p><a href="${unsubLink}" style="color:#B98A2E">Unsubscribe</a> at any time, one click, no questions.</p>
       <p>${postal}</p>

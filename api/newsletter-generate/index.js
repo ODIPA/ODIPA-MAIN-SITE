@@ -22,7 +22,22 @@ const SECTIONS = {
     ask: '2 to 3 practical data protection tips for consumers or small organizations, tied to current events where natural. Tips may omit the url.',
     label: 'Practical Tips',
   },
+  toolpicks: {
+    ask: 'Pick the 2 or 3 ODIPA tools most relevant to this issue and write why each helps.',
+    label: 'Tools That Help',
+  },
 }
+
+// ODIPA's real approved open source tool catalog. The model may ONLY pick
+// from this list, never invent a tool. Keep in sync with CommunityTools.tsx.
+const TOOL_CATALOG = [
+  { name: 'Cookie Harvester & Analyzer', tagline: 'Scan, extract, and classify first and third party cookies from any domain.', url: 'https://github.com/odipa/cookie-harvester' },
+  { name: 'Tracker Lens', tagline: 'Identify and map all third party trackers on a webpage in seconds.', url: 'https://github.com/odipa/tracker-lens' },
+  { name: 'Privacy Policy Scanner', tagline: 'Grade any privacy policy with plain language scoring and red flag detection.', url: 'https://github.com/odipa/policy-scanner' },
+  { name: 'Data Broker Opt-Out Bot', tagline: 'Automate opt out requests to 40 plus known data brokers.', url: 'https://github.com/odipa/broker-opt-out' },
+  { name: 'Browser Fingerprint Inspector', tagline: 'Reveal exactly how uniquely identifiable your browser is.', url: 'https://github.com/odipa/fingerprint-check' },
+  { name: 'GDPR / CCPA Request Generator', tagline: 'Generate legally worded data subject requests in one click.', url: 'https://github.com/odipa/gdpr-request-gen' },
+]
 
 module.exports = async function handler(context, req) {
   if (req.method === 'OPTIONS') return respond(context, 200, {})
@@ -40,6 +55,49 @@ module.exports = async function handler(context, req) {
     if (!section) return respond(context, 400, { error: 'section must be breaches, laws, or tips.' })
     const month = clean(body.month, 40) || new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' })
     const extraNotes = clean(body.extraNotes, 1000)
+    const isToolPicks = String(body.section) === 'toolpicks'
+    const newsContext = clean(body.context, 3000)
+
+    if (isToolPicks) {
+      const catalogText = TOOL_CATALOG.map(t => `${t.name} :: ${t.tagline} :: ${t.url}`).join('\n')
+      const system = [
+        'You recommend ODIPA open source privacy tools inside the ODIPA Privacy Monthly Digest.',
+        'You may ONLY recommend tools from the catalog below, copied exactly, name and url verbatim. Never invent, rename, or modify a tool.',
+        'Pick the 2 or 3 tools most relevant to this month\'s news items. For each, write two sentences on why it helps a consumer or small organization given that news.',
+        'Hard rules: never use em dashes anywhere. Do not use colons inside sentences.',
+        'End your reply with ONLY a JSON array, no markdown fences: [{"title":"tool name from catalog","summary":"","url":"url from catalog"}]',
+        'Catalog, one tool per line, name :: tagline :: url',
+        catalogText,
+      ].join('\n')
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+        body: JSON.stringify({
+          model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-5',
+          max_tokens: 900,
+          system,
+          messages: [{ role: 'user', content: `This month's news items.\n${newsContext || 'General privacy awareness, no specific items.'}\nPick the most relevant tools.` }],
+        }),
+      })
+      if (!res.ok) return respond(context, 502, { error: `Generation failed (${res.status}).` })
+      const data = await res.json()
+      const text = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n')
+      const cleaned = text.replace(/```json|```/g, '')
+      const s = cleaned.indexOf('['); const e = cleaned.lastIndexOf(']')
+      if (s < 0 || e <= s) return respond(context, 502, { error: 'Generation returned an unexpected format. Try again.' })
+      let items
+      try { items = JSON.parse(cleaned.slice(s, e + 1)) } catch (err2) {
+        return respond(context, 502, { error: 'Generated JSON could not be parsed. Try again.' })
+      }
+      // Enforce the catalog server side. Anything not matching a real tool is dropped.
+      const byName = new Map(TOOL_CATALOG.map(t => [t.name.toLowerCase(), t]))
+      const norm = (Array.isArray(items) ? items : []).map(i => {
+        const t = byName.get(String(i.title || '').toLowerCase().trim())
+        if (!t) return null
+        return { title: t.name, summary: clean(i.summary, 600), url: t.url }
+      }).filter(i => i && i.summary)
+      return respond(context, 200, { section: 'toolpicks', month, items: norm })
+    }
 
     const system = [
       `You research one section, ${section.label}, of the ODIPA Privacy Monthly Digest, the email newsletter of a California 501(c)(3) digital privacy education nonprofit.`,
