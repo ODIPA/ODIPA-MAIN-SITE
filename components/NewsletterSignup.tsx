@@ -65,6 +65,10 @@ export default function NewsletterSignup({ variant = 'footer', source = 'Website
             <div>
               <p className="text-[14px] font-semibold text-white">Almost there, check your inbox!</p>
               <p className="text-[12px] text-white/50">Click the confirmation link we just sent to finish subscribing.</p>
+              <button type="button" onClick={() => setState('idle')}
+                className="text-[12px] text-gold-light underline mt-1 bg-transparent border-0 p-0 cursor-pointer">
+                Wrong email? Sign up again
+              </button>
             </div>
           </div>
         ) : (
@@ -139,6 +143,10 @@ export default function NewsletterSignup({ variant = 'footer', source = 'Website
               <div>
                 <p className="font-display text-[20px] font-bold text-white">Almost there, check your inbox!</p>
                 <p className="text-[14px] text-white/55">Click the confirmation link we just sent to start receiving privacy news, research releases, and ODIPA updates. Never spam.</p>
+                <button type="button" onClick={() => setState('idle')}
+                  className="text-[13px] text-gold-light underline mt-2 bg-transparent border-0 p-0 cursor-pointer">
+                  Wrong email? Sign up again
+                </button>
               </div>
             </div>
           ) : (
@@ -228,6 +236,10 @@ export default function NewsletterSignup({ variant = 'footer', source = 'Website
           <div>
             <p className="font-semibold text-[14px] text-navy">Almost there, check your inbox!</p>
             <p className="text-[12px] text-slate-500 mt-0.5">Click the confirmation link we just sent to finish subscribing.</p>
+            <button type="button" onClick={() => setState('idle')}
+              className="text-[12px] text-gold underline mt-1 bg-transparent border-0 p-0 cursor-pointer">
+              Wrong email? Sign up again
+            </button>
           </div>
         </div>
       ) : (
