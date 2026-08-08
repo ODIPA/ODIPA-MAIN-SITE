@@ -106,12 +106,14 @@ function respond(context, status, body) {
   }
 }
 
-async function sendHtmlEmail({ to, subject, html }) {
+async function sendHtmlEmail({ to, subject, html, plainText }) {
   const client = getClient()
   const sender = getSender()
+  const content = { subject, html }
+  if (plainText) content.plainText = plainText
   const poller = await client.beginSend({
     senderAddress: sender,
-    content: { subject, html },
+    content,
     recipients: { to: [{ address: to }] },
   })
   await poller.pollUntilDone()

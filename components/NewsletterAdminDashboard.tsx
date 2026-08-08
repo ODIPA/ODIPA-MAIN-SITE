@@ -60,6 +60,58 @@ export default function NewsletterAdminDashboard() {
   const [key, setKey] = useState('')
   const [stats, setStats] = useState<Stats | null>(null)
   const [state, setState] = useState<'idle' | 'loading' | 'error' | 'unauthorized'>('idle')
+  const [subject, setSubject] = useState('')
+  const [topics, setTopics] = useState('')
+  const [notes, setNotes] = useState('')
+  const [bodyHtml, setBodyHtml] = useState('')
+  const [testTo, setTestTo] = useState('')
+  const [composerMsg, setComposerMsg] = useState('')
+  const [busy, setBusy] = useState<'' | 'generate' | 'test' | 'send'>('')
+
+  async function adminPost(path: string, payload: object) {
+    const res = await fetch(path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-admin-key': key.trim() },
+      body: JSON.stringify(payload),
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`)
+    return data
+  }
+
+  async function generateDraft() {
+    if (!topics.trim()) { setComposerMsg('Add at least one topic first.'); return }
+    setBusy('generate'); setComposerMsg('')
+    try {
+      const d = await adminPost('/api/newsletter-generate', { topics, notes })
+      setSubject(d.subject || '')
+      setBodyHtml(d.html || '')
+      setComposerMsg('Draft generated. Review and edit before sending, the AI only drafts, you decide.')
+    } catch (e: any) { setComposerMsg(e.message) }
+    setBusy('')
+  }
+
+  async function sendTest() {
+    if (!subject.trim() || !bodyHtml.trim() || !testTo.trim()) { setComposerMsg('Subject, body, and a test address are required.'); return }
+    setBusy('test'); setComposerMsg('')
+    try {
+      await adminPost('/api/newsletter-send', { subject, html: bodyHtml, testTo })
+      setComposerMsg(`Test sent to ${testTo}. Check the inbox, then send to all.`)
+    } catch (e: any) { setComposerMsg(e.message) }
+    setBusy('')
+  }
+
+  async function sendAll() {
+    if (!subject.trim() || !bodyHtml.trim()) { setComposerMsg('Subject and body are required.'); return }
+    const n = stats?.totals.confirmed ?? 0
+    if (!window.confirm(`Send this newsletter to ${n} confirmed subscriber${n === 1 ? '' : 's'}? This cannot be undone.`)) return
+    setBusy('send'); setComposerMsg('')
+    try {
+      const d = await adminPost('/api/newsletter-send', { subject, html: bodyHtml })
+      setComposerMsg(`Sent to ${d.sent} of ${d.total}. ${d.failed ? `${d.failed} failed.` : 'No failures.'}`)
+    } catch (e: any) { setComposerMsg(e.message) }
+    setBusy('')
+  }
 
   async function load() {
     if (!key.trim()) return
@@ -181,6 +233,71 @@ export default function NewsletterAdminDashboard() {
               Generated {new Date(stats.generatedAt).toLocaleString()}
             </p>
           </>
+        )}
+
+        {/* Composer, visible once a key is entered */}
+        {key.trim() && (
+          <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
+            <div className="font-mono text-[10px] uppercase tracking-[2px] text-slate-400">Compose &amp; Send</div>
+
+            <div className="grid md:grid-cols-2 gap-3">
+              <div>
+                <label className="text-[12px] text-slate-500 block mb-1">Topics for this issue</label>
+                <textarea value={topics} onChange={e => setTopics(e.target.value)} rows={3}
+                  placeholder="e.g. New tool listing policy, elm.chat community project, volunteer spotlight"
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-gold" />
+              </div>
+              <div>
+                <label className="text-[12px] text-slate-500 block mb-1">Facts and notes the draft may use</label>
+                <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3}
+                  placeholder="Paste real facts, links, dates. The AI is instructed to invent nothing."
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-gold" />
+              </div>
+            </div>
+
+            <button onClick={generateDraft} disabled={busy !== ''}
+              className="font-mono text-[12px] font-semibold border border-navy text-navy px-4 py-2 rounded-lg disabled:opacity-40 hover:bg-navy hover:text-white transition-colors">
+              {busy === 'generate' ? 'Generating…' : 'Generate draft with AI'}
+            </button>
+
+            <div>
+              <label className="text-[12px] text-slate-500 block mb-1">Subject</label>
+              <input value={subject} onChange={e => setSubject(e.target.value)}
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-[14px] focus:outline-none focus:ring-2 focus:ring-gold" />
+            </div>
+            <div>
+              <label className="text-[12px] text-slate-500 block mb-1">Body HTML, edit freely, header and unsubscribe footer are added automatically</label>
+              <textarea value={bodyHtml} onChange={e => setBodyHtml(e.target.value)} rows={10}
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-[12px] font-mono focus:outline-none focus:ring-2 focus:ring-gold" />
+            </div>
+
+            {bodyHtml.trim() && (
+              <div>
+                <div className="font-mono text-[10px] uppercase tracking-[2px] text-slate-400 mb-2">Preview</div>
+                <div className="border border-slate-200 rounded-lg p-5 bg-cream/60"
+                  dangerouslySetInnerHTML={{ __html: bodyHtml }} />
+              </div>
+            )}
+
+            <div className="flex flex-wrap items-end gap-3 pt-2 border-t border-slate-100">
+              <div>
+                <label className="text-[12px] text-slate-500 block mb-1">Send test to</label>
+                <input value={testTo} onChange={e => setTestTo(e.target.value)} placeholder="you@example.org"
+                  className="border border-slate-300 rounded-lg px-3 py-2 text-[13px] w-56 focus:outline-none focus:ring-2 focus:ring-gold" />
+              </div>
+              <button onClick={sendTest} disabled={busy !== ''}
+                className="font-mono text-[12px] font-semibold border border-slate-300 text-navy px-4 py-2.5 rounded-lg disabled:opacity-40 hover:border-navy transition-colors">
+                {busy === 'test' ? 'Sending…' : 'Send test'}
+              </button>
+              <button onClick={sendAll} disabled={busy !== '' || !stats}
+                className="font-mono text-[12px] font-semibold bg-gold text-navy px-5 py-2.5 rounded-lg disabled:opacity-40 hover:opacity-90 transition-opacity"
+                title={!stats ? 'Load stats first so the send count is known' : ''}>
+                {busy === 'send' ? 'Sending…' : `Send to ${stats?.totals.confirmed ?? '…'} confirmed`}
+              </button>
+            </div>
+
+            {composerMsg && <p className="text-[13px] text-navy bg-gold/10 border border-gold/30 rounded-lg px-4 py-2.5">{composerMsg}</p>}
+          </div>
         )}
       </div>
     </div>
