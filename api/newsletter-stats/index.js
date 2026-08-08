@@ -7,6 +7,7 @@
  */
 const crypto = require('crypto')
 const { TableClient } = require('@azure/data-tables')
+const { listIssues } = require('../_shared/subscribers')
 
 function getTable() {
   const conn = process.env.SUBSCRIBERS_TABLE_CONNECTION || process.env.AzureWebJobsStorage
@@ -66,6 +67,7 @@ module.exports = async function handler(context, req) {
       signupsByMonth: Object.fromEntries(Object.entries(signupsByMonth).sort()),
       confirmedByMonth: Object.fromEntries(Object.entries(confirmedByMonth).sort()),
       sources,
+      issues: await listIssues().catch(() => []),
       telemetryPolicy: 'Aggregate counts only. ODIPA does not use open tracking, click tracking, or any per-subscriber telemetry.',
     })
   } catch (err) {

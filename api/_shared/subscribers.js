@@ -94,4 +94,26 @@ async function listByStatus(status) {
   return out
 }
 
-module.exports = { upsertPending, setStatus, listByStatus, verifyToken, confirmLink, unsubscribeLink }
+async function saveIssue({ subject, html, sent, failed }) {
+  const client = getTable()
+  await ensureTable(client)
+  const sentAt = new Date().toISOString()
+  await client.upsertEntity({
+    partitionKey: 'issue',
+    rowKey: sentAt.replace(/[:.]/g, '-'),
+    subject, html: String(html).slice(0, 30000), sent, failed, sentAt,
+  }, 'Replace')
+}
+
+async function listIssues() {
+  const client = getTable()
+  await ensureTable(client)
+  const out = []
+  const iter = client.listEntities({ queryOptions: { filter: "PartitionKey eq 'issue'" } })
+  for await (const ent of iter) {
+    out.push({ subject: ent.subject, sent: ent.sent, failed: ent.failed, sentAt: ent.sentAt })
+  }
+  return out.sort((a, b) => String(b.sentAt).localeCompare(String(a.sentAt)))
+}
+
+module.exports = { upsertPending, setStatus, listByStatus, verifyToken, confirmLink, unsubscribeLink, saveIssue, listIssues }

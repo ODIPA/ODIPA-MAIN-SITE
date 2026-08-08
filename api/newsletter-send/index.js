@@ -11,14 +11,15 @@
  * queue or timer based worker.
  */
 const { sendHtmlEmail, respond, clean } = require('../_shared/mailer')
-const { listByStatus, unsubscribeLink } = require('../_shared/subscribers')
+const { listByStatus, unsubscribeLink, saveIssue } = require('../_shared/subscribers')
 
 function wrapEmail(bodyHtml, unsubLink) {
   const postal = process.env.NEWSLETTER_POSTAL || 'ODIPA, a California 501(c)(3) nonprofit'
   return `
   <div style="font-family:Arial,Helvetica,sans-serif;max-width:600px;margin:0 auto;color:#1C2536">
-    <div style="border-bottom:3px solid #0B1F3A;padding:16px 0;margin-bottom:20px">
-      <span style="font-family:monospace;font-size:11px;letter-spacing:2px;color:#B98A2E">ODIPA · PRIVACY NEWSLETTER</span>
+    <div style="background:#0B1F3A;padding:18px 20px;margin-bottom:24px;border-radius:8px">
+      <img src="https://www.odipa.org/logo-dark-sm.png" alt="ODIPA" height="40" style="display:block;height:40px" />
+      <div style="font-family:monospace;font-size:10px;letter-spacing:2px;color:#B98A2E;margin-top:8px">PRIVACY MONTHLY DIGEST</div>
     </div>
     ${bodyHtml}
     <div style="border-top:1px solid #E4E1D8;margin-top:32px;padding-top:16px;font-size:12px;color:#667">
@@ -81,6 +82,7 @@ module.exports = async function handler(context, req) {
       })
     }
 
+    try { await saveIssue({ subject, html, sent, failed: failures.length }) } catch (e) { context.log.error('saveIssue failed:', e.message) }
     return respond(context, 200, { sent, failed: failures.length, failures, mode: 'full', total: subs.length })
   } catch (err) {
     context.log.error('newsletter-send error:', err.message)

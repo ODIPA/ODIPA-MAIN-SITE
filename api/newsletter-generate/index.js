@@ -1,10 +1,10 @@
 /**
  * ODIPA Newsletter Generate, POST /api/newsletter-generate
  * Admin-only. Requires header x-admin-key matching NEWSLETTER_ADMIN_KEY.
- * Body: { topics, notes? }
- * Calls the Anthropic API server side (key stays in app settings, never in
- * the browser) and returns { subject, html } for review in the composer.
- * Generated drafts are never sent automatically. A human reviews and sends.
+ * Body: { month, extraNotes? }
+ * Uses the Anthropic API with server side web search to research real,
+ * current items for the monthly digest. Returns structured sections for
+ * human review in the composer. Nothing is ever sent automatically.
  */
 const { respond, clean } = require('../_shared/mailer')
 
@@ -20,21 +20,20 @@ module.exports = async function handler(context, req) {
     if (!apiKey) return respond(context, 400, { error: 'ANTHROPIC_API_KEY is not configured in app settings.' })
 
     const body = req.body || {}
-    const topics = clean(body.topics, 2000)
-    const notes = clean(body.notes, 2000)
-    if (!topics) return respond(context, 400, { error: 'topics is required.' })
+    const month = clean(body.month, 40) || new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' })
+    const extraNotes = clean(body.extraNotes, 2000)
 
     const system = [
-      'You write the email newsletter for ODIPA, a California 501(c)(3) nonprofit for digital privacy education.',
-      'Voice: plain, direct, warm, practical. Written by a founder, not a marketing team.',
-      'Hard rules: never use em dashes anywhere. Do not use colons inside sentences. Short paragraphs.',
-      'Audience: consumers and small organizations who care about privacy but are not experts.',
-      'Never invent statistics, studies, laws, or news. Only use facts provided in the topics or notes. If a claim is not provided, do not make one.',
-      'Output strictly valid JSON with exactly two keys, "subject" (under 60 characters) and "html" (an email safe HTML fragment using only p, h2, h3, a, ul, li, strong tags with inline styles, no images, no scripts).',
-      'Do not include a header, unsubscribe footer, or postal address. Those are added by the sending system.',
+      'You research and draft sections of the ODIPA Privacy Monthly Digest, the email newsletter of a California 501(c)(3) digital privacy education nonprofit.',
+      'Use web search to find real, recent, verifiable items. Every item must come from an actual source found in search, with its URL. Never invent a breach, law, statistic, or date. If search yields fewer solid items than asked, return fewer.',
+      'Voice: plain, direct, practical, written for consumers and small organizations who care about privacy but are not experts.',
+      'Hard rules: never use em dashes anywhere. Do not use colons inside sentences. Two to three sentences per summary.',
+      'After your research, end your reply with ONLY a JSON object, no markdown fences, in exactly this shape:',
+      '{"breaches":[{"title":"","summary":"","url":""}],"laws":[{"title":"","summary":"","url":""}],"tips":[{"title":"","summary":"","url":""}]}',
+      'breaches: 2 to 4 significant data breaches or exposures from roughly the past month. laws: 2 to 3 new or advancing privacy laws or regulations. tips: 2 to 3 practical data protection tips, tied to the news where natural (tips may omit url).',
     ].join(' ')
 
-    const userMsg = `Write this issue of the ODIPA newsletter.\nTopics to cover:\n${topics}${notes ? `\nAdditional notes and facts to use:\n${notes}` : ''}`
+    const userMsg = `Research and draft the ${month} issue of the ODIPA Privacy Monthly Digest.${extraNotes ? ` Editor notes to consider, use only if verifiable or clearly editorial guidance. ${extraNotes}` : ''}`
 
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -45,9 +44,10 @@ module.exports = async function handler(context, req) {
       },
       body: JSON.stringify({
         model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-5',
-        max_tokens: 2500,
+        max_tokens: 4000,
         system,
         messages: [{ role: 'user', content: userMsg }],
+        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
       }),
     })
     if (!res.ok) {
@@ -57,18 +57,25 @@ module.exports = async function handler(context, req) {
     }
     const data = await res.json()
     const text = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n')
-    const cleaned = text.replace(/```json|```/g, '').trim()
+    const cleaned = text.replace(/```json|```/g, '')
+    const start = cleaned.indexOf('{')
+    const end = cleaned.lastIndexOf('}')
+    if (start < 0 || end <= start) return respond(context, 502, { error: 'Generation returned an unexpected format. Try again.' })
 
     let draft
-    try {
-      draft = JSON.parse(cleaned)
-    } catch (e) {
-      // Fall back to returning raw text as the body if JSON parsing fails
-      draft = { subject: 'ODIPA Privacy Newsletter', html: `<p>${cleaned}</p>` }
+    try { draft = JSON.parse(cleaned.slice(start, end + 1)) } catch (e) {
+      return respond(context, 502, { error: 'Generated JSON could not be parsed. Try again.' })
     }
-    if (!draft.subject || !draft.html) return respond(context, 502, { error: 'Generation returned an unexpected format.' })
+    const norm = arr => (Array.isArray(arr) ? arr : []).map(i => ({
+      title: clean(i.title, 200), summary: clean(i.summary, 600), url: clean(i.url, 500),
+    })).filter(i => i.title && i.summary)
 
-    return respond(context, 200, { subject: String(draft.subject).slice(0, 200), html: String(draft.html) })
+    return respond(context, 200, {
+      month,
+      breaches: norm(draft.breaches),
+      laws: norm(draft.laws),
+      tips: norm(draft.tips),
+    })
   } catch (err) {
     context.log.error('newsletter-generate error:', err.message)
     return respond(context, 500, { error: 'Generation failed' })
