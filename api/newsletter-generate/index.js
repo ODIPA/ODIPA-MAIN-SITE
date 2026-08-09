@@ -52,7 +52,9 @@ module.exports = async function handler(context, req) {
 
     const body = req.body || {}
     const section = SECTIONS[String(body.section || '')]
-    if (!section) return respond(context, 400, { error: 'section must be breaches, laws, or tips.' })
+    if (!section && String(body.section) !== 'social') {
+      return respond(context, 400, { error: 'section must be breaches, laws, tips, toolpicks, or social.' })
+    }
     const month = clean(body.month, 40) || new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' })
     const extraNotes = clean(body.extraNotes, 1000)
     const isToolPicks = String(body.section) === 'toolpicks'
