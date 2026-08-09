@@ -69,7 +69,7 @@ module.exports = async function handler(context, req) {
         'Both posts must include the link https://www.odipa.org/newsletter',
         'End your reply with ONLY a JSON object, no markdown fences: {"linkedin":"","short":""}',
         'linkedin: 120 to 200 words. Open with a hook from the strongest item, give 2 or 3 highlights as short lines, close with an invitation to read and subscribe, then 3 to 5 relevant hashtags.',
-        'short: a single post under 260 characters including the link, suitable for X, Bluesky, and Mastodon.',
+        'short: a single post under 240 characters including the link, for X, Bluesky, and Mastodon. Structure, pick ONLY the single strongest item, open with it as a hook (a striking number or surprising fact works best), add one line on why it matters to a normal person, then the link written as odipa.org/newsletter. Never list multiple items, never write a summary of the whole issue. It should make someone stop scrolling, not inform them of everything.',
       ].join(' ')
       const res = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
