@@ -116,7 +116,8 @@ const organizationSchema = {
   sameAs: [
     'https://github.com/odipa/ODIPA-MAIN-SITE',
     'https://twitter.com/odipa_org',
-    'https://linkedin.com/company/odipa',
+    'https://linkedin.com/company/odipaorg',
+    'https://bsky.app/profile/odipa.bsky.social',
   ],
   knowsAbout: [
     'Digital Privacy',

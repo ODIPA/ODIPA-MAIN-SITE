@@ -1,5 +1,10 @@
 import Image from 'next/image'
 import NewsletterSignup from './NewsletterSignup'
+// Accounts not yet active. Set to true per launch to show the icon again.
+// Facebook returns with the senior scam outreach program, Instagram needs a
+// graphics pipeline, YouTube returns when workshop recordings exist.
+const SHOW_INACTIVE_SOCIALS = false
+
 const columns = [
   {
     title: 'Programs',
@@ -33,6 +38,7 @@ const columns = [
       { label: 'Volunteer', href: '/get-involved/volunteer' },
       { label: 'Corporate Partner', href: '/get-involved/corporate-partner' },
       { label: 'Contribute Code', href: '/get-involved/contribute-code' },
+      { label: 'Newsletter', href: '/newsletter' },
       { label: 'Get Certified', href: '/get-involved/get-certified' },
       { label: 'Become a Sponsor', href: '/become-a-sponsor' },
       { label: 'Contact Us', href: '/contact' },
@@ -132,6 +138,8 @@ export default function Footer() {
                   <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.741l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
                 </svg>
               </a>
+              {SHOW_INACTIVE_SOCIALS && (
+                <>
               {/* Facebook */}
               <a href="https://facebook.com/odipa.org" target="_blank" rel="noopener noreferrer"
                 aria-label="ODIPA on Facebook"
@@ -154,6 +162,16 @@ export default function Footer() {
                 className="w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all">
                 <svg width="18" height="13" viewBox="0 0 24 17" fill="currentColor">
                   <path d="M23.495 2.205a3.02 3.02 0 00-2.122-2.136C19.505 0 12 0 12 0S4.495 0 2.627.07a3.02 3.02 0 00-2.122 2.135C0 4.073 0 8.383 0 8.383s0 4.31.505 6.178a3.02 3.02 0 002.122 2.136C4.495 17 12 17 12 17s7.505 0 9.373-.303a3.02 3.02 0 002.122-2.136C24 12.692 24 8.383 24 8.383s0-4.31-.505-6.178zM9.545 11.97V4.797l6.273 3.587-6.273 3.586z"/>
+                </svg>
+              </a>
+                </>
+              )}
+              {/* Bluesky */}
+              <a href="https://bsky.app/profile/odipa.bsky.social" target="_blank" rel="noopener noreferrer"
+                aria-label="ODIPA on Bluesky"
+                className="w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all">
+                <svg width="16" height="15" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 10.8c-1.087-2.114-4.046-6.053-6.798-7.995C2.566.944 1.561 1.266.902 1.565.139 1.908 0 3.08 0 3.768c0 .69.378 5.65.624 6.479.815 2.736 3.713 3.66 6.383 3.364.136-.02.275-.039.415-.056-.138.022-.276.04-.415.056-3.912.58-7.387 2.005-2.83 7.078 5.013 5.19 6.87-1.113 7.823-4.308.953 3.195 2.81 9.498 7.823 4.308 4.557-5.073 1.082-6.498-2.83-7.078a8.741 8.741 0 0 1-.415-.056c.14.017.279.036.415.056 2.67.296 5.568-.628 6.383-3.364.246-.828.624-5.79.624-6.478 0-.69-.139-1.861-.902-2.206-.659-.298-1.664-.62-4.3 1.24C16.046 4.748 13.087 8.687 12 10.8Z"/>
                 </svg>
               </a>
               {/* GitHub */}
