@@ -58,6 +58,44 @@ module.exports = async function handler(context, req) {
     const isToolPicks = String(body.section) === 'toolpicks'
     const newsContext = clean(body.context, 3000)
 
+    if (String(body.section) === 'social') {
+      const system = [
+        'You write social media posts announcing an issue of the ODIPA Privacy Monthly Digest, the newsletter of a California 501(c)(3) digital privacy education nonprofit.',
+        'Base the posts ONLY on the issue content provided. Never invent items, numbers, or claims.',
+        'Voice: plain, direct, founder written, no marketing hype.',
+        'Hard rules: never use em dashes anywhere. Do not use colons inside sentences.',
+        'Both posts must include the link https://www.odipa.org/newsletter',
+        'End your reply with ONLY a JSON object, no markdown fences: {"linkedin":"","short":""}',
+        'linkedin: 120 to 200 words. Open with a hook from the strongest item, give 2 or 3 highlights as short lines, close with an invitation to read and subscribe, then 3 to 5 relevant hashtags.',
+        'short: a single post under 260 characters including the link, suitable for X, Bluesky, and Mastodon.',
+      ].join(' ')
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+        body: JSON.stringify({
+          model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-5',
+          max_tokens: 800,
+          system,
+          messages: [{ role: 'user', content: `Issue content for ${month}.\n${newsContext || 'General privacy digest.'}` }],
+        }),
+      })
+      if (!res.ok) return respond(context, 502, { error: `Generation failed (${res.status}).` })
+      const data = await res.json()
+      const text = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n')
+      const cleaned = text.replace(/```json|```/g, '')
+      const s = cleaned.indexOf('{'); const e = cleaned.lastIndexOf('}')
+      if (s < 0 || e <= s) return respond(context, 502, { error: 'Generation returned an unexpected format. Try again.' })
+      let posts
+      try { posts = JSON.parse(cleaned.slice(s, e + 1)) } catch (err2) {
+        return respond(context, 502, { error: 'Generated JSON could not be parsed. Try again.' })
+      }
+      return respond(context, 200, {
+        section: 'social', month,
+        linkedin: String(posts.linkedin || '').slice(0, 3000),
+        short: String(posts.short || '').slice(0, 500),
+      })
+    }
+
     if (isToolPicks) {
       const catalogText = TOOL_CATALOG.map(t => `${t.name} :: ${t.tagline} :: ${t.url}`).join('\n')
       const system = [

@@ -122,6 +122,8 @@ export default function NewsletterAdminDashboard() {
   const [research, setResearch] = useState<Item[]>([])
   const [tips, setTips] = useState<Item[]>([])
   const [toolPicks, setToolPicks] = useState<Item[]>([])
+  const [social, setSocial] = useState<{ linkedin: string; short: string } | null>(null)
+  const [copied, setCopied] = useState('')
   const [testTo, setTestTo] = useState('')
   const [composerMsg, setComposerMsg] = useState('')
   const [busy, setBusy] = useState<'' | 'generate' | 'test' | 'send'>('')
@@ -188,6 +190,23 @@ export default function NewsletterAdminDashboard() {
       ? 'Draft researched. Verify every item and source link, add your Research Releases, then test and send. You are the editor, the AI only drafts.'
       : `Done with issues. These sections failed and can be retried by clicking the button again: ${failed.join(', ')}. Successful sections are filled in.`)
     setBusy('')
+  }
+
+  async function generateSocial() {
+    setBusy('generate'); setComposerMsg('')
+    try {
+      const context = `${subject}. ` + sections
+        .map(s => realItems(s.items).map(i => `${s.heading}, ${i.title}`).join('; '))
+        .filter(Boolean).join('; ')
+      const d = await adminPost('/api/newsletter-generate', { section: 'social', month, context })
+      setSocial({ linkedin: d.linkedin || '', short: d.short || '' })
+      setComposerMsg('Social posts drafted. Review, edit if needed, then copy and paste into each platform.')
+    } catch (e: any) { setComposerMsg(e.message) }
+    setBusy('')
+  }
+
+  async function copyText(label: string, text: string) {
+    try { await navigator.clipboard.writeText(text); setCopied(label); setTimeout(() => setCopied(''), 2000) } catch { /* ignore */ }
   }
 
   async function sendTest() {
@@ -366,6 +385,45 @@ export default function NewsletterAdminDashboard() {
             </div>
 
             {composerMsg && <p className="text-[13px] text-navy bg-gold/10 border border-gold/30 rounded-lg px-4 py-2.5">{composerMsg}</p>}
+
+            {hasContent && (
+              <div className="pt-3 border-t border-slate-100 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="font-mono text-[10px] uppercase tracking-[2px] text-slate-400">Social Posts</div>
+                  <button onClick={generateSocial} disabled={busy !== ''}
+                    className="font-mono text-[12px] font-semibold border border-navy text-navy px-4 py-2 rounded-lg disabled:opacity-40 hover:bg-navy hover:text-white transition-colors">
+                    {busy === 'generate' && !social ? 'Drafting…' : social ? 'Regenerate posts' : 'Generate social posts'}
+                  </button>
+                </div>
+                {social && (
+                  <div className="grid md:grid-cols-2 gap-3">
+                    <div className="border border-slate-200 rounded-lg p-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[12px] font-semibold text-navy">LinkedIn</span>
+                        <button onClick={() => copyText('linkedin', social.linkedin)}
+                          className="font-mono text-[11px] text-gold hover:underline">
+                          {copied === 'linkedin' ? 'Copied!' : 'Copy'}
+                        </button>
+                      </div>
+                      <textarea value={social.linkedin} onChange={e => setSocial({ ...social, linkedin: e.target.value })} rows={9}
+                        className="w-full border border-slate-300 rounded px-2.5 py-1.5 text-[12.5px] focus:outline-none focus:ring-2 focus:ring-gold" />
+                    </div>
+                    <div className="border border-slate-200 rounded-lg p-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[12px] font-semibold text-navy">X / Bluesky / Mastodon</span>
+                        <button onClick={() => copyText('short', social.short)}
+                          className="font-mono text-[11px] text-gold hover:underline">
+                          {copied === 'short' ? 'Copied!' : 'Copy'}
+                        </button>
+                      </div>
+                      <textarea value={social.short} onChange={e => setSocial({ ...social, short: e.target.value })} rows={9}
+                        className="w-full border border-slate-300 rounded px-2.5 py-1.5 text-[12.5px] focus:outline-none focus:ring-2 focus:ring-gold" />
+                      <p className="text-[11px] text-slate-400">{social.short.length} characters</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>
