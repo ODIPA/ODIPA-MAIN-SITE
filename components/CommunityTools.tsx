@@ -89,7 +89,7 @@ const APPROVED_TOOLS: Tool[] = [
   {
     id: 'broker-opt-out',
     name: 'Data Broker Opt-Out Bot',
-    tagline: 'Automate opt-out requests to 40+ known data brokers.',
+    tagline: 'Automate opt-out and removal requests to major data broker sites.',
     desc: 'A Playwright-based automation script that submits consumer opt-out requests to over 40 data brokers on your behalf. Fills forms, generates opt-out emails, and logs completion status. Designed for individuals and privacy professionals.',
     category: 'Data Broker',
     author: 'ODIPA',

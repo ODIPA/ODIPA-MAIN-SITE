@@ -34,7 +34,7 @@ const TOOL_CATALOG = [
   { name: 'Cookie Harvester & Analyzer', tagline: 'Scan, extract, and classify first and third party cookies from any domain.', url: 'https://github.com/odipa/cookie-harvester' },
   { name: 'Tracker Lens', tagline: 'Identify and map all third party trackers on a webpage in seconds.', url: 'https://github.com/odipa/tracker-lens' },
   { name: 'Privacy Policy Scanner', tagline: 'Grade any privacy policy with plain language scoring and red flag detection.', url: 'https://github.com/odipa/policy-scanner' },
-  { name: 'Data Broker Opt-Out Bot', tagline: 'Automate opt out requests to 40 plus known data brokers.', url: 'https://github.com/odipa/broker-opt-out' },
+  { name: 'Data Broker Opt-Out Bot', tagline: 'Automate opt out and removal requests to major data broker sites.', url: 'https://github.com/odipa/broker-opt-out' },
   { name: 'Browser Fingerprint Inspector', tagline: 'Reveal exactly how uniquely identifiable your browser is.', url: 'https://github.com/odipa/fingerprint-check' },
   { name: 'GDPR / CCPA Request Generator', tagline: 'Generate legally worded data subject requests in one click.', url: 'https://github.com/odipa/gdpr-request-gen' },
 ]
