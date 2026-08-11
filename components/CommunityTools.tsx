@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 
 // ─── Seed data — approved community tools ────────────────────────────────────
@@ -195,7 +195,7 @@ function StarIcon({ n }: { n: number }) {
   )
 }
 
-function ToolCard({ tool }: { tool: Tool }) {
+function ToolCard({ tool, stars }: { tool: Tool; stars: number }) {
   return (
     <div className={`bg-white rounded-xl border-2 p-6 flex flex-col gap-4 hover:shadow-md transition-all group ${
       tool.featured ? 'border-gold/40 hover:border-gold' : 'border-slate-200 hover:border-blue-brand/30'
@@ -249,7 +249,7 @@ function ToolCard({ tool }: { tool: Tool }) {
           <span className="text-[12px] text-slate-500">{tool.authorHandle}</span>
         </div>
         <div className="flex items-center gap-4">
-          <StarIcon n={tool.stars} />
+          <StarIcon n={stars} />
           <div className="flex gap-2">
             <a href={tool.docs} target="_blank" rel="noopener noreferrer"
               className="font-mono text-[10px] text-slate-400 hover:text-navy transition-colors no-underline" title="Documentation">
@@ -300,6 +300,29 @@ export default function CommunityTools() {
   const [category, setCategory] = useState('All')
   const [lang, setLang] = useState('All Languages')
 
+  // Live GitHub stargazer counts, one API call for the whole org.
+  // Static values in the tool list are the fallback if the API is
+  // unavailable, so the display degrades to last known counts, never breaks.
+  const [liveStars, setLiveStars] = useState<Record<string, number>>({})
+
+  useEffect(() => {
+    let cancelled = false
+    fetch('https://api.github.com/orgs/odipa/repos?per_page=100')
+      .then(r => { if (!r.ok) throw new Error(String(r.status)); return r.json() })
+      .then((repos: { name: string; stargazers_count: number }[]) => {
+        if (cancelled) return
+        const map: Record<string, number> = {}
+        for (const r of repos) map[r.name.toLowerCase()] = r.stargazers_count
+        setLiveStars(map)
+      })
+      .catch(() => { /* keep static fallback counts */ })
+    return () => { cancelled = true }
+  }, [])
+
+  // Repo name from the tool's github URL, used to look up live stars
+  const repoName = (t: Tool) => t.github.split('/').pop()?.toLowerCase() ?? ''
+  const starsFor = (t: Tool) => liveStars[repoName(t)] ?? t.stars
+
   const filtered = useMemo(() => {
     return ALL_TOOLS.filter(t => {
       const q = search.toLowerCase()
@@ -311,9 +334,9 @@ export default function CommunityTools() {
     }).sort((a, b) =>
       ((a.status === 'needs-help' ? 1 : 0) - (b.status === 'needs-help' ? 1 : 0)) ||
       ((b.featured ? 1 : 0) - (a.featured ? 1 : 0)) ||
-      (b.stars - a.stars)
+      (starsFor(b) - starsFor(a))
     )
-  }, [search, category, lang])
+  }, [search, category, lang, liveStars])
 
   return (
     <section id="community-tools">
@@ -359,7 +382,7 @@ export default function CommunityTools() {
       {/* Results */}
       {filtered.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          {filtered.map(tool => <ToolCard key={tool.id} tool={tool} />)}
+          {filtered.map(tool => <ToolCard key={tool.id} tool={tool} stars={starsFor(tool)} />)}
         </div>
       ) : (
         <div className="bg-white rounded-xl border border-slate-200 p-12 text-center">
