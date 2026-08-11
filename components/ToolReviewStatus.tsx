@@ -22,7 +22,12 @@ const GITHUB_REPO  = 'odipa-privacy-tools'   // The repo where tool submissions 
 
 // Fallback counts shown while loading or on API error.
 // review/audit default to 0 so we never display an invented queue.
-const FALLBACK = { review: 0, audit: 0, approved: 6 }
+// Approved count is the source-of-truth length of APPROVED_TOOLS in
+// CommunityTools.tsx. Bump it there and here together. It is deliberately
+// not derived from GitHub issues, approved tools are not open issues.
+const APPROVED_COUNT = 6
+
+const FALLBACK = { review: 0, audit: 0, approved: APPROVED_COUNT }
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface Counts {
@@ -58,11 +63,11 @@ export default function ToolReviewStatus() {
 
     async function load() {
       try {
-        const [review, audit, approved] = await Promise.all([
+        const [review, audit] = await Promise.all([
           fetchLabelCount('tool-review'),
           fetchLabelCount('security-audit'),
-          fetchLabelCount('approved'),
         ])
+        const approved = APPROVED_COUNT
         if (cancelled) return
         setCounts({ review, audit, approved })
         setStatus('live')
