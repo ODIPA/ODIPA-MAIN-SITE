@@ -22,26 +22,25 @@ const GITHUB_REPO  = 'odipa-privacy-tools'   // The repo where tool submissions 
 
 // Fallback counts shown while loading or on API error.
 // review/audit default to 0 so we never display an invented queue.
-// Approved count is the source-of-truth length of APPROVED_TOOLS in
-// CommunityTools.tsx. Bump it there and here together. It is deliberately
-// not derived from GitHub issues, approved tools are not open issues.
-const APPROVED_COUNT = 6
-
-const FALLBACK = { review: 0, audit: 0, approved: APPROVED_COUNT }
+// Fallback shown only when the GitHub API is unreachable. The approved
+// fallback mirrors the directory so an API outage never zeroes the count.
+// Keep in sync with APPROVED_TOOLS in CommunityTools.tsx.
+const FALLBACK = { review: 0, audit: 0, needsHelp: 0, approved: 6 }
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface Counts {
-  review:   number
-  audit:    number
-  approved: number
+  review:    number
+  audit:     number
+  needsHelp: number
+  approved:  number
 }
 
 type Status = 'loading' | 'live' | 'fallback' | 'error'
 
 // ─── GitHub API helper ───────────────────────────────────────────────────────
-async function fetchLabelCount(label: string): Promise<number> {
+async function fetchLabelCount(label: string, state: 'open' | 'closed' = 'open'): Promise<number> {
   // GitHub search API counts open issues with a given label
-  const url = `https://api.github.com/search/issues?q=repo:${GITHUB_OWNER}/${GITHUB_REPO}+label:"${encodeURIComponent(label)}"+is:issue+is:open&per_page=1`
+  const url = `https://api.github.com/search/issues?q=repo:${GITHUB_OWNER}/${GITHUB_REPO}+label:"${encodeURIComponent(label)}"+is:issue+is:${state}&per_page=1`
   const res = await fetch(url, {
     headers: { Accept: 'application/vnd.github.v3+json' },
     // Cache for 5 minutes — GitHub rate limit is 10 unauthenticated requests/minute
@@ -63,13 +62,16 @@ export default function ToolReviewStatus() {
 
     async function load() {
       try {
-        const [review, audit] = await Promise.all([
+        // Open issues are the working queues. Approved is the closed ledger,
+        // every approved tool's issue is closed carrying the approved label.
+        const [review, audit, needsHelp, approved] = await Promise.all([
           fetchLabelCount('tool-review'),
           fetchLabelCount('security-audit'),
+          fetchLabelCount('needs-help'),
+          fetchLabelCount('approved', 'closed'),
         ])
-        const approved = APPROVED_COUNT
         if (cancelled) return
-        setCounts({ review, audit, approved })
+        setCounts({ review, audit, needsHelp, approved })
         setStatus('live')
         setUpdated(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
       } catch {
@@ -86,6 +88,7 @@ export default function ToolReviewStatus() {
   const rows = [
     { label: 'Under review',    count: counts.review,   color: 'text-amber-400',  dot: 'bg-amber-400'  },
     { label: 'Security audit',  count: counts.audit,    color: 'text-blue-400',   dot: 'bg-blue-400'   },
+    { label: 'Needs help',      count: counts.needsHelp, color: 'text-yellow-300', dot: 'bg-yellow-300' },
     { label: 'Approved & live', count: counts.approved, color: 'text-green-400',  dot: 'bg-green-400'  },
   ]
 
@@ -113,7 +116,7 @@ export default function ToolReviewStatus() {
         {(status === 'fallback' || status === 'error') && (
           <div className="flex items-center gap-1.5" title="Showing last-known counts">
             <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-            <span className="font-mono text-[9px] text-white/30">cached</span>
+            <span className="font-mono text-[9px] text-white/30">static</span>
           </div>
         )}
       </div>
@@ -148,7 +151,7 @@ export default function ToolReviewStatus() {
         </a>
         {status === 'fallback' && (
           <p className="font-mono text-[9px] text-amber-400/60 leading-relaxed">
-            Live counts unavailable. Review and audit queues shown as zero until GitHub data loads.
+            Live GitHub data is unavailable right now. Showing the last known static counts.
           </p>
         )}
         {status === 'live' && updated && (
