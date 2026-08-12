@@ -149,26 +149,27 @@ const APPROVED_TOOLS: Tool[] = [
 // A project graduates to APPROVED_TOOLS after the gaps close and it passes
 // the full review process.
 const COMMUNITY_PROJECTS: Tool[] = [
-  // Staged entry. Enable after the author confirms participation.
-  // {
-  //   id: 'elm-chat',
-  //   name: 'elm.chat',
-  //   tagline: 'Disposable encrypted chat rooms with no accounts or server-side transcript.',
-  //   desc: 'An AGPL web messenger for account-free, temporary conversations. Browser clients encrypt content before a relay forwards ciphertext. Early stage. Message authentication and replay protection are the headline community challenge before this tool can be reviewed and approved.',
-  //   category: 'Encryption / Anonymization',
-  //   author: 'Shawn Bure',
-  //   authorHandle: '@shawnbure',
-  //   lang: 'TypeScript',
-  //   platform: ['Web App', 'Cross-platform'],
-  //   license: 'AGPL-3.0',
-  //   github: 'https://github.com/odipa/elm-chat',
-  //   docs: 'https://elm.chat/security-and-limitations',
-  //   contribute: 'https://github.com/odipa/elm-chat/issues',
-  //   stars: 0,
-  //   featured: false,
-  //   status: 'needs-help',
-  //   tags: ['encryption', 'messaging', 'ephemeral', 'TypeScript', 'needs help'],
-  // },
+  // Author confirmed participation 2026-08-10, repo stays at shawnbure/elm-chat
+  // per the Tier 2 arrangement, contributors work directly on the author's repo.
+  {
+    id: 'elm-chat',
+    name: 'elm.chat',
+    tagline: 'Disposable encrypted chat rooms with no accounts or server-side transcript.',
+    desc: 'An AGPL web messenger for account-free, temporary conversations. Browser clients encrypt content before a relay forwards ciphertext. Early stage. Message authentication and replay protection are the headline community challenge before this tool can be reviewed and approved.',
+    category: 'Encryption / Anonymization',
+    author: 'Shawn Bure',
+    authorHandle: '@shawnbure',
+    lang: 'TypeScript',
+    platform: ['Web App', 'Cross-platform'],
+    license: 'AGPL-3.0',
+    github: 'https://github.com/shawnbure/elm-chat',
+    docs: 'https://elm.chat/security-and-limitations',
+    contribute: 'https://github.com/shawnbure/elm-chat/issues',
+    stars: 0,
+    featured: false,
+    status: 'needs-help',
+    tags: ['encryption', 'messaging', 'ephemeral', 'TypeScript', 'needs help'],
+  },
 ]
 
 const ALL_TOOLS: Tool[] = [...APPROVED_TOOLS, ...COMMUNITY_PROJECTS]
@@ -347,8 +348,12 @@ export default function CommunityTools() {
             <span className="block w-5 h-px bg-blue-brand" />Community Privacy Tools
           </div>
           <p className="text-[14px] text-slate-500 max-w-[480px]">
-            {APPROVED_TOOLS.length} open-source tools built and maintained by ODIPA.
-            Community submissions are welcome. Every submitted tool is reviewed, security-audited, and approved before listing.
+            {APPROVED_TOOLS.length} open-source tools built and maintained by ODIPA,
+            plus community projects seeking contributors. Every listing status here
+            follows our{' '}
+            <Link href="/get-involved/tool-listing-policy" className="text-blue-brand underline">
+              Tool Listing Policy
+            </Link>.
           </p>
         </div>
         <Link href="#submit-tool"
