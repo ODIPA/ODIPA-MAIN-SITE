@@ -5,7 +5,7 @@ import ProgramLayout from '@/components/ProgramLayout'
 export const metadata: Metadata = {
   title: 'Educational Outreach',
   description: 'ODIPA offers free public courses, webinars, and workshops to educate consumers about their digital privacy rights.',
-  alternates: { canonical: 'https://odipa.org/programs/educational-outreach' },
+  alternates: { canonical: 'https://www.odipa.org/programs/educational-outreach' },
 }
 
 export default function Page() {

@@ -5,7 +5,7 @@ import ProgramLayout from '@/components/ProgramLayout'
 export const metadata: Metadata = {
   title: 'Community Building',
   description: 'ODIPA builds a national community of privacy advocates through summits, local meetups, online forums, and a structured volunteer network.',
-  alternates: { canonical: 'https://odipa.org/programs/community-building' },
+  alternates: { canonical: 'https://www.odipa.org/programs/community-building' },
 }
 
 export default function Page() {

@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   title: 'Corporate Partnership — ODIPA',
   description:
     'Purchase ODIPA services for your organization: privacy training, independent certification, research sponsorship, and technical support. A Corporate Partnership is a paid services engagement — not a sponsorship.',
-  alternates: { canonical: 'https://odipa.org/get-involved/corporate-partner' },
+  alternates: { canonical: 'https://www.odipa.org/get-involved/corporate-partner' },
 }
 
 const services = [

@@ -5,7 +5,7 @@ import ProgramLayout from '@/components/ProgramLayout'
 export const metadata: Metadata = {
   title: 'Awareness Campaigns',
   description: 'ODIPA runs Privacy Awareness Week, breach alert campaigns, and year-round social media education to keep consumers informed and protected.',
-  alternates: { canonical: 'https://odipa.org/programs/awareness-campaigns' },
+  alternates: { canonical: 'https://www.odipa.org/programs/awareness-campaigns' },
 }
 
 export default function Page() {

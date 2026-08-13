@@ -5,7 +5,7 @@ import ProgramLayout from '@/components/ProgramLayout'
 export const metadata: Metadata = {
   title: 'Research & Publications',
   description: 'ODIPA publishes independent privacy research, research briefs and special investigations — all freely available to the public.',
-  alternates: { canonical: 'https://odipa.org/programs/research-publications' },
+  alternates: { canonical: 'https://www.odipa.org/programs/research-publications' },
 }
 
 export default function Page() {

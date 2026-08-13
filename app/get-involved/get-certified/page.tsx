@@ -6,7 +6,7 @@ import { FileText, Database, CheckSquare, Inbox, GraduationCap, ShieldAlert } fr
 export const metadata: Metadata = {
   title: 'Get Certified',
   description: 'Earn ODIPA certification and demonstrate your organization\'s compliance with state and federal privacy laws. Build consumer trust with independent third-party verification.',
-  alternates: { canonical: 'https://odipa.org/get-involved/get-certified' },
+  alternates: { canonical: 'https://www.odipa.org/get-involved/get-certified' },
 }
 
 const certProcess = [

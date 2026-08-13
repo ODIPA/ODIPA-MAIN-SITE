@@ -6,7 +6,7 @@ import { Scale, Laptop, Microscope, GraduationCap, Megaphone, PenLine, Globe, Ba
 export const metadata: Metadata = {
   title: 'Volunteer',
   description: 'Join ODIPA as a volunteer. Share your expertise in privacy law, technology, research, advocacy, or education to help protect digital rights for everyone.',
-  alternates: { canonical: 'https://odipa.org/get-involved/volunteer' },
+  alternates: { canonical: 'https://www.odipa.org/get-involved/volunteer' },
 }
 
 const roles = [

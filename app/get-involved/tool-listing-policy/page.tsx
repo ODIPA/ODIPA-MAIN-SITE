@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   title: 'Tool Listing Policy',
   description:
     'How tools enter, appear in, and move between the statuses of ODIPA\'s Community Privacy Tools directory. Approved, Community Project (Needs Help), and ODIPA Adopted.',
-  alternates: { canonical: 'https://odipa.org/get-involved/tool-listing-policy' },
+  alternates: { canonical: 'https://www.odipa.org/get-involved/tool-listing-policy' },
 }
 
 const tiers = [

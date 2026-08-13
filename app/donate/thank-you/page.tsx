@@ -5,7 +5,7 @@ import Link from 'next/link'
 export const metadata: Metadata = {
   title: 'Thank You — ODIPA',
   description: 'Thank you for your donation to ODIPA. Your support helps protect digital privacy for everyone.',
-  alternates: { canonical: 'https://odipa.org/donate/thank-you' },
+  alternates: { canonical: 'https://www.odipa.org/donate/thank-you' },
   robots: { index: false },
 }
 

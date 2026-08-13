@@ -4,7 +4,7 @@ import Nav from '@/components/Nav'
 import CookieConsent from '@/components/CookieConsent'
 import Footer from '@/components/Footer'
 
-const SITE_URL = 'https://odipa.org'
+const SITE_URL = 'https://www.odipa.org'
 const SITE_NAME = 'ODIPA'
 const TITLE = 'ODIPA — Organization for Digital Information Privacy & Awareness'
 const DESCRIPTION =

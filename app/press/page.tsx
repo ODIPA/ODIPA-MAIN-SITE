@@ -5,7 +5,7 @@ import { Landmark, ShieldOff, Smartphone, Users, Building2, BrainCircuit } from 
 export const metadata: Metadata = {
   title: 'Press & Media',
   description: 'ODIPA press resources — media kit, expert commentary, press releases, and contact information for journalists covering digital privacy and data protection.',
-  alternates: { canonical: 'https://odipa.org/press' },
+  alternates: { canonical: 'https://www.odipa.org/press' },
 }
 
 const coverageAreas = [

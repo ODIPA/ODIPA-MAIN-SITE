@@ -6,7 +6,7 @@ import CommunityTools from '@/components/CommunityTools'
 export const metadata: Metadata = {
   title: 'Open-Source Development',
   description: 'ODIPA builds and maintains free, open-source privacy tools that help developers implement privacy-by-design and give consumers practical protection.',
-  alternates: { canonical: 'https://odipa.org/programs/open-source-development' },
+  alternates: { canonical: 'https://www.odipa.org/programs/open-source-development' },
 }
 
 export default function Page() {

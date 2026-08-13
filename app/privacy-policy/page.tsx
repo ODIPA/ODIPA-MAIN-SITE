@@ -6,12 +6,12 @@ export const metadata: Metadata = {
   description:
     'ODIPA is a privacy-first organization. Read how we collect, use, and protect your information — and why we chose cookieless analytics.',
   alternates: {
-    canonical: 'https://odipa.org/privacy-policy',
+    canonical: 'https://www.odipa.org/privacy-policy',
   },
   openGraph: {
     title: 'Privacy Policy — ODIPA',
     description: 'How ODIPA collects, uses, and protects your data — including our cookieless, privacy-first analytics approach.',
-    url: 'https://odipa.org/privacy-policy',
+    url: 'https://www.odipa.org/privacy-policy',
     type: 'website',
   },
 }

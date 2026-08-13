@@ -5,7 +5,7 @@ import ProgramLayout from '@/components/ProgramLayout'
 export const metadata: Metadata = {
   title: 'International Cooperation',
   description: 'ODIPA partners with global privacy advocacy organizations to coordinate advocacy, share best practices, and assist emerging privacy nonprofits worldwide.',
-  alternates: { canonical: 'https://odipa.org/programs/international-cooperation' },
+  alternates: { canonical: 'https://www.odipa.org/programs/international-cooperation' },
 }
 
 export default function Page() {

@@ -5,7 +5,7 @@ import ProgramLayout from '@/components/ProgramLayout'
 export const metadata: Metadata = {
   title: 'Advocacy & Policy',
   description: 'ODIPA advocates for stronger consumer privacy protections through legislative monitoring, regulatory submissions, and direct policy engagement.',
-  alternates: { canonical: 'https://odipa.org/programs/advocacy-policy' },
+  alternates: { canonical: 'https://www.odipa.org/programs/advocacy-policy' },
 }
 
 export default function Page() {

@@ -6,7 +6,7 @@ import { Scale, BookOpen, Landmark, BarChart2, Laptop, Users, Lock, Microscope }
 export const metadata: Metadata = {
   title: 'About ODIPA',
   description: 'Learn about ODIPA\'s mission, history, leadership, and the team of privacy advocates, attorneys, technologists, and educators driving our work.',
-  alternates: { canonical: 'https://odipa.org/about' },
+  alternates: { canonical: 'https://www.odipa.org/about' },
 }
 
 // ─── Filled seats ────────────────────────────────────────────────────────────

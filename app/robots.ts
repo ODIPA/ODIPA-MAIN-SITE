@@ -11,11 +11,11 @@ export default function robots(): MetadataRoute.Robots {
         disallow: [],
       },
     ],
-    sitemap: 'https://odipa.org/sitemap.xml',
-    host: 'https://odipa.org',
+    sitemap: 'https://www.odipa.org/sitemap.xml',
+    host: 'https://www.odipa.org',
   }
 }
 
 export async function GET() {
-  return new Response(`User-agent: *\nAllow: /\nSitemap: https://odipa.org/sitemap.xml`)
+  return new Response(`User-agent: *\nAllow: /\nSitemap: https://www.odipa.org/sitemap.xml`)
 }

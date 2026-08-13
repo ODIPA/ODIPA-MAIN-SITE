@@ -5,7 +5,7 @@ import ProgramLayout from '@/components/ProgramLayout'
 export const metadata: Metadata = {
   title: 'Corporate Certification',
   description: 'ODIPA\'s Corporate Privacy Certification gives businesses a credible, independent seal that signals genuine commitment to consumer data protection.',
-  alternates: { canonical: 'https://odipa.org/programs/corporate-certification' },
+  alternates: { canonical: 'https://www.odipa.org/programs/corporate-certification' },
 }
 
 const credentials = [

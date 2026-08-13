@@ -5,7 +5,7 @@ import { ClipboardList } from 'lucide-react'
 export const metadata: Metadata = {
   title: 'Annual Report',
   description: 'ODIPA\'s annual report — program outcomes, financial transparency, impact metrics, and plans for the year ahead.',
-  alternates: { canonical: 'https://odipa.org/annual-report' },
+  alternates: { canonical: 'https://www.odipa.org/annual-report' },
 }
 
 const programHighlights = [

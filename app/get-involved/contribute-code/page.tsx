@@ -9,7 +9,7 @@ import ToolReviewStatus from '@/components/ToolReviewStatus'
 export const metadata: Metadata = {
   title: 'Contribute Code & Privacy Tools',
   description: 'Join ODIPA\'s open-source community — contribute code, or submit a privacy tool for review and listing in the Community Privacy Tools directory.',
-  alternates: { canonical: 'https://odipa.org/get-involved/contribute-code' },
+  alternates: { canonical: 'https://www.odipa.org/get-involved/contribute-code' },
 }
 
 const ways = [

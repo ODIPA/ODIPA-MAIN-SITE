@@ -5,7 +5,7 @@ import { FileText, ExternalLink, Mail, Shield, BookOpen, ClipboardList, Building
 export const metadata: Metadata = {
   title: 'Transparency & Financial Disclosures',
   description: 'ODIPA\'s public financial documents, Form 990 filings, IRS determination letter, and governance disclosures. All records available upon request.',
-  alternates: { canonical: 'https://odipa.org/transparency' },
+  alternates: { canonical: 'https://www.odipa.org/transparency' },
 }
 
 const documents = [

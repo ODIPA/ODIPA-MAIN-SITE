@@ -2,7 +2,7 @@ export const dynamic = 'force-static'
 
 import { MetadataRoute } from 'next'
 
-const BASE = 'https://odipa.org'
+const BASE = 'https://www.odipa.org'
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
