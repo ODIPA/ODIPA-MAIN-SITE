@@ -84,7 +84,7 @@ module.exports = async function handler(context, req) {
       if (!res.ok) return respond(context, 502, { error: `Generation failed (${res.status}).` })
       const data = await res.json()
       const text = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n')
-      const cleaned = text.replace(/```json|```/g, '')
+      const cleaned = text.replace(/```json|```/g, '').replace(/<\/?cite[^>]*>/g, '')
       const s = cleaned.indexOf('{'); const e = cleaned.lastIndexOf('}')
       if (s < 0 || e <= s) return respond(context, 502, { error: 'Generation returned an unexpected format. Try again.' })
       let posts
@@ -122,7 +122,7 @@ module.exports = async function handler(context, req) {
       if (!res.ok) return respond(context, 502, { error: `Generation failed (${res.status}).` })
       const data = await res.json()
       const text = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n')
-      const cleaned = text.replace(/```json|```/g, '')
+      const cleaned = text.replace(/```json|```/g, '').replace(/<\/?cite[^>]*>/g, '')
       const s = cleaned.indexOf('['); const e = cleaned.lastIndexOf(']')
       if (s < 0 || e <= s) return respond(context, 502, { error: 'Generation returned an unexpected format. Try again.' })
       let items
@@ -171,7 +171,7 @@ module.exports = async function handler(context, req) {
     }
     const data = await res.json()
     const text = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n')
-    const cleaned = text.replace(/```json|```/g, '')
+    const cleaned = text.replace(/```json|```/g, '').replace(/<\/?cite[^>]*>/g, '')
     const start = cleaned.indexOf('[')
     const end = cleaned.lastIndexOf(']')
     if (start < 0 || end <= start) return respond(context, 502, { error: 'Generation returned an unexpected format. Try again.' })
