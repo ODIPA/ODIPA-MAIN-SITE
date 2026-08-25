@@ -13,7 +13,7 @@ module.exports = async function (context, req) {
     return respond(context, 401, { error: 'Unauthorized' })
 
   try {
-    const raw = (req.query.status || 'acked,drafted,needs-attention').split(',').map(s => s.trim()).filter(Boolean)
+    const raw = (req.query.status || 'acked,drafted,needs-attention,sent,meeting').split(',').map(s => s.trim()).filter(Boolean)
     const rows = await listInquiries(raw)
     rows.sort((a, b) => (a.rowKey < b.rowKey ? -1 : 1)) // inverted-ts ids: newest first
     respond(context, 200, {

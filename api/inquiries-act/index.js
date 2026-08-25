@@ -1,7 +1,9 @@
 /**
- * POST /api/inquiries-act — approve-and-send or dismiss an inquiry draft.
+ * POST /api/inquiries-act, approve-and-send or dismiss an inquiry draft.
  * Admin-only (x-admin-key).
- * Body: { id, action: 'send' | 'dismiss', subject?, body? }
+ * Body: { id, action: 'send' | 'dismiss' | 'move', subject?, body?, status? }
+ * 'move' sets a whitelisted pipeline status (kanban drag or button). Moving
+ * to 'sent' marks an inquiry handled personally and emails nothing.
  * 'send' uses the provided subject/body (the admin may have edited the
  * draft), emails the submitter with reply-to routed to the team address,
  * and marks the inquiry sent. Nothing sends without this explicit call.
@@ -38,6 +40,14 @@ module.exports = async function (context, req) {
     if (action === 'dismiss') {
       await updateInquiry(id, { status: 'dismissed' })
       return respond(context, 200, { ok: true, status: 'dismissed' })
+    }
+
+    if (action === 'move') {
+      const allowed = ['acked', 'needs-attention', 'sent', 'meeting']
+      const target = String(req.body && req.body.status || '')
+      if (!allowed.includes(target)) return respond(context, 400, { error: 'Invalid target status' })
+      await updateInquiry(id, { status: target })
+      return respond(context, 200, { ok: true, status: target })
     }
 
     if (action === 'send') {
