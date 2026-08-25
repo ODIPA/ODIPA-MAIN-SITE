@@ -114,8 +114,12 @@ export default function NewsletterAdminDashboard() {
   const [stats, setStats] = useState<Stats | null>(null)
   const [state, setState] = useState<'idle' | 'loading' | 'error' | 'unauthorized'>('idle')
 
-  const defaultMonth = new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' })
-  const [month, setMonth] = useState(defaultMonth)
+  // Stored as YYYY-MM for the native month picker. The human-readable label
+  // ("August 2026") is derived for prompts and published HTML, so the model
+  // and readers see prose while the input gets a real calendar control.
+  const defaultYm = new Date().toISOString().slice(0, 7)
+  const [monthYm, setMonthYm] = useState(defaultYm)
+  const month = new Date(`${monthYm}-15T00:00:00Z`).toLocaleString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' })
   const [extraNotes, setExtraNotes] = useState('')
   const [breaches, setBreaches] = useState<Item[]>([])
   const [laws, setLaws] = useState<Item[]>([])
@@ -333,7 +337,7 @@ export default function NewsletterAdminDashboard() {
             <div className="flex flex-wrap items-end gap-3">
               <div>
                 <label className="text-[12px] text-slate-500 block mb-1">Issue month</label>
-                <input value={month} onChange={e => setMonth(e.target.value)}
+                <input type="month" value={monthYm} onChange={e => setMonthYm(e.target.value)}
                   className="border border-slate-300 rounded-lg px-3 py-2 text-[13px] w-48 focus:outline-none focus:ring-2 focus:ring-gold" />
               </div>
               <div className="flex-1 min-w-[220px]">

@@ -92,7 +92,7 @@ export default function InquiriesAdminDashboard() {
 
   if (!unlocked) {
     return (
-      <div className="bg-cream min-h-screen flex items-center justify-center px-4">
+      <div className="bg-cream min-h-screen flex items-center justify-center px-4 pt-24">
         <div className="bg-white rounded-xl border border-slate-200 p-6 w-full max-w-sm">
           <h1 className="font-bold text-lg text-navy mb-1">Inquiry Inbox</h1>
           <p className="text-slate-500 text-sm mb-4">Review and approve replies to contact inquiries.</p>
@@ -116,21 +116,23 @@ export default function InquiriesAdminDashboard() {
 
   return (
     <div className="bg-cream min-h-screen">
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+      <div className="bg-navy">
+        <div className="max-w-4xl mx-auto px-4 pt-28 pb-8 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="font-bold text-xl text-navy">Inquiry Inbox</h1>
-            <p className="text-slate-500 text-sm">{drafted.length} awaiting approval · {flagged.length} flagged · {waiting.length} in grace period</p>
+            <h1 className="font-bold text-xl text-white">Inquiry Inbox</h1>
+            <p className="text-slate-300 text-sm">{drafted.length} awaiting approval · {flagged.length} flagged · {waiting.length} in grace period</p>
           </div>
           <div className="flex items-center gap-2">
             <button onClick={runDrafting} disabled={busy === 'draft-run'}
-              className="bg-navy text-white rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-50">
+              className="bg-gold text-navy rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-50">
               {busy === 'draft-run' ? 'Drafting…' : 'Run drafting now'}
             </button>
-            <button onClick={load} className="border border-slate-300 rounded-lg px-4 py-2 text-sm">Refresh</button>
+            <button onClick={load} className="border border-white/30 text-white rounded-lg px-4 py-2 text-sm">Refresh</button>
           </div>
         </div>
+      </div>
 
+      <div className="max-w-4xl mx-auto px-4 py-8">
         {notice && <div className="mb-4 bg-white border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-navy">{notice}</div>}
 
         {items.length === 0 && (

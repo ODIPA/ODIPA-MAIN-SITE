@@ -160,7 +160,7 @@ module.exports = async function handler(context, req) {
         model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-5',
         max_tokens: 1500,
         system,
-        messages: [{ role: 'user', content: `Research the ${section.label} section for the ${month} issue.${extraNotes ? ` Editor notes. ${extraNotes}` : ''}` }],
+        messages: [{ role: 'user', content: `Research the ${section.label} section for the ${month} issue. Only include items whose events are dated within ${month}. Discard anything older, however significant.${extraNotes ? ` Editor notes. ${extraNotes}` : ''}` }],
         tools: [{ type: 'web_search_20250305', name: 'web_search' }],
       }),
     })
