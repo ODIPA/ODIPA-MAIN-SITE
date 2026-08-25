@@ -1,0 +1,21 @@
+# Daily inquiry drafting run.
+# SWA managed functions cannot host timer triggers, so this scheduled
+# workflow calls the admin drafting endpoint instead. Requires the repo
+# secret ODIPA_ADMIN_KEY set to the same value as NEWSLETTER_ADMIN_KEY.
+name: Daily inquiry drafting
+
+on:
+  schedule:
+    - cron: '0 16 * * *'   # 16:00 UTC, morning Pacific
+  workflow_dispatch: {}
+
+jobs:
+  draft:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run drafting pass
+        run: |
+          curl -sS -X POST "https://www.odipa.org/api/inquiries-draft" \
+            -H "x-admin-key: ${{ secrets.ODIPA_ADMIN_KEY }}" \
+            -w "\nHTTP %{http_code}\n" \
+            --fail-with-body
