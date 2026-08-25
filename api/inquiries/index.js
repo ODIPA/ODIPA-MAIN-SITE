@@ -1,5 +1,5 @@
 /**
- * GET /api/inquiries — admin list for the review inbox.
+ * GET /api/inquiries, admin list for the review inbox.
  * Requires header x-admin-key matching NEWSLETTER_ADMIN_KEY.
  * ?status=drafted,needs-attention,acked (comma list, default all active)
  */
@@ -23,6 +23,7 @@ module.exports = async function (context, req) {
         status: r.status, receivedAt: Number(r.receivedAt) || 0,
         draftSubject: r.draftSubject || '', draftBody: r.draftBody || '',
         draftReason: r.draftReason || '', draftedAt: Number(r.draftedAt) || 0,
+        prepSheetAt: Number(r.prepSheetAt) || 0,
       })),
     })
   } catch (err) {

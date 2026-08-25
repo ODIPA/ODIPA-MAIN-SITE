@@ -23,6 +23,7 @@ type Inquiry = {
   draftBody: string
   draftReason: string
   draftedAt: number
+  prepSheetAt: number
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -85,6 +86,37 @@ export default function InquiriesAdminDashboard() {
         setNotice(action === 'send' ? `Reply sent to ${item?.email}` : 'Dismissed')
       } else setNotice(data.error || 'Action failed')
     } catch { setNotice('Action failed') }
+    finally { setBusy(null) }
+  }
+
+  const viewPrep = async (id: string) => {
+    setBusy(`prep-${id}`); setNotice('')
+    try {
+      const res = await fetch(`/api/inquiries-prep?id=${encodeURIComponent(id)}`, {
+        headers: { 'x-admin-key': key.trim() },
+      })
+      const data = await res.json()
+      if (!res.ok) { setNotice(data.error || 'Could not load prep sheet'); return }
+      const w = window.open('', '_blank')
+      if (w) { w.document.write(data.html); w.document.close() }
+      else setNotice('Popup blocked, allow popups for this site to view prep sheets')
+    } catch { setNotice('Could not load prep sheet') }
+    finally { setBusy(null) }
+  }
+
+  const generatePrep = async (id: string, regenerate = false) => {
+    setBusy(`prep-${id}`); setNotice('')
+    try {
+      const res = await fetch('/api/inquiries-prep', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-key': key.trim() },
+        body: JSON.stringify({ id, regenerate }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setNotice(data.error || 'Prep sheet generation failed'); return }
+      setItems(prev => prev.map(i => i.id === id ? { ...i, prepSheetAt: data.generatedAt || Date.now() } : i))
+      await viewPrep(id)
+    } catch { setNotice('Prep sheet generation failed') }
     finally { setBusy(null) }
   }
 
@@ -197,6 +229,20 @@ export default function InquiriesAdminDashboard() {
                     className="border border-slate-300 text-slate-600 rounded-lg px-4 py-2 text-sm disabled:opacity-50">
                     Dismiss
                   </button>
+                  {inq.topic === 'volunteer' && (
+                    <button
+                      onClick={() => inq.prepSheetAt ? viewPrep(inq.id) : generatePrep(inq.id)}
+                      disabled={busy === `prep-${inq.id}`}
+                      className="border border-navy/30 text-navy rounded-lg px-4 py-2 text-sm disabled:opacity-50">
+                      {busy === `prep-${inq.id}` ? 'Working…' : inq.prepSheetAt ? 'View prep sheet' : 'Generate prep sheet'}
+                    </button>
+                  )}
+                  {inq.topic === 'volunteer' && !!inq.prepSheetAt && (
+                    <button onClick={() => generatePrep(inq.id, true)} disabled={busy === `prep-${inq.id}`}
+                      className="text-xs text-slate-400 underline underline-offset-2 disabled:opacity-50">
+                      regenerate
+                    </button>
+                  )}
                   <a href={`mailto:${inq.email}`} className="text-sm text-slate-500 underline underline-offset-2 ml-auto">Reply personally</a>
                 </div>
               </div>
