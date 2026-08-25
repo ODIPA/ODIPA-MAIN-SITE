@@ -6,6 +6,7 @@
  */
 
 const { sendFormEmail, sendHtmlEmail, respond, clean } = require('../_shared/mailer')
+const { saveInquiry } = require('../_shared/inquiries')
 const { checkRateLimit, getClientIp } = require('../_shared/rateLimiter')
 
 // ── Auto-acknowledgment templates per topic ──────────────────────────────────
@@ -148,6 +149,14 @@ module.exports = async function handler(context, req) {
       })
     } catch (ackErr) {
       context.log.error('Contact acknowledgment failed:', ackErr.message)
+    }
+
+    // Persist for the admin review inbox. Failure only logs, the inquiry
+    // was already delivered by email either way.
+    try {
+      await saveInquiry({ topic, name, email, organization, message, routedTo: toAddress })
+    } catch (storeErr) {
+      context.log.error('Inquiry store failed:', storeErr.message)
     }
 
     respond(context, 200, { ok: true })

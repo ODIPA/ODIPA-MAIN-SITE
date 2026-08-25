@@ -95,6 +95,35 @@ module.exports = async function handler(context, req) {
     if (!github || !github.startsWith('https://github.com/'))
       return respond(context, 400, { error: 'Valid GitHub URL is required' })
 
+    // ── Spam guardrails ────────────────────────────────────────────────────
+    // 1. The privacy problem must be answered in its own words. Submissions
+    //    that paste the description again are directory spam by signature.
+    const privacyProblem = clean(body['Privacy Problem'], 2000) || ''
+    const normalize = s => s.toLowerCase().replace(/\s+/g, ' ').trim()
+    if (!privacyProblem || normalize(privacyProblem) === normalize(description))
+      return respond(context, 400, { error: 'Please describe the specific privacy problem this tool solves, in your own words.' })
+    if (privacyProblem.length < 40)
+      return respond(context, 400, { error: 'Please describe the privacy problem in at least a sentence or two.' })
+
+    // 2. The GitHub repo must actually exist and not be empty.
+    try {
+      const m = /^https:\/\/github\.com\/([^\/]+)\/([^\/]+?)(?:\.git)?\/?$/.exec(github)
+      if (!m) return respond(context, 400, { error: 'GitHub URL must point to a repository.' })
+      const repoRes = await fetch(`https://api.github.com/repos/${m[1]}/${m[2]}`, {
+        headers: { Accept: 'application/vnd.github.v3+json', 'User-Agent': 'odipa-tool-submit' },
+      })
+      if (repoRes.status === 404)
+        return respond(context, 400, { error: 'That GitHub repository does not exist or is private.' })
+      if (repoRes.ok) {
+        const repo = await repoRes.json()
+        if ((repo.size ?? 0) === 0)
+          return respond(context, 400, { error: 'That repository appears to be empty.' })
+      }
+      // Rate-limited or transient GitHub errors fall through, humans review anyway.
+    } catch (ghErr) {
+      context.log.warn('GitHub check skipped:', ghErr.message)
+    }
+
     // Run email + GitHub issue creation in parallel
     const [, issue] = await Promise.allSettled([
       sendFormEmail({
