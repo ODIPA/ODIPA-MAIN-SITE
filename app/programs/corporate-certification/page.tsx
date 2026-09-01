@@ -86,31 +86,36 @@ const credentials = [
 const methodologySteps = [
   {
     num: '01',
+    title: 'ODIPA Assessor Qualification',
+    desc: 'Before any assessor evaluates an applicant, they complete ODIPA\'s internal qualification, covering the certification criteria, the assessment methodology, evidence standards, and findings reporting, followed by a supervised assessment. The program launches only when a qualified assessor bench exists.',
+  },
+  {
+    num: '02',
     title: 'Credential Matching',
     desc: 'Every assessment must be staffed by assessors holding credentials directly relevant to the organization\'s industry and applicable frameworks. A healthcare applicant is assessed by a CHPC/CIPP-credentialed assessor; a financial services applicant by CAMS/CIPP assessors.',
   },
   {
-    num: '02',
+    num: '03',
     title: 'Framework Scoping',
     desc: 'Before assessment begins, ODIPA identifies all applicable frameworks based on the organization\'s industry, size, data types, and jurisdictions. Assessments are never one-size-fits-all.',
   },
   {
-    num: '03',
+    num: '04',
     title: 'Independent Review Panel',
     desc: 'Certification decisions require a minimum two-assessor panel. No single assessor can unilaterally certify or deny an organization, and no certification is issued until a full panel is seated. Decisions are documented and retained.',
   },
   {
-    num: '04',
+    num: '05',
     title: 'Conflicts of Interest Policy',
     desc: 'Assessors may not evaluate organizations they have a financial, employment, or advisory relationship with. Every assessor must sign ODIPA\'s conflict-of-interest disclosure annually before taking assignments.',
   },
   {
-    num: '05',
+    num: '06',
     title: 'Continuing Education',
     desc: 'Assessors are required to maintain active credentials and complete continuing education on evolving privacy law. Credential lapses result in suspension from assessor assignments pending renewal.',
   },
   {
-    num: '06',
+    num: '07',
     title: 'Confidentiality Commitment',
     desc: 'All assessment materials, findings, and gap analyses are confidential. ODIPA publishes only certification status — never assessment details — and retains documents under strict access controls.',
   },
@@ -119,7 +124,7 @@ const methodologySteps = [
 export default function Page() {
   return (
     <ProgramLayout data={{
-      num: '05',
+      num: '06',
       pct: '9%',
       pctFree: '4%',
       pctFee: '5%',
@@ -129,9 +134,9 @@ export default function Page() {
       image: '/images/corporate-certification.jpg',
       imageAlt: 'Business professionals reviewing compliance documentation together',
       hero: `Consumers are skeptical of self-declared privacy commitments. ODIPA's Corporate Certification program provides independent, rigorous verification — giving privacy-committed organizations a seal that actually means something.`,
-      overview: `ODIPA's Corporate Privacy Certification is a structured assessment of an organization's data practices against applicable privacy law and industry best practices. Unlike self-certification or checkbox compliance, ODIPA's process involves documentation review, staff training verification, breach response evaluation, and a structured interview with our assessment team. We benchmark against CCPA/CPRA, VCDPA, CPA, CTDPA, GLBA, BSA, PCI DSS, HIPAA, HITECH, NERC CIP, BIPA, FERPA, COPPA, SOC 2, NIST Privacy Framework, ISO 27001, GDPR, LGPD, PIPEDA, PIPL, and additional applicable state and international laws — covering financial services, healthcare, energy, education, technology, and all consumer-facing industries. Organizations that pass receive the ODIPA Trust Seal — a verifiable, annually renewed mark that signals genuine commitment to consumer privacy. Revenue from certifications directly funds ODIPA's free consumer programs.`,
+      overview: `ODIPA's Corporate Privacy Certification is a structured conformity assessment of an organization's data practices against ODIPA's published certification criteria. Our criteria draw on established frameworks, including CCPA/CPRA and the emerging state privacy laws, GDPR, the NIST Privacy Framework, ISO 27001, and SOC 2, with sector-specific rules such as HIPAA, GLBA, COPPA, and BIPA applied where they govern an applicant's industry. Unlike self-certification or checkbox compliance, the process involves documentation review, staff training verification, breach response evaluation, and structured interviews conducted by ODIPA-qualified assessors. Organizations receive written findings, remediate them, and are certified only when the criteria are met. Certification attests that an organization met ODIPA's published criteria on the assessment date. It is not a legal determination of compliance, which only regulators and courts can make. Certified organizations receive the ODIPA Trust Seal, a verifiable, annually renewed mark that signals genuine commitment to consumer privacy. The program is accepting inquiries for its founding cohort, and revenue from certifications directly funds ODIPA's free consumer programs.`,
       whatWeDo: [
-        { icon: <ClipboardCheck className="w-5 h-5" />, title: 'Privacy Compliance Assessment', desc: 'Fee-based structured review of your organization\'s data collection, processing, retention, and sharing practices against applicable law. Fees are set at cost to sustain program operations.' },
+        { icon: <ClipboardCheck className="w-5 h-5" />, title: 'Privacy Compliance Assessment', desc: 'Fee-based structured review of your organization\'s data collection, processing, retention, and sharing practices against ODIPA\'s published certification criteria. Fees are set at cost to sustain program operations.' },
         { icon: <Search className="w-5 h-5" />, title: 'Policy & Documentation Review', desc: 'Fee-based evaluation of your privacy policy, consent mechanisms, data subject request processes, and internal data governance documentation.' },
         { icon: <Users className="w-5 h-5" />, title: 'Employee Training Verification', desc: 'Fee-based assessment of staff privacy training programs, including frequency, content coverage, and completion rates.' },
         { icon: <ShieldAlert className="w-5 h-5" />, title: 'Breach Response Evaluation', desc: 'Fee-based review of your incident response plan, breach notification procedures, and historical response track record.' },
@@ -151,7 +156,8 @@ export default function Page() {
         { metric: 'Rigorous', label: 'Independent assessment' },
       ],
       faqs: [
-        { q: 'How long does the certification process take?', a: 'The typical process takes 4–6 weeks from application to decision, depending on your organization\'s size and how quickly you submit documentation.' },
+        { q: 'How long does the certification process take?', a: 'The process is designed to run four to six weeks from application to decision, depending on your organization\'s size and how quickly documentation is submitted. Founding cohort timelines are agreed individually.' },
+        { q: 'Does certification mean we are legally compliant?', a: 'No, and no certification can. ODIPA certification attests that your organization met ODIPA\'s published criteria on the assessment date. Legal compliance is determined only by regulators and courts. Our criteria are designed to reflect strong privacy practice, and the assessment is structured to be a genuine review, never a rubber stamp.' },
         { q: 'What does ODIPA certification cost?', a: 'Pricing is based on organization size. Contact certification@odipa.org for a quote. All revenue from certifications funds ODIPA\'s free consumer programs.' },
         { q: 'What happens if we don\'t pass?', a: 'We provide a confidential Gap Analysis report with specific recommendations. Many organizations address findings and reapply within 60–90 days.' },
       ],
