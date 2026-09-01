@@ -1,0 +1,675 @@
+{
+  "version": "1.0 Draft",
+  "effectiveDate": "Pending counsel review",
+  "status": "Draft for public comment and counsel review. Not yet in force for any assessment.",
+  "ratings": [
+    [
+      "Met",
+      "Evidence demonstrates the requirement is implemented and operating."
+    ],
+    [
+      "Partially Met",
+      "The requirement is implemented in part or operates inconsistently. A finding is issued with a remediation window."
+    ],
+    [
+      "Not Met",
+      "Evidence is absent or the practice contradicts the requirement. A finding is issued and certification cannot issue until remediated."
+    ],
+    [
+      "Not Applicable",
+      "The requirement does not apply to the organization's processing, with the rationale documented by the assessor."
+    ]
+  ],
+  "decisionRule": [
+    "Every criterion marked Mandatory must be rated Met or Not Applicable for certification to issue.",
+    "Criteria not marked Mandatory may be rated Partially Met, provided the organization accepts a remediation plan with a dated window, and no more than one quarter of applicable non-mandatory criteria are rated below Met.",
+    "All findings are delivered in writing with the criterion cited by identifier. The organization remediates and resubmits evidence. Certification issues only when the decision rule is satisfied on the assessment date.",
+    "Certification attests conformance to these criteria on the assessment date. It is not a determination of legal compliance, which only regulators and courts can make."
+  ],
+  "domains": [
+    {
+      "id": "GOV",
+      "name": "Governance and Accountability",
+      "intro": "Whether privacy is owned, documented, and overseen as a program rather than treated as a policy page.",
+      "criteria": [
+        {
+          "id": "GOV-01",
+          "m": true,
+          "title": "Designated privacy owner",
+          "req": "A named individual or role is accountable for the privacy program, with documented responsibilities and executive reporting.",
+          "ev": [
+            "Role description or charter",
+            "Organization chart"
+          ],
+          "refs": [
+            "GDPR Art. 37 to 39",
+            "NIST PF GV.PO",
+            "SOC 2 CC1"
+          ]
+        },
+        {
+          "id": "GOV-02",
+          "m": true,
+          "title": "Written privacy program",
+          "req": "An internal privacy policy or program document defines principles, roles, and procedures, is approved by leadership, and is reviewed at least annually.",
+          "ev": [
+            "Internal privacy policy with approval and review dates"
+          ],
+          "refs": [
+            "NIST PF GV.PO",
+            "ISO 27001 A.5",
+            "SOC 2 CC1"
+          ]
+        },
+        {
+          "id": "GOV-03",
+          "m": true,
+          "title": "Data inventory",
+          "req": "The organization maintains a current inventory of personal information it processes, including categories, sources, purposes, recipients, and retention, updated when processing changes.",
+          "ev": [
+            "Data inventory or record of processing activities"
+          ],
+          "refs": [
+            "GDPR Art. 30",
+            "CCPA §1798.100",
+            "NIST PF ID.IM"
+          ]
+        },
+        {
+          "id": "GOV-04",
+          "m": false,
+          "title": "Privacy risk assessment",
+          "req": "New or materially changed processing of personal information is assessed for privacy risk before launch, with documented outcomes and mitigations.",
+          "ev": [
+            "PIA or DPIA template",
+            "Completed assessment samples"
+          ],
+          "refs": [
+            "GDPR Art. 35",
+            "NIST PF ID.RA",
+            "SOC 2 CC3"
+          ]
+        },
+        {
+          "id": "GOV-05",
+          "m": true,
+          "title": "Retention schedule",
+          "req": "A retention and deletion schedule defines how long each category of personal information is kept and the basis for that period.",
+          "ev": [
+            "Retention and deletion schedule"
+          ],
+          "refs": [
+            "GDPR Art. 5(1)(e)",
+            "CCPA §1798.100(a)(3)",
+            "SOC 2 P4"
+          ]
+        },
+        {
+          "id": "GOV-06",
+          "m": false,
+          "title": "Data classification",
+          "req": "Personal information is classified by sensitivity, and handling requirements are defined for each class.",
+          "ev": [
+            "Data classification policy"
+          ],
+          "refs": [
+            "ISO 27001 A.5",
+            "NIST PF ID.IM"
+          ]
+        },
+        {
+          "id": "GOV-07",
+          "m": false,
+          "title": "Leadership oversight",
+          "req": "Privacy program status, incidents, and risks are reported to executive leadership or the board at least annually.",
+          "ev": [
+            "Meeting minutes or reporting decks, redacted"
+          ],
+          "refs": [
+            "NIST PF GV.MT",
+            "SOC 2 CC1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "TRN",
+      "name": "Transparency and Consent",
+      "intro": "Whether people are told the truth about processing, at the right time, and given real choices.",
+      "criteria": [
+        {
+          "id": "TRN-01",
+          "m": true,
+          "title": "Complete privacy notice",
+          "req": "A consumer-facing privacy notice accurately describes categories collected, sources, purposes, disclosures, retention, consumer rights, and contact methods, and carries an effective date.",
+          "ev": [
+            "Current privacy notice",
+            "Change history"
+          ],
+          "refs": [
+            "CCPA §1798.130",
+            "GDPR Art. 13 and 14",
+            "SOC 2 P1"
+          ]
+        },
+        {
+          "id": "TRN-02",
+          "m": true,
+          "title": "Notice at collection",
+          "req": "Consumers are informed at or before the point of collection of the categories collected and the purposes of use.",
+          "ev": [
+            "Collection point screenshots",
+            "Notice placement documentation"
+          ],
+          "refs": [
+            "CCPA §1798.100(b)",
+            "GDPR Art. 13"
+          ]
+        },
+        {
+          "id": "TRN-03",
+          "m": true,
+          "title": "Consent where required",
+          "req": "Where law or the organization's own notice requires consent, it is obtained through an affirmative act, is specific to the purpose, and is recorded.",
+          "ev": [
+            "Consent flow documentation",
+            "Consent records sample"
+          ],
+          "refs": [
+            "GDPR Art. 6 and 7",
+            "CCPA sensitive information rules",
+            "SOC 2 P2"
+          ]
+        },
+        {
+          "id": "TRN-04",
+          "m": true,
+          "title": "Opt-out of sale and sharing",
+          "req": "Where applicable, consumers can opt out of the sale or sharing of personal information through an accessible mechanism, and browser opt-out preference signals are honored.",
+          "ev": [
+            "Opt-out mechanism",
+            "Preference signal handling documentation"
+          ],
+          "refs": [
+            "CCPA §1798.120 and §1798.135",
+            "CPRA regulations"
+          ]
+        },
+        {
+          "id": "TRN-05",
+          "m": false,
+          "title": "No manipulative design",
+          "req": "Consent, opt-out, and rights interfaces are designed so that declining is as easy as accepting and choices are not obtained through confusing or coercive design.",
+          "ev": [
+            "Interface review",
+            "Design guidelines"
+          ],
+          "refs": [
+            "CPRA regulations on dark patterns",
+            "GDPR Art. 7(3)"
+          ]
+        },
+        {
+          "id": "TRN-06",
+          "m": false,
+          "title": "Children's data",
+          "req": "Where the organization knowingly processes children's personal information, age screening, parental consent, and heightened protections are implemented as applicable.",
+          "ev": [
+            "Age screening and consent procedures"
+          ],
+          "refs": [
+            "COPPA, 16 CFR Part 312",
+            "CCPA §1798.120(c)",
+            "GDPR Art. 8"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "RTS",
+      "name": "Individual Rights",
+      "intro": "Whether people can actually exercise their rights, on time, without being punished for it.",
+      "criteria": [
+        {
+          "id": "RTS-01",
+          "m": true,
+          "title": "Request channels",
+          "req": "Consumers can submit rights requests through at least the methods required by applicable law, and the channels are published in the privacy notice.",
+          "ev": [
+            "Request intake documentation"
+          ],
+          "refs": [
+            "CCPA §1798.130(a)",
+            "GDPR Art. 12"
+          ]
+        },
+        {
+          "id": "RTS-02",
+          "m": true,
+          "title": "Proportionate verification",
+          "req": "Requester identity is verified using methods proportionate to the sensitivity of the data and the request, without collecting unnecessary additional information.",
+          "ev": [
+            "Verification procedure"
+          ],
+          "refs": [
+            "CPRA regulations on verification",
+            "GDPR Art. 12(6)"
+          ]
+        },
+        {
+          "id": "RTS-03",
+          "m": true,
+          "title": "Timeliness",
+          "req": "Requests are tracked and fulfilled within statutory timelines, with extensions used only where permitted and communicated.",
+          "ev": [
+            "Request log with dates",
+            "Timeline tracking"
+          ],
+          "refs": [
+            "CCPA §1798.130(a)(2)",
+            "GDPR Art. 12(3)"
+          ]
+        },
+        {
+          "id": "RTS-04",
+          "m": true,
+          "title": "Access and portability",
+          "req": "Access requests return the specific personal information held, in a usable and where required portable format.",
+          "ev": [
+            "Fulfilled request samples, anonymized"
+          ],
+          "refs": [
+            "CCPA §1798.110",
+            "GDPR Art. 15 and 20",
+            "SOC 2 P5"
+          ]
+        },
+        {
+          "id": "RTS-05",
+          "m": true,
+          "title": "Deletion including processors",
+          "req": "Deletion requests are fulfilled across the organization's systems and communicated to service providers and third parties as required.",
+          "ev": [
+            "Deletion procedure",
+            "Processor notification records"
+          ],
+          "refs": [
+            "CCPA §1798.105",
+            "GDPR Art. 17 and 19"
+          ]
+        },
+        {
+          "id": "RTS-06",
+          "m": false,
+          "title": "Correction",
+          "req": "Consumers can correct inaccurate personal information, and corrections propagate to relevant systems and recipients.",
+          "ev": [
+            "Correction procedure"
+          ],
+          "refs": [
+            "CCPA §1798.106",
+            "GDPR Art. 16"
+          ]
+        },
+        {
+          "id": "RTS-07",
+          "m": true,
+          "title": "Denials, appeals, and non-discrimination",
+          "req": "Denied requests are documented with reasons and any appeal route, and consumers are not discriminated against for exercising rights.",
+          "ev": [
+            "Denial records",
+            "Non-discrimination policy"
+          ],
+          "refs": [
+            "CCPA §1798.125",
+            "GDPR Art. 12(4)",
+            "CPA and VCDPA appeal provisions"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "MIN",
+      "name": "Data Minimization and Retention",
+      "intro": "Whether the organization collects only what it needs and lets go of it when it should.",
+      "criteria": [
+        {
+          "id": "MIN-01",
+          "m": true,
+          "title": "Purpose limitation",
+          "req": "Personal information is used only for the purposes disclosed at collection or purposes compatible with them.",
+          "ev": [
+            "Purpose documentation in the inventory",
+            "Use case review records"
+          ],
+          "refs": [
+            "GDPR Art. 5(1)(b)",
+            "CCPA §1798.100(c)",
+            "SOC 2 P3"
+          ]
+        },
+        {
+          "id": "MIN-02",
+          "m": true,
+          "title": "Collection limitation",
+          "req": "Collection is limited to what is reasonably necessary and proportionate for the disclosed purposes.",
+          "ev": [
+            "Data element justification",
+            "Form and collection point review"
+          ],
+          "refs": [
+            "GDPR Art. 5(1)(c)",
+            "CCPA §1798.100(c)",
+            "NIST PF CT.DM"
+          ]
+        },
+        {
+          "id": "MIN-03",
+          "m": false,
+          "title": "Retention enforced",
+          "req": "Retention periods are enforced through technical or procedural controls, not only stated in policy.",
+          "ev": [
+            "Deletion job evidence",
+            "Retention control documentation"
+          ],
+          "refs": [
+            "GDPR Art. 5(1)(e)",
+            "SOC 2 P4"
+          ]
+        },
+        {
+          "id": "MIN-04",
+          "m": false,
+          "title": "Secure disposal",
+          "req": "Personal information beyond its retention period is disposed of securely, including on backups within a defined period and at vendors.",
+          "ev": [
+            "Disposal procedure",
+            "Media sanitization standard"
+          ],
+          "refs": [
+            "ISO 27001 A.7 and A.8",
+            "SOC 2 P4"
+          ]
+        },
+        {
+          "id": "MIN-05",
+          "m": false,
+          "title": "De-identification standard",
+          "req": "Where the organization relies on de-identified or aggregated data, the method meets a recognized standard and re-identification is contractually and technically prohibited.",
+          "ev": [
+            "De-identification methodology",
+            "Contract terms"
+          ],
+          "refs": [
+            "CCPA §1798.140 de-identified definition",
+            "GDPR Recital 26"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "SEC",
+      "name": "Security Safeguards",
+      "intro": "Whether the information is protected in proportion to its sensitivity, and whether the organization would know if it were not.",
+      "criteria": [
+        {
+          "id": "SEC-01",
+          "m": true,
+          "title": "Information security program",
+          "req": "A written information security program defines controls proportionate to the sensitivity and volume of personal information processed.",
+          "ev": [
+            "Information security policy"
+          ],
+          "refs": [
+            "CCPA §1798.150 and Civil Code §1798.81.5",
+            "GDPR Art. 32",
+            "ISO 27001 A.5"
+          ]
+        },
+        {
+          "id": "SEC-02",
+          "m": true,
+          "title": "Access control",
+          "req": "Access to personal information follows least privilege, is reviewed periodically, and administrative and remote access require multi-factor authentication.",
+          "ev": [
+            "Access control policy",
+            "Access review records"
+          ],
+          "refs": [
+            "ISO 27001 A.5 and A.8",
+            "SOC 2 CC6",
+            "NIST PF PR.AC"
+          ]
+        },
+        {
+          "id": "SEC-03",
+          "m": true,
+          "title": "Encryption",
+          "req": "Personal information is encrypted in transit and, for sensitive categories, at rest, using current standards with managed keys.",
+          "ev": [
+            "Encryption standard",
+            "Key management documentation"
+          ],
+          "refs": [
+            "GDPR Art. 32",
+            "ISO 27001 A.8",
+            "SOC 2 CC6"
+          ]
+        },
+        {
+          "id": "SEC-04",
+          "m": false,
+          "title": "Logging and monitoring",
+          "req": "Access to and changes in systems holding personal information are logged, retained, and monitored for anomalies.",
+          "ev": [
+            "Logging standard",
+            "Monitoring evidence"
+          ],
+          "refs": [
+            "ISO 27001 A.8",
+            "SOC 2 CC7"
+          ]
+        },
+        {
+          "id": "SEC-05",
+          "m": true,
+          "title": "Vulnerability management",
+          "req": "Systems are assessed for vulnerabilities on a defined cadence, including at least annual independent testing for internet-facing systems, and findings are remediated by severity.",
+          "ev": [
+            "Most recent test summary",
+            "Remediation tracking"
+          ],
+          "refs": [
+            "ISO 27001 A.8",
+            "SOC 2 CC7"
+          ]
+        },
+        {
+          "id": "SEC-06",
+          "m": false,
+          "title": "Secure development",
+          "req": "Systems that process personal information are built and changed under a process that includes security and privacy review before release.",
+          "ev": [
+            "SDLC documentation",
+            "Change management records"
+          ],
+          "refs": [
+            "GDPR Art. 25",
+            "ISO 27001 A.8",
+            "NIST PF PR.PO"
+          ]
+        },
+        {
+          "id": "SEC-07",
+          "m": true,
+          "title": "Incident response",
+          "req": "An incident response plan assigns roles, defines escalation, and is exercised at least annually.",
+          "ev": [
+            "Incident response plan",
+            "Exercise records"
+          ],
+          "refs": [
+            "ISO 27001 A.5",
+            "SOC 2 CC7",
+            "NIST PF PR.PO"
+          ]
+        },
+        {
+          "id": "SEC-08",
+          "m": true,
+          "title": "Breach notification",
+          "req": "A breach procedure determines notification obligations and executes notice to individuals, regulators, and partners within statutory timeframes.",
+          "ev": [
+            "Breach notification procedure",
+            "Decision log template"
+          ],
+          "refs": [
+            "GDPR Art. 33 and 34",
+            "Civil Code §1798.82",
+            "HIPAA Breach Notification Rule where applicable"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "VEN",
+      "name": "Vendors and Third Parties",
+      "intro": "Whether the organization's promises survive the handoff to everyone it shares data with.",
+      "criteria": [
+        {
+          "id": "VEN-01",
+          "m": true,
+          "title": "Processor inventory",
+          "req": "Service providers and third parties that receive personal information are inventoried with the data shared and the purpose.",
+          "ev": [
+            "Vendor and sub-processor list"
+          ],
+          "refs": [
+            "GDPR Art. 28 and 30",
+            "CCPA §1798.140 service provider definition"
+          ]
+        },
+        {
+          "id": "VEN-02",
+          "m": false,
+          "title": "Due diligence",
+          "req": "Vendors are assessed for privacy and security practices before receiving personal information, proportionate to the risk of the sharing.",
+          "ev": [
+            "Due diligence questionnaire",
+            "Completed assessments"
+          ],
+          "refs": [
+            "SOC 2 CC9",
+            "NIST PF ID.DE"
+          ]
+        },
+        {
+          "id": "VEN-03",
+          "m": true,
+          "title": "Contract terms",
+          "req": "Contracts with recipients of personal information include the terms required by applicable law, including purpose limitation, confidentiality, security, deletion, and cooperation with rights requests.",
+          "ev": [
+            "DPA template",
+            "Executed agreement samples"
+          ],
+          "refs": [
+            "GDPR Art. 28(3)",
+            "CCPA §1798.100(d) and §1798.140",
+            "SOC 2 P6"
+          ]
+        },
+        {
+          "id": "VEN-04",
+          "m": false,
+          "title": "Cross-border transfers",
+          "req": "Where personal information leaves its jurisdiction of collection, a lawful transfer mechanism is in place and documented.",
+          "ev": [
+            "Transfer mechanism records"
+          ],
+          "refs": [
+            "GDPR Art. 44 to 46",
+            "PIPEDA and LGPD transfer provisions where applicable"
+          ]
+        },
+        {
+          "id": "VEN-05",
+          "m": false,
+          "title": "Ongoing oversight and offboarding",
+          "req": "Vendor performance is monitored, and at termination personal information is returned or destroyed with confirmation.",
+          "ev": [
+            "Monitoring records",
+            "Offboarding checklist"
+          ],
+          "refs": [
+            "GDPR Art. 28(3)(g)",
+            "SOC 2 CC9"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "TRA",
+      "name": "Training and Awareness",
+      "intro": "Whether the people who touch the data know what they are responsible for.",
+      "criteria": [
+        {
+          "id": "TRA-01",
+          "m": true,
+          "title": "Onboarding training",
+          "req": "New personnel who handle personal information complete privacy training before receiving access.",
+          "ev": [
+            "Onboarding procedure",
+            "Completion records"
+          ],
+          "refs": [
+            "GDPR Art. 39(1)(b)",
+            "ISO 27001 A.6",
+            "SOC 2 CC1"
+          ]
+        },
+        {
+          "id": "TRA-02",
+          "m": true,
+          "title": "Annual role-based training",
+          "req": "Personnel complete privacy training at least annually, with content tailored to the data and processes their role involves.",
+          "ev": [
+            "Training curriculum",
+            "Completion records by role, anonymized"
+          ],
+          "refs": [
+            "CCPA §1798.130(a)(6)",
+            "ISO 27001 A.6",
+            "NIST PF GV.AT"
+          ]
+        },
+        {
+          "id": "TRA-03",
+          "m": false,
+          "title": "Handler procedures",
+          "req": "Documented procedures exist for personnel who process rights requests, respond to incidents, or handle sensitive categories.",
+          "ev": [
+            "Role-specific procedures"
+          ],
+          "refs": [
+            "CCPA §1798.130(a)(6)",
+            "SOC 2 CC2"
+          ]
+        },
+        {
+          "id": "TRA-04",
+          "m": false,
+          "title": "Awareness of reporting",
+          "req": "Personnel know how to report suspected incidents and privacy concerns, and reports are acted on without retaliation.",
+          "ev": [
+            "Reporting channel documentation",
+            "Awareness materials"
+          ],
+          "refs": [
+            "ISO 27001 A.6",
+            "SOC 2 CC2 and CC7"
+          ]
+        }
+      ]
+    }
+  ]
+}

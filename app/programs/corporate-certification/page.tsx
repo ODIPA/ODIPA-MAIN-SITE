@@ -157,11 +157,12 @@ export default function Page() {
       ],
       faqs: [
         { q: 'How long does the certification process take?', a: 'The process is designed to run four to six weeks from application to decision, depending on your organization\'s size and how quickly documentation is submitted. Founding cohort timelines are agreed individually.' },
+        { q: 'Where are the certification criteria published?', a: 'In full, on our Certification Criteria page at odipa.org/programs/corporate-certification/criteria, with evidence expectations, framework references, the rating scale, and the certification decision rule. Findings cite criteria by identifier.' },
         { q: 'Does certification mean we are legally compliant?', a: 'No, and no certification can. ODIPA certification attests that your organization met ODIPA\'s published criteria on the assessment date. Legal compliance is determined only by regulators and courts. Our criteria are designed to reflect strong privacy practice, and the assessment is structured to be a genuine review, never a rubber stamp.' },
         { q: 'What does ODIPA certification cost?', a: 'Pricing is based on organization size. Contact certification@odipa.org for a quote. All revenue from certifications funds ODIPA\'s free consumer programs.' },
         { q: 'What happens if we don\'t pass?', a: 'We provide a confidential Gap Analysis report with specific recommendations. Many organizations address findings and reapply within 60–90 days.' },
       ],
-      cta: { label: 'Apply for Certification', href: '/get-involved/get-certified', secondary: { label: 'Download Certification Guide', href: '/documents/ODIPA-Certification-Guide.pdf', download: true } },
+      cta: { label: 'Apply for Certification', href: '/get-involved/get-certified', secondary: { label: 'Read the Certification Criteria', href: '/programs/corporate-certification/criteria' } },
     }}>
 
       {/* Fee funds free — breakdown callout */}
