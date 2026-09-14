@@ -158,9 +158,9 @@ module.exports = async function handler(context, req) {
       },
       body: JSON.stringify({
         model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-5',
-        max_tokens: 1500,
+        max_tokens: 4000,
         system,
-        messages: [{ role: 'user', content: `Research the ${section.label} section for the ${month} issue. Only include items whose events are dated within ${month}. Discard anything older, however significant.${extraNotes ? ` Editor notes. ${extraNotes}` : ''}` }],
+        messages: [{ role: 'user', content: `Research the ${section.label} section for the ${month} issue. Prefer items whose events are dated within ${month}. If the month is young or fewer than two qualifying items exist, use the most recent items from the past six weeks instead, and state each item's date plainly in its summary. Never include anything older than six weeks. Return fewer items rather than inventing or padding, but never return an empty list when relevant recent items exist.${extraNotes ? ` Editor notes. ${extraNotes}` : ''}` }],
         tools: [{ type: 'web_search_20250305', name: 'web_search' }],
       }),
     })
@@ -172,14 +172,28 @@ module.exports = async function handler(context, req) {
     const data = await res.json()
     const text = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n')
     const cleaned = text.replace(/```json|```/g, '').replace(/<\/?cite[^>]*>/g, '')
+    const truncated = data.stop_reason === 'max_tokens'
     const start = cleaned.indexOf('[')
-    const end = cleaned.lastIndexOf(']')
-    if (start < 0 || end <= start) return respond(context, 502, { error: 'Generation returned an unexpected format. Try again.' })
-
-    let items
-    try { items = JSON.parse(cleaned.slice(start, end + 1)) } catch (e) {
-      return respond(context, 502, { error: 'Generated JSON could not be parsed. Try again.' })
+    if (start < 0) {
+      return respond(context, 502, { error: truncated ? 'Generation ran out of room before the items. Try again.' : 'Generation returned an unexpected format. Try again.' })
     }
+    const end = cleaned.lastIndexOf(']')
+
+    let items = null
+    if (end > start) {
+      try { items = JSON.parse(cleaned.slice(start, end + 1)) } catch (e) { items = null }
+    }
+    if (!items) {
+      // Salvage complete objects from a truncated or malformed array
+      const lastObj = cleaned.lastIndexOf('}')
+      if (lastObj > start) {
+        try { items = JSON.parse(cleaned.slice(start, lastObj + 1) + ']') } catch (e) { items = null }
+      }
+    }
+    if (!items) {
+      return respond(context, 502, { error: truncated ? 'Generation ran out of room mid list. Try again.' : 'Generated JSON could not be parsed. Try again.' })
+    }
+    if (truncated) context.log.warn(`newsletter-generate: ${body.section} hit max_tokens, salvaged ${Array.isArray(items) ? items.length : 0} items`)
     const norm = (Array.isArray(items) ? items : []).map(i => ({
       title: clean(i.title, 200), summary: clean(i.summary, 600), url: clean(i.url, 500),
     })).filter(i => i.title && i.summary)
