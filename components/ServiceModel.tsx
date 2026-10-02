@@ -22,7 +22,7 @@ const legend = [
 const modelItems = [
   { num: '01', title: 'Free Educational Courses', tag: 'FREE', tagColor: 'text-green-600 bg-green-100', desc: 'Public courses, webinars, and workshops for underserved communities' },
   { num: '02', title: 'Corporate Training', tag: 'FEE-BASED', tagColor: 'text-blue-brand bg-blue-brand/10', desc: 'Privacy training for businesses and corporations. Scoped and priced per engagement. Revenue funds free public programs.' },
-  { num: '03', title: 'Certification Program', tag: 'FEE-BASED', tagColor: 'text-blue-brand bg-blue-brand/10', desc: 'Priced by organization size and number of standards in scope. Independent third-party certification against applicable privacy frameworks.' },
+  { num: '03', title: 'Certification Program', tag: 'FEE-BASED', tagColor: 'text-blue-brand bg-blue-brand/10', desc: 'Priced by organization size and the sector rules in scope. Independent third-party certification against ODIPA\'s published criteria.' },
   { num: '04', title: 'Research & Publications', tag: 'FREE', tagColor: 'text-green-600 bg-green-100', desc: 'All annual reports, research briefs, and special publications freely available to the public.' },
   { num: '05', title: 'Open-Source Platform', tag: 'FREE', tagColor: 'text-green-600 bg-green-100', desc: 'Privacy tools and libraries available free to all individuals, developers, and community organizations.' },
 ]

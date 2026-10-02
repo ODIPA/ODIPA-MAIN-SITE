@@ -31,14 +31,14 @@ const services = [
     price: null,
     color: 'border-gold',
     highlight: true,
-    desc: 'Independent third-party assessment of your organization\'s data practices against applicable privacy frameworks. Successful completion earns the ODIPA Trust Seal for use on your website and materials.',
+    desc: 'Independent third-party assessment of your organization\'s data practices against ODIPA\'s published certification criteria. Successful completion earns the ODIPA Trust Seal for use on your website and materials.',
     deliverables: [
       'Full gap analysis report with findings and remediation recommendations',
       'Two-assessor independent review panel (minimum)',
       'ODIPA Trust Seal license upon certification (valid 1 year)',
       'Annual renewal assessment available',
     ],
-    note: 'Pricing is based on organization size and number of applicable frameworks. Contact us for a quote. Certification is not a legal opinion or regulatory safe harbor. Organizations should continue working with qualified legal counsel on regulatory obligations.',
+    note: 'Pricing is based on organization size and the sector rules in scope alongside our core criteria. Contact us for a quote. Certification is not a legal opinion or regulatory safe harbor. Organizations should continue working with qualified legal counsel on regulatory obligations.',
   },
   {
     icon: <FlaskConical className="w-6 h-6" />,

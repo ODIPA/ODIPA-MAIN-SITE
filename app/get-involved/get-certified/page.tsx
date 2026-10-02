@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 const certProcess = [
   { num: '01', title: 'Application', duration: 'Day 1', desc: 'Submit your application with basic organizational information and your primary data privacy contact.' },
   { num: '02', title: 'Documentation Review', duration: 'Week 1–2', desc: 'Submit your privacy policy, data maps, consent mechanisms, and employee training records for review.' },
-  { num: '03', title: 'Assessment Interview', duration: 'Week 2–3', desc: 'A 60–90 minute structured interview with ODIPA\'s assessment team covering your data practices in depth.' },
+  { num: '03', title: 'Assessment Interview', duration: 'Week 2–3', desc: 'A 60–90 minute structured interview with ODIPA-qualified assessors covering your data practices in depth.' },
   { num: '04', title: 'Gap Analysis', duration: 'Week 3–4', desc: 'We identify any gaps and provide a confidential report with recommendations before making a certification decision.' },
   { num: '05', title: 'Certification Decision', duration: 'Week 4–6', desc: 'Receive your certification decision. Certified organizations receive the ODIPA Trust Seal and certificate.' },
   { num: '06', title: 'Annual Renewal', duration: 'Annually', desc: 'Streamlined renewal review to reflect changes in your practices and evolving privacy laws.' },
@@ -76,7 +76,7 @@ export default function GetCertifiedPage() {
               <span className="block w-5 h-px bg-blue-brand" />What We Assess
             </div>
             <p className="text-[15px] text-slate-500 leading-relaxed mb-6">
-              Our certification framework evaluates six core dimensions of your privacy program — benchmarked against CCPA/CPRA, VCDPA, CPA, CTDPA and other state laws, GLBA, BSA, PCI DSS, HIPAA, HITECH, NERC CIP, BIPA, FERPA, COPPA, SOC 2, NIST Privacy Framework, ISO 27001, GDPR, LGPD, PIPEDA, and PIPL.
+              Our certification framework evaluates six core dimensions of your privacy program against ODIPA's published certification criteria, which draw on CCPA/CPRA and the state privacy laws, GDPR, the NIST Privacy Framework, ISO 27001, and SOC 2, with sector rules such as HIPAA, GLBA, COPPA, and BIPA applied where they govern your industry. Certification attests that your organization met the published criteria on the assessment date. It is not a legal determination of compliance.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {whatsCovered.map((item) => (
@@ -174,7 +174,7 @@ export default function GetCertifiedPage() {
               <div>
                 <h3 className="font-display text-[18px] font-bold text-white mb-1">Get a Custom Quote</h3>
                 <p className="text-[13px] text-white/55 leading-relaxed">
-                  Tell us your industry, size, and jurisdictions. We&apos;ll identify applicable standards and send a quote within 3 business days.
+                  Tell us your industry, size, and jurisdictions. We&apos;ll identify which sector rules apply alongside our core criteria and send a quote within 3 business days.
                 </p>
               </div>
               <Link href="/contact"
@@ -237,7 +237,8 @@ export default function GetCertifiedPage() {
                 { label: 'Timeline', value: '4–8 weeks' },
                 { label: 'Validity', value: '1 year' },
                 { label: 'Renewal', value: 'Annual streamlined review' },
-                { label: 'Standards', value: 'CCPA/CPRA, VCDPA, CPA, CTDPA, GLBA, BSA, PCI DSS, HIPAA, HITECH, NERC CIP, BIPA, FERPA, COPPA, SOC 2, NIST, ISO 27001, GDPR, LGPD, PIPEDA, PIPL' },
+                { label: 'Criteria', value: 'ODIPA published certification criteria, drawing on CCPA/CPRA, GDPR, NIST Privacy Framework, ISO 27001, and SOC 2, with sector rules where relevant' },
+                { label: 'Stage', value: 'Accepting founding cohort inquiries' },
                 { label: 'Confidential', value: 'Yes — assessment details are private' },
               ].map((item) => (
                 <div key={item.label} className="flex justify-between items-start gap-3 py-2.5 border-b border-slate-100 last:border-0">
