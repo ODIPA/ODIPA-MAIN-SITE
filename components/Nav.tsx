@@ -25,7 +25,7 @@ export default function Nav() {
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 transition-all duration-300 ${
+      className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 lg:px-8 transition-all duration-300 ${
         scrolled
           ? 'h-14 bg-[rgba(6,15,29,0.98)] backdrop-blur-md'
           : 'h-[68px] bg-[rgba(11,31,58,0.95)] backdrop-blur-md'
@@ -41,18 +41,18 @@ export default function Nav() {
           className={`${scrolled ? 'h-11' : 'h-14'} w-auto object-contain transition-all duration-300 group-hover:opacity-80`}
           priority
         />
-        <span className="font-mono text-[9px] text-gold-light uppercase tracking-[2px] hidden sm:block">
+        <span className="font-mono text-[9px] text-gold-light uppercase tracking-[2px] hidden lg:block">
           501(c)(3) Nonprofit
         </span>
       </a>
 
       {/* Desktop links */}
-      <ul className="hidden md:flex items-center gap-8 list-none">
+      <ul className="hidden md:flex items-center gap-4 lg:gap-8 list-none">
         {links.map((l) => (
           <li key={l.href}>
             <a
               href={isHome ? l.href : '/' + l.href}
-              className="text-white/75 text-[13px] font-medium tracking-[0.5px] hover:text-gold-light transition-colors no-underline"
+              className="text-white/75 text-[13px] font-medium tracking-[0.5px] hover:text-gold-light transition-colors no-underline whitespace-nowrap"
             >
               {l.label}
             </a>
@@ -75,7 +75,7 @@ export default function Nav() {
         <li>
           <a
             href="/join"
-            className="border border-gold text-gold-light px-5 py-2 rounded text-[13px] font-semibold hover:bg-gold hover:text-navy transition-colors no-underline"
+            className="border border-gold text-gold-light px-4 lg:px-5 py-2 rounded text-[13px] font-semibold hover:bg-gold hover:text-navy transition-colors no-underline whitespace-nowrap"
           >
             Join Free
           </a>
@@ -83,7 +83,7 @@ export default function Nav() {
         <li>
           <a
             href="/donate"
-            className="bg-gold text-navy px-5 py-2 rounded text-[13px] font-semibold hover:bg-gold-light transition-colors no-underline"
+            className="bg-gold text-navy px-4 lg:px-5 py-2 rounded text-[13px] font-semibold hover:bg-gold-light transition-colors no-underline whitespace-nowrap"
           >
             Donate
           </a>

@@ -39,14 +39,10 @@ export default function CookieConsent() {
 
   return (
     <>
-      {/* Backdrop blur on mobile */}
-      <div className="fixed inset-0 bg-navy/40 backdrop-blur-sm z-[90] md:hidden" aria-hidden />
-
       {/* Banner */}
       <div
         role="dialog"
         aria-label="Cookie consent"
-        aria-modal="true"
         className={`fixed bottom-0 left-0 right-0 md:bottom-6 md:left-6 md:right-auto md:max-w-[420px] z-[100]
           bg-navy border-t md:border border-white/10 md:rounded-xl shadow-[0_24px_80px_rgba(0,0,0,0.5)]
           transition-all duration-500 ease-out

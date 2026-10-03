@@ -1,10 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ArrowRight, CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
 import { TERMS_PATH, TERMS_VERSION } from '@/data/membership'
 
 const API_ENDPOINT = '/api/membership'
+const REQUEST_TIMEOUT_MS = 20000
+const HELP_EMAIL = 'info@odipa.org'
 
 type State = 'idle' | 'submitting' | 'success' | 'joined' | 'error'
 
@@ -25,33 +27,49 @@ export default function JoinSignup({ source = 'Join page' }: Props) {
   const [state, setState]       = useState<State>('idle')
   const [error, setError]       = useState('')
   const [honeypot, setHoneypot] = useState('')
+  const errorRef = useRef<HTMLDivElement>(null)
 
   const fmtEmail = (v: string) => v.toLowerCase().replace(/\s/g, '')
 
+  // Whenever a message appears, bring it into view so the button never seems to do nothing.
+  useEffect(() => {
+    if (error && errorRef.current) {
+      errorRef.current.scrollIntoView({ block: 'center', behavior: 'smooth' })
+      errorRef.current.focus({ preventScroll: true })
+    }
+  }, [error])
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (honeypot) return // silently discard bot submissions
+    if (state === 'submitting') return
     const trimmed = email.trim()
     if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
       setError('Please enter a valid email address.')
       return
     }
     if (!accepted) {
-      setError('Please accept the Community Member Terms to join.')
+      setError('Please tick the box to accept the Community Member Terms, then press Join Free again.')
       return
     }
     setError('')
     setState('submitting')
+
+    // A request that never answers must not leave the button spinning forever.
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
     try {
       const res = await fetch(API_ENDPOINT, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal:  controller.signal,
         body:    JSON.stringify({
           email: trimmed,
           name: name.trim(),
           source,
           acceptedTerms: true,
           termsVersion: TERMS_VERSION,
+          // If anything fills the hidden trap field, the server discards the sign up quietly.
+          // The visitor still sees a normal confirmation instead of a button that does nothing.
           _hp: honeypot,
         }),
       })
@@ -64,12 +82,18 @@ export default function JoinSignup({ source = 'Join page' }: Props) {
         setAccepted(false)
       } else {
         const data = await res.json().catch(() => ({}))
-        setError(data.error || 'Sign up failed. Please try again.')
+        const why = data.error || 'Sign up failed.'
+        setError(`${why} (error ${res.status}) If this keeps happening, email ${HELP_EMAIL}.`)
         setState('error')
       }
-    } catch {
-      setError('Network error. Please try again.')
+    } catch (err) {
+      const timedOut = err instanceof DOMException && err.name === 'AbortError'
+      setError(timedOut
+        ? `This is taking longer than expected, so we stopped waiting. Please try again, or email ${HELP_EMAIL}.`
+        : `We could not reach the server. Check your connection and try again, or email ${HELP_EMAIL}.`)
       setState('error')
+    } finally {
+      clearTimeout(timer)
     }
   }
 
@@ -180,21 +204,31 @@ export default function JoinSignup({ source = 'Join page' }: Props) {
         </div>
 
         {showError && (
-          <p id="join-error" role="alert" className="flex items-center gap-1.5 text-[12px] text-red-500">
-            <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
-            {error || 'Sign up failed. Please try again.'}
-          </p>
+          <div
+            ref={errorRef}
+            id="join-error"
+            role="alert"
+            tabIndex={-1}
+            className="flex items-start gap-2 rounded-lg border border-red-300 bg-red-50 px-3.5 py-3 text-[13px] leading-snug text-red-700 outline-none"
+          >
+            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+            <span>{error || 'Sign up failed. Please try again.'}</span>
+          </div>
         )}
 
         {/* Honeypot, hidden from real users, bots fill it in */}
         <input
           type="text"
-          name="website"
+          name="hp_contact_pref"
           value={honeypot}
           onChange={e => setHoneypot(e.target.value)}
           tabIndex={-1}
           autoComplete="off"
           aria-hidden="true"
+          data-lpignore="true"
+          data-1p-ignore="true"
+          data-bwignore="true"
+          data-form-type="other"
           style={{ position: 'absolute', left: '-9999px', opacity: 0, height: 0, width: 0 }}
         />
 
@@ -205,7 +239,7 @@ export default function JoinSignup({ source = 'Join page' }: Props) {
             text-navy font-bold text-[14px] px-5 py-3.5 rounded-lg transition-colors"
         >
           {state === 'submitting'
-            ? <Loader2 className="w-4 h-4 animate-spin" />
+            ? <><Loader2 className="w-4 h-4 animate-spin" /><span>Joining</span></>
             : <><span>Join Free</span><ArrowRight className="w-4 h-4" /></>
           }
         </button>
