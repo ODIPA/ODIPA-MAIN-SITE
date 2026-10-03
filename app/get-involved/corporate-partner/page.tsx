@@ -19,7 +19,7 @@ const services = [
     desc: 'Live or virtual privacy training for your employees, management, or compliance team. Sessions cover CCPA/CPRA, GDPR, HIPAA, and applicable frameworks for your industry.',
     deliverables: [
       'Custom curriculum scoped to your industry and frameworks',
-      'Facilitated session with credentialed ODIPA instructor',
+      'Facilitated session led by an ODIPA-qualified instructor',
       'Post-session resource packet for attendees',
       'Attendance certificate for each participant',
     ],
@@ -38,7 +38,7 @@ const services = [
       'ODIPA Trust Seal license upon certification (valid 1 year)',
       'Annual renewal assessment available',
     ],
-    note: 'Pricing is based on organization size and the sector rules in scope alongside our core criteria. Contact us for a quote. Certification is not a legal opinion or regulatory safe harbor. Organizations should continue working with qualified legal counsel on regulatory obligations.',
+    note: 'The certification program is accepting inquiries for its founding cohort. Pricing is based on organization size and the sector rules in scope alongside our core criteria. Contact us for a quote. Certification is not a legal opinion or regulatory safe harbor. Organizations should continue working with qualified legal counsel on regulatory obligations.',
   },
   {
     icon: <FlaskConical className="w-6 h-6" />,
@@ -63,7 +63,7 @@ const services = [
       'Dedicated support queue access (priority response)',
       'Custom configuration or development per agreed scope',
       'Documentation for custom implementations',
-      'Hand-off session with ODIPA technical team',
+      'Hand-off session with the ODIPA maintainer of the tool',
     ],
     note: 'Open-source tools remain MIT licensed and publicly available to all users regardless of technical support engagement.',
   },
@@ -135,7 +135,7 @@ export default function CorporatePartnerPage() {
             </a>
             <Link href="/contact"
               className="inline-block border border-white/25 hover:border-white/50 text-white font-medium text-[14px] px-7 py-3.5 rounded-lg transition-colors no-underline">
-              Contact Partnerships Team
+              Contact Us About Partnership
             </Link>
           </div>
         </div>
@@ -275,7 +275,7 @@ export default function CorporatePartnerPage() {
               </a>
               <Link href="/contact"
                 className="flex items-center justify-center w-full border border-white/20 hover:border-white/40 text-white font-medium text-[14px] px-7 py-4 rounded-xl transition-colors no-underline">
-                Contact Partnerships Team
+                Contact Us About Partnership
               </Link>
               <p className="text-center font-mono text-[11px] text-white/25 pt-1">
                 All engagements at fair market value · Arm&apos;s-length transactions · 501(c)(3) compliant
