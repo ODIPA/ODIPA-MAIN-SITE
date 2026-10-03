@@ -22,6 +22,12 @@ const TOOLS = [
     tag: 'Daily',
   },
   {
+    href: '/admin/subscribers',
+    name: 'Subscribers and Members',
+    desc: 'Look up a newsletter subscriber or community member, and permanently delete a person who asks. Deletions are logged without keeping any name or address.',
+    tag: 'As needed',
+  },
+  {
     href: '/admin/newsletter',
     name: 'Newsletter Dashboard',
     desc: 'Compose, schedule, and send the newsletter. Subscriber stats, archive, and the monthly generator live here.',

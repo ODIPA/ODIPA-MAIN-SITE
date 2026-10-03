@@ -20,6 +20,7 @@ type Stats = {
   signupsByMonth: Record<string, number>
   confirmedByMonth: Record<string, number>
   sources: Record<string, number>
+  members?: { confirmed: number; pending: number; unsubscribed: number; total: number; newLast30Days: number; newsletterOnlyConfirmed: number }
   issues?: Issue[]
 }
 
@@ -266,6 +267,7 @@ export default function NewsletterAdminDashboard() {
             {state === 'loading' ? 'Loading…' : stats ? 'Refresh' : 'Load stats'}
           </button>
           <p className="w-full text-[11px] text-slate-400 mt-1">The key stays in this browser tab's memory only and is sent solely to ODIPA's own API.</p>
+          <a href="/admin/subscribers" className="w-full text-[12px] text-gold underline">Look up or delete a person</a>
         </div>
 
         {state === 'unauthorized' && (
@@ -293,6 +295,21 @@ export default function NewsletterAdminDashboard() {
               <StatCard label="Signups · 30 days" value={stats.last30Days.signups} />
               <StatCard label="Confirmed · 30 days" value={stats.last30Days.confirmed} />
             </div>
+            {stats.members && (
+              <div>
+                <div className="font-mono text-[10px] uppercase tracking-[2px] text-slate-400 mb-2">Community members</div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <StatCard label="Members · confirmed" value={stats.members.confirmed} accent="text-green-700" />
+                  <StatCard label="Members · pending" value={stats.members.pending} accent="text-amber-600" />
+                  <StatCard label="Newsletter only · confirmed" value={stats.members.newsletterOnlyConfirmed} />
+                  <StatCard label="New members · 30 days" value={stats.members.newLast30Days} />
+                </div>
+                <p className="text-[12px] text-slate-400 mt-2">
+                  Members and newsletter only subscribers share one list. The Confirmed total above includes confirmed members, and everyone confirmed receives the digest.
+                  {stats.members.unsubscribed > 0 ? ` ${stats.members.unsubscribed} former member${stats.members.unsubscribed === 1 ? '' : 's'} unsubscribed.` : ''}
+                </p>
+              </div>
+            )}
             <div className="grid md:grid-cols-2 gap-4">
               <MonthBars title="Signups by month" data={stats.signupsByMonth} />
               <MonthBars title="Confirmations by month" data={stats.confirmedByMonth} />

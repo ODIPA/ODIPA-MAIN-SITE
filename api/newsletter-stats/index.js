@@ -35,6 +35,9 @@ module.exports = async function handler(context, req) {
     const now = Date.now()
     const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000
     let last30 = { signups: 0, confirmed: 0, unsubscribed: 0 }
+    // Community members are rows flagged member: true. They share the one list with newsletter-only
+    // subscribers, so the confirmed total here already includes the confirmed members.
+    const members = { confirmed: 0, pending: 0, unsubscribed: 0, total: 0, newLast30Days: 0 }
 
     const iter = client.listEntities({ queryOptions: { filter: "PartitionKey eq 'sub'" } })
     for await (const ent of iter) {
@@ -51,6 +54,12 @@ module.exports = async function handler(context, req) {
       if (ent.createdAt && now - Date.parse(ent.createdAt) < THIRTY_DAYS) last30.signups++
       if (ent.confirmedAt && now - Date.parse(ent.confirmedAt) < THIRTY_DAYS) last30.confirmed++
       if (ent.unsubscribedAt && now - Date.parse(ent.unsubscribedAt) < THIRTY_DAYS) last30.unsubscribed++
+
+      if (ent.member) {
+        members.total++
+        if (members[status] != null) members[status]++
+        if (ent.memberSince && now - Date.parse(ent.memberSince) < THIRTY_DAYS) members.newLast30Days++
+      }
     }
 
     const totalSignups = totals.pending + totals.confirmed + totals.unsubscribed
@@ -64,6 +73,7 @@ module.exports = async function handler(context, req) {
         unsubscribeRate: everConfirmed ? +(totals.unsubscribed / everConfirmed * 100).toFixed(1) : 0,
       },
       last30Days: last30,
+      members: { ...members, newsletterOnlyConfirmed: totals.confirmed - members.confirmed },
       signupsByMonth: Object.fromEntries(Object.entries(signupsByMonth).sort()),
       confirmedByMonth: Object.fromEntries(Object.entries(confirmedByMonth).sort()),
       sources,

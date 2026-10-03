@@ -41,7 +41,7 @@ export default function Nav() {
           className={`${scrolled ? 'h-11' : 'h-14'} w-auto object-contain transition-all duration-300 group-hover:opacity-80`}
           priority
         />
-        <span className="font-mono text-[9px] text-gold-light uppercase tracking-[2px] hidden lg:block">
+        <span className="font-mono text-[9px] text-gold-light uppercase tracking-[2px] hidden xl:block">
           501(c)(3) Nonprofit
         </span>
       </a>
