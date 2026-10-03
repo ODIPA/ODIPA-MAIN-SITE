@@ -275,14 +275,17 @@ export default function DonateWidget() {
             </div>
           )}
 
-          {/* Legal note */}
+          {/* Donating and joining are separate */}
           <div className="mt-4 px-5 py-4 bg-white rounded-xl border border-slate-200">
             <p className="text-[11px] text-slate-500 leading-relaxed">
-              <span className="font-semibold text-slate-600">Member communications:</span>{' '}
-              By completing your donation, you will be asked during checkout whether you consent
-              to receive ODIPA member communications — including newsletters, research updates,
-              privacy alerts, and program announcements. Your donation makes you an ODIPA member.
-              Consent is recorded at the time of donation and you may unsubscribe at any time.{' '}
+              <span className="font-semibold text-slate-600">Donating and joining are separate.</span>{' '}
+              A donation does not make you a member of ODIPA and does not add you to any email list.
+              PayPal handles your payment details. If you would like the Privacy Monthly Digest,
+              event invitations, and research updates, you can{' '}
+              <a href="/join" className="text-blue-brand hover:text-navy underline">join the free community</a>{' '}
+              at any time. Community members have no vote and no role in governance, as the{' '}
+              <a href="/community-member-terms" className="text-blue-brand hover:text-navy underline">Community Member Terms</a>{' '}
+              explain. See also our{' '}
               <a href="/privacy-policy" className="text-blue-brand hover:text-navy underline">Privacy Policy</a>.
             </p>
           </div>

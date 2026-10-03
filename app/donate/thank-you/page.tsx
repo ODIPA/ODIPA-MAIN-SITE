@@ -17,9 +17,9 @@ const nextSteps = [
   },
   {
     icon: <Heart className="w-5 h-5" />,
-    title: 'Join the community',
-    desc: 'Sign up for our newsletter to receive privacy alerts, research updates, and program announcements.',
-    action: { label: 'Subscribe', href: '/#newsletter' },
+    title: 'Join the community, free',
+    desc: 'Joining is separate from your donation and carries no vote. Community members receive the Privacy Monthly Digest, invitations to free sessions and events, and research updates.',
+    action: { label: 'Join Free', href: '/join' },
   },
   {
     icon: <ArrowRight className="w-5 h-5" />,
