@@ -130,13 +130,12 @@ const reset = () => { acsResult = { id: 'msg-1', status: 'Succeeded' }; acsThrow
     const r = await join(good)
     assert.deepStrictEqual([r.status, r.body.alreadyConfirmed, r.body.welcomeSent], [200, true, false])
   })
-  await t('a filled hidden field is reported, not faked, and nothing is stored or sent', async () => {
+  await t('a leftover _hp value from an old cached page cannot block a real sign up', async () => {
     reset()
-    const r = await join({ ...good, _hp: 'autofilled' })
-    assert.deepStrictEqual([r.status, r.body.code], [400, 'honeypot'])
-    assert(/info@odipa.org/.test(r.body.error))
-    assert.strictEqual(rows.size, 0); assert.strictEqual(sentMessages.length, 0)
-    assert(logs.some(l => l[0] === 'warn'))
+    const r = await join({ ...good, _hp: 'filled-by-a-password-manager' })
+    assert.deepStrictEqual([r.status, r.body.ok], [200, true])
+    assert.strictEqual(rows.size, 1)
+    assert(sentMessages.some(m => m.content.subject === 'Confirm your ODIPA community membership'))
   })
   await t('the internal notification failing does not fail the sign up', async () => {
     reset()

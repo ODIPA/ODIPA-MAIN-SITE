@@ -17,8 +17,12 @@ interface Props {
 
 /**
  * Free community membership sign-up. Follows the same flow as NewsletterSignup
- * (optional first name, email, honeypot, double opt-in by email) and adds a
- * required checkbox to accept the Community Member Terms.
+ * (optional first name, email, double opt-in by email) and adds a required
+ * checkbox to accept the Community Member Terms. There is deliberately no hidden
+ * spam-trap field. Password managers and form-filling extensions fill hidden fields,
+ * which turned real sign ups into silent failures. Abuse is limited by the per-IP
+ * rate limit on the server and by double opt-in, so nobody is subscribed without
+ * clicking the emailed link.
  */
 export default function JoinSignup({ source = 'Join page' }: Props) {
   const [email, setEmail]       = useState('')
@@ -26,7 +30,6 @@ export default function JoinSignup({ source = 'Join page' }: Props) {
   const [accepted, setAccepted] = useState(false)
   const [state, setState]       = useState<State>('idle')
   const [error, setError]       = useState('')
-  const [honeypot, setHoneypot] = useState('')
   const errorRef = useRef<HTMLDivElement>(null)
   const [welcomeSent, setWelcomeSent] = useState(false)
 
@@ -69,9 +72,6 @@ export default function JoinSignup({ source = 'Join page' }: Props) {
           source,
           acceptedTerms: true,
           termsVersion: TERMS_VERSION,
-          // If anything fills the hidden trap field, the server discards the sign up quietly.
-          // The visitor still sees a normal confirmation instead of a button that does nothing.
-          _hp: honeypot,
         }),
       })
       if (res.ok) {
@@ -220,22 +220,6 @@ export default function JoinSignup({ source = 'Join page' }: Props) {
             <span>{error || 'Sign up failed. Please try again.'}</span>
           </div>
         )}
-
-        {/* Honeypot, hidden from real users, bots fill it in */}
-        <input
-          type="text"
-          name="hp_contact_pref"
-          value={honeypot}
-          onChange={e => setHoneypot(e.target.value)}
-          tabIndex={-1}
-          autoComplete="off"
-          aria-hidden="true"
-          data-lpignore="true"
-          data-1p-ignore="true"
-          data-bwignore="true"
-          data-form-type="other"
-          style={{ position: 'absolute', left: '-9999px', opacity: 0, height: 0, width: 0 }}
-        />
 
         <button
           type="submit"

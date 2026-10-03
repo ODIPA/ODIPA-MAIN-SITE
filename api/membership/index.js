@@ -2,8 +2,8 @@
  * ODIPA Community Membership Signup, Azure Function
  * POST /api/membership
  *
- * Follows the same flow as /api/newsletter (rate limit, honeypot, first-party
- * storage, double opt-in by email) and additionally requires the person to
+ * Follows the same flow as /api/newsletter (rate limit, first-party storage,
+ * double opt-in by email) and additionally requires the person to
  * accept the Community Member Terms. Members are stored in the same subscriber
  * table, flagged as members, so they receive the Privacy Monthly Digest and
  * can unsubscribe with the same one-click link.
@@ -28,17 +28,6 @@ module.exports = async function handler(context, req) {
     const body  = req.body || {}
     const email = clean(body.email, 254).toLowerCase()
     const name  = clean(body.name, 100)
-
-    // Honeypot check, bots fill in hidden fields, humans do not.
-    // This is a real sign up form, so a person whose browser auto-filled the hidden field
-    // must be told, not shown a fake success that never produces an email.
-    if (body._hp) {
-      context.log.warn('Honeypot field was filled, sign up not saved')
-      return respond(context, 400, {
-        error: 'We could not complete your sign up from this browser. Please email info@odipa.org and we will add you.',
-        code: 'honeypot',
-      })
-    }
 
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return respond(context, 400, { error: 'A valid email address is required.' })
