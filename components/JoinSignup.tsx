@@ -28,6 +28,7 @@ export default function JoinSignup({ source = 'Join page' }: Props) {
   const [error, setError]       = useState('')
   const [honeypot, setHoneypot] = useState('')
   const errorRef = useRef<HTMLDivElement>(null)
+  const [welcomeSent, setWelcomeSent] = useState(false)
 
   const fmtEmail = (v: string) => v.toLowerCase().replace(/\s/g, '')
 
@@ -76,6 +77,7 @@ export default function JoinSignup({ source = 'Join page' }: Props) {
       if (res.ok) {
         const data = await res.json().catch(() => ({}))
         // Already-confirmed subscribers get no confirmation email, so say so.
+        setWelcomeSent(!!data.welcomeSent)
         setState(data.alreadyConfirmed ? 'joined' : 'success')
         setEmail('')
         setName('')
@@ -83,7 +85,10 @@ export default function JoinSignup({ source = 'Join page' }: Props) {
       } else {
         const data = await res.json().catch(() => ({}))
         const why = data.error || 'Sign up failed.'
-        setError(`${why} (error ${res.status}) If this keeps happening, email ${HELP_EMAIL}.`)
+        // Some server messages already tell the person who to email, so do not repeat it.
+        setError(why.includes(HELP_EMAIL)
+          ? `${why} (error ${res.status})`
+          : `${why} (error ${res.status}) If this keeps happening, email ${HELP_EMAIL}.`)
         setState('error')
       }
     } catch (err) {
@@ -105,7 +110,7 @@ export default function JoinSignup({ source = 'Join page' }: Props) {
           <div>
             <p className="font-display text-[22px] font-bold text-navy">You are in!</p>
             <p className="text-[14px] text-slate-500 mt-1 leading-relaxed">
-              You were already on our list, so your community membership is active. No confirmation is needed.
+              You were already on our list, so your community membership is active and no confirmation is needed.{welcomeSent ? ' We also sent you a short welcome email.' : ''}
             </p>
             <button
               type="button"
@@ -128,7 +133,7 @@ export default function JoinSignup({ source = 'Join page' }: Props) {
           <div>
             <p className="font-display text-[22px] font-bold text-navy">Almost there, check your inbox!</p>
             <p className="text-[14px] text-slate-500 mt-1 leading-relaxed">
-              Click the confirmation link we just sent to finish joining. If it does not arrive within a few minutes, check your spam folder.
+              We sent a message with the subject &quot;Confirm your ODIPA community membership&quot;. Click the link in it to finish joining. If it does not arrive within a few minutes, check your spam or junk folder.
             </p>
             <button
               type="button"

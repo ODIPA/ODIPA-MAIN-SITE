@@ -37,6 +37,30 @@ function clean(val, max = 2000) {
   return String(val).replace(/<[^>]*>/g, '').trim().slice(0, max)
 }
 
+/**
+ * Send a message and confirm Azure accepted it. pollUntilDone() does NOT throw when
+ * the send ends as Failed or Canceled, it returns a result with that status, so
+ * every send must check the result or a failed email looks like a successful one.
+ * Succeeded means Azure accepted the message for delivery. It does not guarantee the
+ * inbox, a receiving server can still filter it to spam.
+ * Returns the Azure message id. Throws with code EMAIL_NOT_SENT otherwise.
+ */
+async function sendAndVerify(client, message) {
+  const poller = await client.beginSend(message)
+  const result = await poller.pollUntilDone()
+  if (!result || result.status !== 'Succeeded') {
+    const status = result && result.status
+    const acsCode = (result && result.error && result.error.code) || 'unknown'
+    const detail = (result && result.error && result.error.message) || `status ${status}`
+    const err = new Error(`Email was not sent. ${acsCode}. ${detail}`)
+    err.code = 'EMAIL_NOT_SENT'
+    err.acsCode = acsCode
+    err.messageId = result && result.id
+    throw err
+  }
+  return result.id
+}
+
 async function sendFormEmail({ to, subject, replyTo, fields }) {
   const client = getClient()
   const sender = getSender()
@@ -89,8 +113,7 @@ async function sendFormEmail({ to, subject, replyTo, fields }) {
     ...(replyTo && { replyTo: [{ address: replyTo }] }),
   }
 
-  const poller = await client.beginSend(message)
-  await poller.pollUntilDone()
+  return sendAndVerify(client, message)
 }
 
 function respond(context, status, body) {
@@ -117,8 +140,7 @@ async function sendHtmlEmail({ to, subject, html, plainText, replyTo }) {
     recipients: { to: [{ address: to }] },
   }
   if (replyTo) message.replyTo = [{ address: replyTo }]
-  const poller = await client.beginSend(message)
-  await poller.pollUntilDone()
+  return sendAndVerify(client, message)
 }
 
 module.exports = { sendFormEmail, sendHtmlEmail, respond, clean }
