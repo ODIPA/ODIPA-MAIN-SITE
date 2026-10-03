@@ -15,6 +15,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE}/press`,               lastModified: new Date(), changeFrequency: 'monthly',  priority: 0.7 },
     { url: `${BASE}/annual-report`,       lastModified: new Date(), changeFrequency: 'yearly',   priority: 0.7 },
     { url: `${BASE}/privacy-policy`,      lastModified: new Date(), changeFrequency: 'yearly',   priority: 0.4 },
+    { url: `${BASE}/community-member-terms`, lastModified: new Date(), changeFrequency: 'yearly', priority: 0.3 },
 
     // ── Programs ──────────────────────────────────────────────────────────
     { url: `${BASE}/programs/educational-outreach`,    lastModified: new Date(), changeFrequency: 'monthly', priority: 0.9 },
@@ -27,6 +28,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE}/programs/international-cooperation`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
 
     // ── Get Involved ──────────────────────────────────────────────────────
+    { url: `${BASE}/join`,                           lastModified: new Date(), changeFrequency: 'monthly', priority: 0.8 },
     { url: `${BASE}/get-involved/volunteer`,         lastModified: new Date(), changeFrequency: 'monthly', priority: 0.8 },
     { url: `${BASE}/get-involved/corporate-partner`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.8 },
     { url: `${BASE}/get-involved/get-certified`,     lastModified: new Date(), changeFrequency: 'monthly', priority: 0.8 },

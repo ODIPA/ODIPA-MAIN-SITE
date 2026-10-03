@@ -168,6 +168,10 @@ export default function PrivacyPolicy() {
                 value="Page views, referrer source, device type, country — never linked to an individual"
               />
               <InfoBox
+                label="Newsletter and community sign ups"
+                value="Your email address and, if you choose, your first name, plus the date you signed up and, for community members, the version of the Community Member Terms you accepted. Stored by ODIPA and never sold."
+              />
+              <InfoBox
                 label="Email communications"
                 value="Only when you contact us directly (e.g., volunteer@odipa.org). We retain only what is needed to respond."
               />
@@ -177,9 +181,10 @@ export default function PrivacyPolicy() {
               />
             </div>
             <p>
-              We do <strong className="text-navy">not</strong> collect names, email addresses,
-              IP addresses, location data, device identifiers, behavioral profiles, or any other
-              personally identifiable information through the Site itself.
+              Apart from the newsletter and community sign ups above, which only collect what you
+              choose to give us, we do <strong className="text-navy">not</strong> collect names,
+              email addresses, IP addresses, location data, device identifiers, behavioral
+              profiles, or any other personally identifiable information through the Site itself.
             </p>
           </Section>
 
@@ -263,6 +268,7 @@ export default function PrivacyPolicy() {
                   {[
                     ['Plausible Analytics', 'Website analytics', 'Aggregate only — no personal data', '✓ Excellent'],
                     ['Azure Static Web Apps', 'Website hosting', 'Standard HTTP request logs (IP, timestamp) — retained briefly per Microsoft policy', '~ Standard'],
+                    ['Microsoft Azure (Table Storage and Communication Services)', 'Storing newsletter and community sign ups and sending our email', 'Email address and optional first name, handled on ODIPA\'s behalf only', '✓ Service provider'],
                     ['Google Fonts', 'Typography', 'Font file requests only', '~ Standard'],
                     ['Unsplash', 'Stock photography', 'Image requests only', '~ Standard'],
                   ].map(([service, purpose, data, privacy], i) => (
@@ -290,7 +296,7 @@ export default function PrivacyPolicy() {
             <div className="space-y-3 my-5">
               {[
                 ['Right to access', 'You can request a copy of any personal information we hold about you. Since we collect almost none through the Site, this will typically apply only to email correspondence.'],
-                ['Right to deletion', 'You can request that we delete any personal information we hold. Email us at ' + CONTACT_EMAIL + '.'],
+                ['Right to deletion', 'You can request that we delete any personal information we hold, including a newsletter or community sign up. We will act on it within 30 days. Email us at ' + CONTACT_EMAIL + '.'],
                 ['Right to opt out of analytics', 'Plausible respects the "Do Not Track" browser setting. You can also install a browser ad-blocker, which will prevent Plausible from counting your visit.'],
                 ['Right to withdraw consent', 'Clear "odipa-cookie-consent" from your browser\'s localStorage at any time to reset your consent preference.'],
                 ['California residents (CCPA)', 'We do not sell personal information. You have the right to know, delete, and opt out of sale — though we have nothing to opt out of.'],

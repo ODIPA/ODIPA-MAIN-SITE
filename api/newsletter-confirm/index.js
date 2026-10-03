@@ -1,7 +1,7 @@
 /**
  * ODIPA Newsletter Confirm, GET /api/newsletter-confirm?e=<b64url>&t=<token>
  */
-const { setStatus, verifyToken } = require('../_shared/subscribers')
+const { setStatus, getSubscriber, verifyToken } = require('../_shared/subscribers')
 
 function page(title, message) {
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -25,6 +25,11 @@ module.exports = async function handler(context, req) {
     }
     const ok = await setStatus(email, 'confirmed')
     if (!ok) return res(404, page('Not found', 'We could not find a pending signup for this address. You can sign up on odipa.org.'))
+    // Community members get a welcome that matches what they signed up for.
+    const sub = await getSubscriber(email).catch(() => null)
+    if (sub && sub.member) {
+      return res(200, page('Welcome to the ODIPA community', 'Your free community membership is confirmed. You will receive the Privacy Monthly Digest, invitations to free sessions and events, and research and program updates. Every email includes a one-click unsubscribe link.'))
+    }
     return res(200, page('Subscription confirmed', 'You are on the list. We send occasional updates about digital privacy education, tools, and programs, and every email includes a one-click unsubscribe link.'))
   } catch (err) {
     context.log.error('newsletter-confirm error:', err.message)

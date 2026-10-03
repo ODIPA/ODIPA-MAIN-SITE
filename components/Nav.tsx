@@ -74,6 +74,14 @@ export default function Nav() {
         </li>
         <li>
           <a
+            href="/join"
+            className="border border-gold text-gold-light px-5 py-2 rounded text-[13px] font-semibold hover:bg-gold hover:text-navy transition-colors no-underline"
+          >
+            Join Free
+          </a>
+        </li>
+        <li>
+          <a
             href="/donate"
             className="bg-gold text-navy px-5 py-2 rounded text-[13px] font-semibold hover:bg-gold-light transition-colors no-underline"
           >
@@ -81,6 +89,14 @@ export default function Nav() {
           </a>
         </li>
       </ul>
+
+      {/* Mobile: the desktop links are hidden below md, so keep Join Free reachable */}
+      <a
+        href="/join"
+        className="md:hidden border border-gold text-gold-light px-4 py-1.5 rounded text-[12px] font-semibold hover:bg-gold hover:text-navy transition-colors no-underline whitespace-nowrap"
+      >
+        Join Free
+      </a>
     </nav>
   )
 }

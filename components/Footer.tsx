@@ -34,6 +34,7 @@ const columns = [
   {
     title: 'Get Involved',
     links: [
+      { label: 'Join Free', href: '/join' },
       { label: 'Donate', href: '/donate' },
       { label: 'Volunteer', href: '/get-involved/volunteer' },
       { label: 'Corporate Partner', href: '/get-involved/corporate-partner' },
@@ -66,6 +67,20 @@ export default function Footer() {
             <p className="text-[13px] leading-[1.7] mb-6 text-white/40 italic">
               ODIPA is funded through individual donations, corporate sponsorships, and foundation grants.
             </p>
+
+            {/* Community membership */}
+            <div className="mb-6 rounded-xl border border-gold/30 bg-white/[0.04] p-4 max-w-[360px]">
+              <div className="font-mono text-[10px] text-gold-light uppercase tracking-[2px] mb-2">Community</div>
+              <p className="text-[13px] text-white/60 leading-relaxed mb-3">
+                Join ODIPA&apos;s free community for the digest, event invitations, and research updates.
+              </p>
+              <a
+                href="/join"
+                className="inline-flex items-center gap-1.5 bg-gold hover:bg-gold-light text-navy font-bold text-[12px] px-4 py-2.5 rounded-lg transition-colors no-underline"
+              >
+                Join Free
+              </a>
+            </div>
 
             {/* Newsletter signup */}
             <div className="mb-6">

@@ -83,13 +83,42 @@ async function setStatus(email, status) {
   return true
 }
 
+async function getSubscriber(email) {
+  const client = getTable()
+  await ensureTable(client)
+  try { return await client.getEntity('sub', emailKey(email)) } catch (e) { return null }
+}
+
+/**
+ * Record that a subscriber joined as a free, non-voting community member and
+ * accepted a specific version of the Community Member Terms. Works for new
+ * (pending) and already-confirmed subscribers, and never changes their status.
+ */
+async function recordMembership(email, { termsVersion }) {
+  const client = getTable()
+  await ensureTable(client)
+  const rowKey = emailKey(email)
+  let existing = null
+  try { existing = await client.getEntity('sub', rowKey) } catch (e) { /* not found */ }
+  const now = new Date().toISOString()
+  await client.upsertEntity({
+    partitionKey: 'sub',
+    rowKey,
+    email: email.toLowerCase(),
+    member: true,
+    memberSince: (existing && existing.memberSince) || now,
+    memberTermsVersion: termsVersion || '',
+    memberTermsAcceptedAt: now,
+  }, 'Merge')
+}
+
 async function listByStatus(status) {
   const client = getTable()
   await ensureTable(client)
   const out = []
   const iter = client.listEntities({ queryOptions: { filter: `PartitionKey eq 'sub' and status eq '${status}'` } })
   for await (const ent of iter) {
-    out.push({ email: ent.email, name: ent.name || '', source: ent.source || '', createdAt: ent.createdAt, confirmedAt: ent.confirmedAt || null })
+    out.push({ email: ent.email, name: ent.name || '', source: ent.source || '', createdAt: ent.createdAt, confirmedAt: ent.confirmedAt || null, member: !!ent.member })
   }
   return out
 }
@@ -116,4 +145,4 @@ async function listIssues() {
   return out.sort((a, b) => String(b.sentAt).localeCompare(String(a.sentAt)))
 }
 
-module.exports = { upsertPending, setStatus, listByStatus, verifyToken, confirmLink, unsubscribeLink, saveIssue, listIssues }
+module.exports = { upsertPending, setStatus, getSubscriber, recordMembership, listByStatus, verifyToken, confirmLink, unsubscribeLink, saveIssue, listIssues }

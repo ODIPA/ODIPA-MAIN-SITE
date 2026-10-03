@@ -3,7 +3,7 @@
  * Run with: node tests/smoke.js
  * Requires: func start running on port 7071
  *
- * Tests all 6 endpoints for:
+ * Tests each endpoint for:
  * - CORS preflight (OPTIONS) → 200
  * - Missing required fields → 400
  * - Valid payload → depends on SMTP config (200 if SMTP set, 500 if not)
@@ -98,6 +98,29 @@ async function run() {
   })
   await test('Valid payload → 200 or 500', async () => {
     const r = await post('/newsletter', { email: 'test@example.com', name: 'Test', source: 'smoke-test' })
+    assert(r.status === 200 || r.status === 500, `Got unexpected ${r.status}`)
+  })
+
+  // ── /api/membership ───────────────────────────────────
+  // Rate limit is 3 POSTs per minute per IP, so keep this block to 3 POSTs.
+  console.log('\n/api/membership')
+  await test('OPTIONS preflight → 200', async () => {
+    const r = await options('/membership')
+    assert(r.status === 200, `Got ${r.status}`)
+  })
+  await test('Invalid email → 400', async () => {
+    const r = await post('/membership', { email: 'bademail', acceptedTerms: true, termsVersion: 'smoke' })
+    assert(r.status === 400, `Got ${r.status}`)
+  })
+  await test('Terms not accepted → 400', async () => {
+    const r = await post('/membership', { email: 'test@example.com', termsVersion: 'smoke' })
+    assert(r.status === 400, `Got ${r.status}`)
+  })
+  await test('Valid payload → 200 or 500 (500 = storage or email not configured)', async () => {
+    const r = await post('/membership', {
+      email: 'test@example.com', name: 'Test', source: 'smoke-test',
+      acceptedTerms: true, termsVersion: 'smoke',
+    })
     assert(r.status === 200 || r.status === 500, `Got unexpected ${r.status}`)
   })
 
