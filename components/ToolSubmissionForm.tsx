@@ -15,10 +15,34 @@ const CATEGORIES = [
   'Fingerprinting',
   'Rights Requests',
   'Encryption / Anonymization',
+  'File & Metadata Privacy',
+  'AI Agent Security',
   'Network Privacy',
   'Mobile Privacy',
   'Other',
 ]
+
+// The three listing arrangements from the Tool Listing Policy. The value is what
+// the server validates and what appears in the submission email. Mirrors
+// api/tool-submit/index.js, keep the two lists the same.
+export const LISTING_TIERS = [
+  {
+    value: 'Approved listing',
+    title: 'Approved listing',
+    detail: 'Full review for the green Approved badge. The repository stays where it is and you keep full ownership and control. The listing identifies the version reviewed.',
+  },
+  {
+    value: 'Community project',
+    title: 'Community project (Needs Help)',
+    detail: 'Not ready for approval yet. Featured under the amber Needs Help badge so contributors can help close the gaps. Labeled experimental and not yet reviewed.',
+  },
+  {
+    value: 'ODIPA adopted',
+    title: 'ODIPA adopted',
+    detail: 'You transfer the repository into ODIPA\'s GitHub organization and continue as lead maintainer with review authority on every change. Adoption does not grant Approved status on its own.',
+  },
+] as const
+type ListingTier = typeof LISTING_TIERS[number]['value']
 
 const LICENSES = ['MIT', 'Apache 2.0', 'GPL v2', 'GPL v3', 'LGPL', 'BSD 2-Clause', 'BSD 3-Clause', 'MPL 2.0', 'Other Open Source']
 
@@ -45,13 +69,14 @@ interface AppFormData {
   authorEmail: string
   authorHandle: string
   org: string
+  tier: ListingTier | ''
   agree: boolean
 }
 
 const INIT: AppFormData = {
   name: '', tagline: '', description: '', category: '', problem: '',
   github: '', docs: '', lang: '', platforms: [], license: '',
-  authorName: '', authorEmail: '', authorHandle: '', org: '', agree: false,
+  authorName: '', authorEmail: '', authorHandle: '', org: '', tier: '', agree: false,
 }
 
 function Field({ label, required, hint, error, children }: {
@@ -85,6 +110,7 @@ export default function ToolSubmissionForm() {
   const [errors, setErrors] = useState<Partial<Record<keyof AppFormData, string>>>({})
   const [state, setState] = useState<State>('idle')
   const [honeypot, setHoneypot] = useState('')
+  const [serverError, setServerError] = useState('')
 
   function set<K extends keyof AppFormData>(field: K) {
     return (val: AppFormData[K]) => {
@@ -124,6 +150,7 @@ export default function ToolSubmissionForm() {
       if (!form.authorName.trim())  e.authorName = 'Your name is required'
       if (!form.authorEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.authorEmail))
         e.authorEmail = 'A valid email address is required'
+      if (!form.tier)               e.tier = 'Choose how you would like the tool listed'
       if (!form.agree)              e.agree = 'You must confirm your tool meets ODIPA standards'
     }
     setErrors(e)
@@ -160,11 +187,20 @@ export default function ToolSubmissionForm() {
           'Contributor Email':form.authorEmail,
           'GitHub Handle':    form.authorHandle || '—',
           'Organization':     form.org || '—',
+          'Listing Tier':     form.tier,
           'Agreed to Standards': form.agree ? 'Yes' : 'No',
         }),
       })
-      setState(res.ok ? 'success' : 'error')
-    } catch { setState('error') }
+      if (res.ok) {
+        setState('success')
+      } else {
+        // Show the server's reason when it gives one, for example a visitor on a cached
+        // copy of this page from before a field was added.
+        const data = await res.json().catch(() => ({}))
+        setServerError(typeof data.error === 'string' ? data.error : '')
+        setState('error')
+      }
+    } catch { setServerError(''); setState('error') }
   }
 
   if (state === 'success') {
@@ -368,6 +404,35 @@ export default function ToolSubmissionForm() {
               </Field>
             </div>
 
+            {/* Listing arrangement, the three tiers from the Tool Listing Policy */}
+            <fieldset>
+              <legend className="block font-semibold text-[13px] text-navy mb-1.5">
+                How would you like the tool listed?<span className="text-gold ml-1">*</span>
+              </legend>
+              <p className="text-[12px] text-slate-500 mb-3">
+                The three arrangements are described in our{' '}
+                <Link href="/get-involved/tool-listing-policy" className="text-blue-brand underline hover:text-navy transition-colors">
+                  Tool Listing Policy
+                </Link>. Most submissions are approved listings.
+              </p>
+              <div className="space-y-2.5">
+                {LISTING_TIERS.map(t => (
+                  <label key={t.value} className={`flex items-start gap-3 rounded-xl border p-4 cursor-pointer transition-colors ${
+                    form.tier === t.value ? 'border-gold bg-gold/5' : 'border-slate-200 hover:border-slate-300'
+                  }`}>
+                    <input type="radio" name="listing-tier" value={t.value} checked={form.tier === t.value}
+                      onChange={() => set('tier')(t.value)}
+                      className="accent-gold w-4 h-4 mt-0.5 flex-shrink-0" />
+                    <span>
+                      <span className="block text-[13px] font-semibold text-navy">{t.title}</span>
+                      <span className="block text-[12px] text-slate-500 leading-relaxed mt-0.5">{t.detail}</span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+              {errors.tier && <p className="text-red-500 text-[12px] mt-1.5">{errors.tier}</p>}
+            </fieldset>
+
             {/* Standards checklist */}
             <div className="bg-slate-50 rounded-xl border border-slate-200 p-5 space-y-2.5">
               <div className="font-mono text-[10px] text-blue-brand uppercase tracking-[2px] mb-3">Submission Standards</div>
@@ -400,7 +465,7 @@ export default function ToolSubmissionForm() {
 
             {state === 'error' && (
               <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-[13px] text-red-700">
-                Something went wrong. Please try again or email{' '}
+                {serverError ? `${serverError} If this keeps happening, refresh the page and try again, or email` : 'Something went wrong. Please try again or email'}{' '}
                 <a href="mailto:dev@odipa.org" className="underline font-semibold">dev@odipa.org</a>.
               </div>
             )}

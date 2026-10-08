@@ -10,7 +10,7 @@ const { checkRateLimit, getClientIp } = require('../_shared/rateLimiter')
 const GITHUB_OWNER = 'odipa'
 const GITHUB_REPO  = 'odipa-privacy-tools'
 
-async function openGitHubIssue({ toolName, github, description, authorName, authorEmail, category, lang }) {
+async function openGitHubIssue({ toolName, github, description, authorName, authorEmail, category, lang, tier }) {
   const token = process.env.GITHUB_TOKEN
   if (!token) {
     // Non-fatal — email still sends, issue just won't be created
@@ -25,6 +25,7 @@ async function openGitHubIssue({ toolName, github, description, authorName, auth
     `**Category:** ${category || '—'}`,
     `**Language:** ${lang || '—'}`,
     `**GitHub:** ${github}`,
+    `**Requested listing:** ${tier}`,
     ``,
     `### Description`,
     description || '—',
@@ -88,12 +89,18 @@ module.exports = async function handler(context, req) {
     const category    = clean(body['Category'], 100) || '—'
     const lang        = clean(body['Language'], 100) || '—'
     const agree       = clean(body['Agreed to Standards'], 10) || 'No'
+    // Listing arrangement from the Tool Listing Policy. Mirrors LISTING_TIERS in
+    // components/ToolSubmissionForm.tsx, keep the two lists the same.
+    const LISTING_TIERS = ['Approved listing', 'Community project', 'ODIPA adopted']
+    const tier        = clean(body['Listing Tier'], 40)
 
     if (!toolName) return respond(context, 400, { error: 'Tool name is required' })
     if (!authorEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(authorEmail))
       return respond(context, 400, { error: 'Valid email is required' })
     if (!github || !github.startsWith('https://github.com/'))
       return respond(context, 400, { error: 'Valid GitHub URL is required' })
+    if (!LISTING_TIERS.includes(tier))
+      return respond(context, 400, { error: 'Please choose how you would like the tool listed.' })
 
     // ── Spam guardrails ────────────────────────────────────────────────────
     // 1. The privacy problem must be answered in its own words. Submissions
@@ -145,6 +152,7 @@ module.exports = async function handler(context, req) {
           'Contributor Email': authorEmail,
           'GitHub Handle':     clean(body['GitHub Handle'], 100) || '—',
           'Organization':      clean(body['Organization'], 200) || '—',
+          'Listing Tier':      tier,
           'Agreed to Standards': agree,
         },
       }),
