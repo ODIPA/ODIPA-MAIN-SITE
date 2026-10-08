@@ -58,6 +58,8 @@ function toView(ent) {
   return {
     email: ent.email || '',
     name: ent.name || '',
+    firstName: ent.firstName || '',
+    lastName: ent.lastName || '',
     status: ent.status || 'pending',
     source: ent.source || '',
     member: !!ent.member,
@@ -152,6 +154,34 @@ async function deletePerson({ email, reason }) {
   return info
 }
 
+/**
+ * Remove sign ups that were never confirmed. Only rows with status pending and a known
+ * createdAt older than the cutoff are touched. Confirmed and unsubscribed rows are never
+ * removed here. dryRun only counts. The minimum age is 24 hours.
+ */
+async function purgeStalePending({ olderThanHours = 72, dryRun = true, now = Date.now() } = {}) {
+  const hours = Math.max(24, Number(olderThanHours) || 72)
+  const cutoff = new Date(now - hours * 3600 * 1000).toISOString()
+  const client = table(SUBSCRIBERS)
+  await ensure(client)
+  let scanned = 0
+  const stale = []
+  const iter = client.listEntities({ queryOptions: { filter: "PartitionKey eq 'sub' and status eq 'pending'" } })
+  for await (const ent of iter) {
+    if (++scanned > SCAN_CAP) break
+    if (ent.createdAt && String(ent.createdAt) < cutoff) stale.push(ent.rowKey)
+  }
+  let deleted = 0
+  if (!dryRun) {
+    for (const rowKey of stale) {
+      try { await client.deleteEntity('sub', rowKey); deleted++ } catch (e) {
+        if (!(e && e.statusCode === 404)) throw e
+      }
+    }
+  }
+  return { dryRun: !!dryRun, olderThanHours: hours, cutoff, scanned, matched: stale.length, deleted }
+}
+
 /** Newest first. Holds no names or addresses. */
 async function listDeletions(limit = LOOKUP_LIMIT) {
   const log = table(DELETIONS)
@@ -170,5 +200,5 @@ async function listDeletions(limit = LOOKUP_LIMIT) {
 module.exports = {
   REASONS, LOOKUP_LIMIT, EMAIL_RE,
   emailKey, isAdminRequest, normalizeEmail, toView,
-  lookup, deletePerson, listDeletions,
+  lookup, deletePerson, listDeletions, purgeStalePending,
 }

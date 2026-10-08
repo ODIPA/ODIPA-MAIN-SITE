@@ -5,8 +5,10 @@
  */
 
 const { sendFormEmail, sendHtmlEmail, respond, clean } = require('../_shared/mailer')
-const { upsertPending, confirmLink, unsubscribeLink } = require('../_shared/subscribers')
+const { upsertPending, getSubscriber, confirmLink, unsubscribeLink } = require('../_shared/subscribers')
 const { checkRateLimit, getClientIp } = require('../_shared/rateLimiter')
+const abuse = require('../_shared/abuse')
+const { strictEmailCheck } = require('../_shared/emailChecks')
 
 // ─── Optional ESP helpers ─────────────────────────────────────────────────────
 
@@ -74,22 +76,52 @@ module.exports = async function handler(context, req) {
       return respond(context, 429, { error: 'Too many requests. Please wait a moment and try again.' })
     }
     const body  = req.body || {}
-    const email = clean(body.email, 254).toLowerCase()
-    const name  = clean(body.name, 100)
+    const typedEmail = clean(body.email, 254).toLowerCase()
+    // The newsletter collects an email address and nothing else.
 
-    // Honeypot check — bots fill in hidden fields, humans don't
+    // Hidden trap field. Bots fill it in, people do not. A real person whose browser or
+    // password manager filled it anyway gets a clear message and a way in, not a fake success.
     if (body._hp) {
-      context.log.warn('Honeypot triggered — discarding bot submission')
-      return respond(context, 200, { ok: true }) // return 200 so bot doesn't retry
+      context.log.warn('Newsletter trap field filled, rejecting submission')
+      return respond(context, 400, {
+        code: 'trap',
+        error: `We could not complete your sign up from this browser. Please email ${abuse.HELP_EMAIL} and we will add you.`,
+      })
     }
 
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (!typedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(typedEmail)) {
       return respond(context, 400, { error: 'A valid email address is required.' })
     }
+
+    // Bot checks run before anything is stored and before any email is sent.
+    const blocked = abuse.enforceChallenge(body, context, 'Newsletter')
+    if (blocked) return respond(context, blocked.status, blocked.body)
+
+    if (abuse.looksGenerated(typedEmail)) {
+      context.log.warn('Newsletter signup held for review, generated looking Gmail pattern')
+      const r = abuse.reviewResponse()
+      return respond(context, r.status, r.body)
+    }
+
+    // Strict email checks: format, throwaway domains, then a mail server lookup.
+    const emailCheck = await strictEmailCheck(typedEmail)
+    if (!emailCheck.ok) {
+      context.log.warn('Newsletter signup refused, email ' + emailCheck.reason)
+      return respond(context, emailCheck.status, emailCheck.body)
+    }
+    if (emailCheck.skipped) context.log.warn('Newsletter signup mail server check skipped, ' + emailCheck.skipped)
+
+    // One inbox, one record. Gmail dot and plus variants collapse to a single address.
+    const canon = abuse.canonicalEmail(typedEmail)
+    const addrLimit = checkRateLimit(canon, 'newsletter-address', { max: 3, windowMs: 10 * 60000 })
+    if (addrLimit.limited) {
+      return respond(context, 429, { error: 'There have been several sign up attempts for this address. Please check your inbox and spam folder, or try again in a few minutes.' })
+    }
+    const email = await abuse.resolveIdentity(typedEmail, getSubscriber)
     // First-party persistence + double opt-in.
     // The subscriber is stored as pending and receives a confirmation email.
     // Only confirmed subscribers ever receive the newsletter.
-    const record = await upsertPending({ email, name, source: clean(body.source, 100) || 'Website' })
+    const record = await upsertPending({ email, name: '', source: clean(body.source, 100) || 'Website' })
     if (record.status !== 'confirmed') {
       const cLink = confirmLink(email)
       const uLink = unsubscribeLink(email)
@@ -118,7 +150,6 @@ module.exports = async function handler(context, req) {
       replyTo: email,
       fields: {
         'Email':      email,
-        'Name':       name || '—',
         'Source':     clean(body.source, 100) || 'Website',
         'Signed Up':  new Date().toUTCString(),
       },
@@ -127,9 +158,9 @@ module.exports = async function handler(context, req) {
     // Forward to ESP if configured
     const provider = (process.env.NEWSLETTER_PROVIDER || '').toLowerCase()
     if (provider === 'brevo' && process.env.BREVO_API_KEY) {
-      await addToBrevo(email, name)
+      await addToBrevo(email, '')
     } else if (provider === 'mailchimp' && process.env.MAILCHIMP_API_KEY && process.env.MAILCHIMP_LIST_ID) {
-      await addToMailchimp(email, name)
+      await addToMailchimp(email, '')
     }
 
     respond(context, 200, { ok: true })

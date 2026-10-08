@@ -60,4 +60,7 @@ function getClientIp(req) {
   )
 }
 
-module.exports = { checkRateLimit, getClientIp }
+/** Clears all counters. Used by tests so one test's attempts do not count against the next. */
+function resetRateLimits() { store.clear() }
+
+module.exports = { checkRateLimit, getClientIp, resetRateLimits }

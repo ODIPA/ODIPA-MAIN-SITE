@@ -84,9 +84,10 @@ export default function JoinPage() {
               You can leave at any time with the unsubscribe link in any email.
             </p>
             <p>
-              We ask for your email address and, if you choose, your first name. ODIPA stores
-              this information itself, never sells it, and never shares it for anyone else&apos;s
-              use. Read the full{' '}
+              We ask for your first and last name and your email address. Your name lets ODIPA
+              keep an accurate record of who its members are, and your email address is how we
+              confirm your sign up and send you the digest. ODIPA stores this information itself,
+              never sells it, and never shares it for anyone else&apos;s use. Read the full{' '}
               <a href={TERMS_PATH} className="text-blue-brand underline hover:text-navy transition-colors">
                 Community Member Terms
               </a>{' '}

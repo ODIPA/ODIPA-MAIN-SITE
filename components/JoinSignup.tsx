@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ArrowRight, CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
 import { TERMS_PATH, TERMS_VERSION } from '@/data/membership'
+import { useSignupChallenge } from './useSignupChallenge'
 
 const API_ENDPOINT = '/api/membership'
 const REQUEST_TIMEOUT_MS = 20000
@@ -16,22 +17,24 @@ interface Props {
 }
 
 /**
- * Free community membership sign-up. Follows the same flow as NewsletterSignup
- * (optional first name, email, double opt-in by email) and adds a required
- * checkbox to accept the Community Member Terms. There is deliberately no hidden
- * spam-trap field. Password managers and form-filling extensions fill hidden fields,
- * which turned real sign ups into silent failures. Abuse is limited by the per-IP
- * rate limit on the server and by double opt-in, so nobody is subscribed without
- * clicking the emailed link.
+ * Free community membership sign-up. Membership is a roster, so a first and last
+ * name are required along with the email address, and the person must accept the
+ * Community Member Terms. Double opt-in by email confirms the sign up.
+ * There is deliberately no hidden spam-trap field. Password managers and form-filling extensions fill hidden fields,
+ * which turned real sign ups into silent failures. Abuse is limited by a background
+ * proof-of-work challenge, server side checks, the per-IP rate limit, and double
+ * opt-in, so nobody is subscribed without clicking the emailed link.
  */
 export default function JoinSignup({ source = 'Join page' }: Props) {
   const [email, setEmail]       = useState('')
-  const [name, setName]         = useState('')
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName]   = useState('')
   const [accepted, setAccepted] = useState(false)
   const [state, setState]       = useState<State>('idle')
   const [error, setError]       = useState('')
   const errorRef = useRef<HTMLDivElement>(null)
   const [welcomeSent, setWelcomeSent] = useState(false)
+  const { start: startChallenge, take: takeChallenge } = useSignupChallenge()
 
   const fmtEmail = (v: string) => v.toLowerCase().replace(/\s/g, '')
 
@@ -47,6 +50,10 @@ export default function JoinSignup({ source = 'Join page' }: Props) {
     e.preventDefault()
     if (state === 'submitting') return
     const trimmed = email.trim()
+    if (!firstName.trim() || !lastName.trim()) {
+      setError('Please enter your first and last name.')
+      return
+    }
     if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
       setError('Please enter a valid email address.')
       return
@@ -58,6 +65,9 @@ export default function JoinSignup({ source = 'Join page' }: Props) {
     setError('')
     setState('submitting')
 
+    // Usually already solved in the background while the person filled in the form.
+    const challenge = await takeChallenge()
+
     // A request that never answers must not leave the button spinning forever.
     const controller = new AbortController()
     const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
@@ -68,10 +78,12 @@ export default function JoinSignup({ source = 'Join page' }: Props) {
         signal:  controller.signal,
         body:    JSON.stringify({
           email: trimmed,
-          name: name.trim(),
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
           source,
           acceptedTerms: true,
           termsVersion: TERMS_VERSION,
+          challenge: challenge || '',
         }),
       })
       if (res.ok) {
@@ -80,7 +92,8 @@ export default function JoinSignup({ source = 'Join page' }: Props) {
         setWelcomeSent(!!data.welcomeSent)
         setState(data.alreadyConfirmed ? 'joined' : 'success')
         setEmail('')
-        setName('')
+        setFirstName('')
+        setLastName('')
         setAccepted(false)
       } else {
         const data = await res.json().catch(() => ({}))
@@ -152,21 +165,42 @@ export default function JoinSignup({ source = 'Join page' }: Props) {
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8">
-      <form onSubmit={handleSubmit} noValidate className="space-y-3">
-        <div>
-          <label htmlFor="join-name" className="block text-[13px] font-semibold text-navy mb-1.5">
-            First name <span className="font-normal text-slate-400">(optional)</span>
-          </label>
-          <input
-            id="join-name"
-            type="text"
-            autoComplete="given-name"
-            placeholder="First name"
-            value={name}
-            onChange={e => setName(e.target.value)}
-            className="w-full px-3.5 py-3 rounded-lg border border-slate-200 text-[14px] text-navy placeholder-slate-400
-              focus:outline-none focus:border-blue-brand focus:ring-2 focus:ring-blue-brand/10 transition-all"
-          />
+      <form onSubmit={handleSubmit} onFocus={startChallenge} noValidate className="space-y-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label htmlFor="join-first-name" className="block text-[13px] font-semibold text-navy mb-1.5">
+              First name
+            </label>
+            <input
+              id="join-first-name"
+              type="text"
+              autoComplete="given-name"
+              placeholder="First name"
+              value={firstName}
+              onChange={e => { setFirstName(e.target.value); setError('') }}
+              required
+              maxLength={60}
+              className="w-full px-3.5 py-3 rounded-lg border border-slate-200 text-[14px] text-navy placeholder-slate-400
+                focus:outline-none focus:border-blue-brand focus:ring-2 focus:ring-blue-brand/10 transition-all"
+            />
+          </div>
+          <div>
+            <label htmlFor="join-last-name" className="block text-[13px] font-semibold text-navy mb-1.5">
+              Last name
+            </label>
+            <input
+              id="join-last-name"
+              type="text"
+              autoComplete="family-name"
+              placeholder="Last name"
+              value={lastName}
+              onChange={e => { setLastName(e.target.value); setError('') }}
+              required
+              maxLength={60}
+              className="w-full px-3.5 py-3 rounded-lg border border-slate-200 text-[14px] text-navy placeholder-slate-400
+                focus:outline-none focus:border-blue-brand focus:ring-2 focus:ring-blue-brand/10 transition-all"
+            />
+          </div>
         </div>
 
         <div>

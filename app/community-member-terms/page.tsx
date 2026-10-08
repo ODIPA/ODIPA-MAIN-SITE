@@ -121,10 +121,11 @@ export default function CommunityMemberTerms() {
 
           <Section id="your-information" title="Your information">
             <p>
-              We collect your email address and, if you choose to give it, your first name. We also
-              record the date you joined and the version of these terms you accepted. We use this
-              information to send the digest, event invitations, research updates, and program news,
-              and to confirm that you chose to join.
+              We collect your first and last name and your email address. We also record the date
+              you joined and the version of these terms you accepted. We use your name to keep an
+              accurate record of who our members are. We use your email address to confirm that you
+              chose to join and to send the digest, event invitations, research updates, and program
+              news.
             </p>
             <p>
               ODIPA stores your information itself. We do not sell it and we do not share it for

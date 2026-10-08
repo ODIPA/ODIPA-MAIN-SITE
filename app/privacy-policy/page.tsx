@@ -169,7 +169,7 @@ export default function PrivacyPolicy() {
               />
               <InfoBox
                 label="Newsletter and community sign ups"
-                value="Your email address and, if you choose, your first name, plus the date you signed up and, for community members, the version of the Community Member Terms you accepted. Stored by ODIPA and never sold."
+                value="Newsletter: your email address and the date you subscribed. Community membership: your first and last name, your email address, the date you joined, and the version of the Community Member Terms you accepted. Stored by ODIPA and never sold."
               />
               <InfoBox
                 label="Email communications"
@@ -268,7 +268,7 @@ export default function PrivacyPolicy() {
                   {[
                     ['Plausible Analytics', 'Website analytics', 'Aggregate only — no personal data', '✓ Excellent'],
                     ['Azure Static Web Apps', 'Website hosting', 'Standard HTTP request logs (IP, timestamp) — retained briefly per Microsoft policy', '~ Standard'],
-                    ['Microsoft Azure (Table Storage and Communication Services)', 'Storing newsletter and community sign ups and sending our email', 'Email address and optional first name, handled on ODIPA\'s behalf only', '✓ Service provider'],
+                    ['Microsoft Azure (Table Storage and Communication Services)', 'Storing newsletter and community sign ups and sending our email', 'Email address, and for community members their name, handled on ODIPA\'s behalf only', '✓ Service provider'],
                     ['Google Fonts', 'Typography', 'Font file requests only', '~ Standard'],
                     ['Unsplash', 'Stock photography', 'Image requests only', '~ Standard'],
                   ].map(([service, purpose, data, privacy], i) => (

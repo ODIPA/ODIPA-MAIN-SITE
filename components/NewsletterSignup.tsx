@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { Mail, ArrowRight, CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
+import TrapField from './TrapField'
+import { useSignupChallenge } from './useSignupChallenge'
 
 const API_ENDPOINT = '/api/newsletter'
 
@@ -15,18 +17,24 @@ interface Props {
   source?: string
 }
 
+/** Newsletter sign-up. Collects an email address and nothing else. */
 export default function NewsletterSignup({ variant = 'footer', source = 'Website' }: Props) {
   const [email, setEmail]     = useState('')
-  const [name,  setName]      = useState('')
   const [state, setState]     = useState<State>('idle')
   const [error, setError]     = useState('')
   const [honeypot, setHoneypot] = useState('')
+  const { start: startChallenge, take: takeChallenge } = useSignupChallenge()
 
   const fmtEmail = (v: string) => v.toLowerCase().replace(/\s/g, '')
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (honeypot) return // silently discard bot submissions
+    if (honeypot) {
+      // Never fail silently. A real person whose browser filled the trap field needs a way forward.
+      setError('We could not complete your sign up from this browser. Please email info@odipa.org and we will add you.')
+      setState('error')
+      return
+    }
     const trimmed = email.trim()
     if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
       setError('Please enter a valid email address.')
@@ -34,16 +42,17 @@ export default function NewsletterSignup({ variant = 'footer', source = 'Website
     }
     setError('')
     setState('submitting')
+    // Usually already solved in the background while the person filled in the form.
+    const challenge = await takeChallenge()
     try {
       const res = await fetch(API_ENDPOINT, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ email: trimmed, name: name.trim(), source, _hp: honeypot }),
+        body:    JSON.stringify({ email: trimmed, source, _hp: honeypot, challenge: challenge || '' }),
       })
       if (res.ok) {
         setState('success')
         setEmail('')
-        setName('')
       } else {
         const data = await res.json().catch(() => ({}))
         setError(data.error || 'Signup failed. Please try again.')
@@ -72,15 +81,7 @@ export default function NewsletterSignup({ variant = 'footer', source = 'Website
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} noValidate className="space-y-2.5">
-            <input
-              type="text"
-              placeholder="First name (optional)"
-              value={name}
-              onChange={e => setName(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-lg bg-white/[0.07] border border-white/10 text-[13px] text-white placeholder-white/30
-                focus:outline-none focus:border-gold/50 focus:bg-white/10 transition-all"
-            />
+          <form onSubmit={handleSubmit} onFocus={startChallenge} noValidate className="space-y-2.5">
             <div className="flex gap-2">
               <input
                 type="email"
@@ -109,17 +110,7 @@ export default function NewsletterSignup({ variant = 'footer', source = 'Website
                 {error || 'Signup failed. Please try again.'}
               </p>
             )}
-            {/* Honeypot — hidden from real users, bots fill it in */}
-            <input
-              type="text"
-              name="website"
-              value={honeypot}
-              onChange={e => setHoneypot(e.target.value)}
-              tabIndex={-1}
-              autoComplete="off"
-              aria-hidden="true"
-              style={{ position: 'absolute', left: '-9999px', opacity: 0, height: 0, width: 0 }}
-            />
+            <TrapField value={honeypot} onChange={setHoneypot} />
             <p className="text-[10px] text-white/25 leading-relaxed">
               No spam, ever. Unsubscribe any time. We never sell your data.{' '}
               <a href="/privacy-policy" className="underline hover:text-white/50 transition-colors">Privacy Policy</a>
@@ -163,15 +154,7 @@ export default function NewsletterSignup({ variant = 'footer', source = 'Website
                   Privacy digest: breach alerts, new privacy laws, ODIPA research releases, and practical tips to protect your data. Free, always.
                 </p>
               </div>
-              <form onSubmit={handleSubmit} noValidate className="w-full lg:w-auto lg:min-w-[360px] space-y-2.5">
-                <input
-                  type="text"
-                  placeholder="First name (optional)"
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-white/[0.07] border border-white/10 text-[14px] text-white placeholder-white/30
-                    focus:outline-none focus:border-gold/40 focus:bg-white/10 transition-all"
-                />
+              <form onSubmit={handleSubmit} onFocus={startChallenge} noValidate className="w-full lg:w-auto lg:min-w-[360px] space-y-2.5">
                 <div className="flex gap-2">
                   <input
                     type="email"
@@ -200,17 +183,7 @@ export default function NewsletterSignup({ variant = 'footer', source = 'Website
                     {error || 'Signup failed. Please try again.'}
                   </p>
                 )}
-                {/* Honeypot */}
-                <input
-                  type="text"
-                  name="website"
-                  value={honeypot}
-                  onChange={e => setHoneypot(e.target.value)}
-                  tabIndex={-1}
-                  autoComplete="off"
-                  aria-hidden="true"
-                  style={{ position: 'absolute', left: '-9999px', opacity: 0, height: 0, width: 0 }}
-                />
+            <TrapField value={honeypot} onChange={setHoneypot} />
                 <p className="text-[11px] text-white/25 leading-relaxed">
                   No spam. Unsubscribe anytime. We never sell your data.{' '}
                   <a href="/privacy-policy" className="underline hover:text-white/45 transition-colors">Privacy Policy</a>
@@ -243,18 +216,10 @@ export default function NewsletterSignup({ variant = 'footer', source = 'Website
           </div>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} noValidate className="space-y-2.5">
+        <form onSubmit={handleSubmit} onFocus={startChallenge} noValidate className="space-y-2.5">
           <p className="text-[13px] text-slate-500 leading-relaxed mb-3">
             Get privacy news, research releases, and breach alerts. Free, no spam.
           </p>
-          <input
-            type="text"
-            placeholder="First name (optional)"
-            value={name}
-            onChange={e => setName(e.target.value)}
-            className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-[13px] text-navy placeholder-slate-400
-              focus:outline-none focus:border-blue-brand focus:ring-2 focus:ring-blue-brand/10 transition-all"
-          />
           <div className="flex gap-2">
             <input
               type="email"
@@ -283,17 +248,7 @@ export default function NewsletterSignup({ variant = 'footer', source = 'Website
               {error || 'Signup failed. Please try again.'}
             </p>
           )}
-          {/* Honeypot */}
-          <input
-            type="text"
-            name="website"
-            value={honeypot}
-            onChange={e => setHoneypot(e.target.value)}
-            tabIndex={-1}
-            autoComplete="off"
-            aria-hidden="true"
-            style={{ position: 'absolute', left: '-9999px', opacity: 0, height: 0, width: 0 }}
-          />
+            <TrapField value={honeypot} onChange={setHoneypot} />
           <p className="text-[10px] text-slate-400">
             No spam. Unsubscribe anytime.{' '}
             <a href="/privacy-policy" className="underline hover:text-slate-600 transition-colors">Privacy Policy</a>

@@ -93,15 +93,21 @@ async function getSubscriber(email) {
  * Record that a subscriber joined as a free, non-voting community member and
  * accepted a specific version of the Community Member Terms. Works for new
  * (pending) and already-confirmed subscribers, and never changes their status.
+ *
+ * The member's name is written here, not only in upsertPending, because a person
+ * who was already a confirmed newsletter subscriber skips upsertPending's write.
+ * Membership requires a name, so the name given at join time always wins.
  */
-async function recordMembership(email, { termsVersion }) {
+async function recordMembership(email, { termsVersion, firstName, lastName }) {
   const client = getTable()
   await ensureTable(client)
   const rowKey = emailKey(email)
   let existing = null
   try { existing = await client.getEntity('sub', rowKey) } catch (e) { /* not found */ }
   const now = new Date().toISOString()
-  await client.upsertEntity({
+  const first = String(firstName || '').trim(), last = String(lastName || '').trim()
+  const nameFields = first || last ? { firstName: first, lastName: last, name: `${first} ${last}`.trim() } : {}
+  await client.upsertEntity(Object.assign({
     partitionKey: 'sub',
     rowKey,
     email: email.toLowerCase(),
@@ -109,7 +115,7 @@ async function recordMembership(email, { termsVersion }) {
     memberSince: (existing && existing.memberSince) || now,
     memberTermsVersion: termsVersion || '',
     memberTermsAcceptedAt: now,
-  }, 'Merge')
+  }, nameFields), 'Merge')
 }
 
 async function listByStatus(status) {
@@ -118,7 +124,7 @@ async function listByStatus(status) {
   const out = []
   const iter = client.listEntities({ queryOptions: { filter: `PartitionKey eq 'sub' and status eq '${status}'` } })
   for await (const ent of iter) {
-    out.push({ email: ent.email, name: ent.name || '', source: ent.source || '', createdAt: ent.createdAt, confirmedAt: ent.confirmedAt || null, member: !!ent.member })
+    out.push({ email: ent.email, name: ent.name || '', firstName: ent.firstName || '', lastName: ent.lastName || '', source: ent.source || '', createdAt: ent.createdAt, confirmedAt: ent.confirmedAt || null, member: !!ent.member })
   }
   return out
 }

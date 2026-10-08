@@ -36,7 +36,23 @@ Module._load = function (req, parent, ...rest) {
 }
 const mailer = require(path.join(api, '_shared/mailer.js'))
 const subs = require(path.join(api, '_shared/subscribers.js'))
+// DNS is not available in every test environment. Make example.com look like a real mail domain.
+const emailChecks = require(path.join(api, '_shared/emailChecks.js'))
+emailChecks.checkMx = async () => ({ ok: true })
+const realStrict = emailChecks.strictEmailCheck
+emailChecks.strictEmailCheck = async email => { const r = emailChecks.checkShape(email); if (!r.ok) return r; return emailChecks.checkDisposable(email) }
 const membership = require(path.join(api, 'membership/index.js'))
+const abuse = require(path.join(api, '_shared/abuse.js'))
+const crypto = require('crypto')
+// Solve a challenge issued 10 seconds ago, the way a browser would after waiting.
+function solve() {
+  const c = abuse.issueChallenge(Date.now() - 10000)
+  for (let k = 0; k <= c.maxnumber; k++) {
+    if (crypto.createHash('sha256').update(c.salt + k).digest('hex') === c.challenge) {
+      return Buffer.from(JSON.stringify({ algorithm: c.algorithm, challenge: c.challenge, number: k, salt: c.salt, signature: c.signature })).toString('base64')
+    }
+  }
+}
 
 let pass = 0, fail = 0
 async function t(label, fn) { try { await fn(); console.log('  PASS', label); pass++ } catch (e) { console.log('  FAIL', label, '\n      ', e.message.split('\n')[0]); fail++ } }
@@ -45,11 +61,12 @@ const log = Object.assign(m => logs.push(['info', String(m)]), { warn: m => logs
 let n = 0
 async function join(body) {
   const ctx = { log }
-  await membership(ctx, { method: 'POST', headers: { 'x-forwarded-for': `10.2.0.${++n}` }, body })
+  await membership(ctx, { method: 'POST', headers: { 'x-forwarded-for': `10.2.0.${++n}` }, body: { challenge: solve(), ...body } })
   return { status: ctx.res.status, body: JSON.parse(ctx.res.body) }
 }
-const good = { email: 'jane@example.com', name: 'Jane', source: 'Join page', acceptedTerms: true, termsVersion: 'v1' }
-const reset = () => { acsResult = { id: 'msg-1', status: 'Succeeded' }; acsThrows = null; sentMessages.length = 0; logs.length = 0; rows.clear() }
+const good = { email: 'jane@example.com', firstName: 'Jane', lastName: 'Doe', source: 'Join page', acceptedTerms: true, termsVersion: 'v1' }
+const resetRateLimits = require(path.join(api, '_shared/rateLimiter.js')).resetRateLimits
+const reset = () => { resetRateLimits(); acsResult = { id: 'msg-1', status: 'Succeeded' }; acsThrows = null; sentMessages.length = 0; logs.length = 0; rows.clear() }
 
 ;(async () => {
   console.log('\nmailer')
