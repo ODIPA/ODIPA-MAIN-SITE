@@ -29,6 +29,15 @@ type Tool = {
   status?: 'approved' | 'needs-help'
   // For needs-help projects, where contributors should go (usually the issues page)
   contribute?: string
+  // Who maintains the code. ODIPA's own tools show "ODIPA Built & Maintained".
+  // Approved tools from outside authors show "ODIPA Reviewed & Approved" with the
+  // review date, per the Tool Listing Policy. The code stays in the author's repo.
+  maintainer?: 'odipa' | 'community'
+  // Approval attaches to a specific version. The short commit that was reviewed.
+  reviewedCommit?: string
+  // One plain sentence on what the review covered, shown under the badge when the
+  // project is too large for a line-by-line read and the badge should not imply one.
+  reviewScope?: string
 }
 
 const APPROVED_TOOLS: Tool[] = [
@@ -139,6 +148,34 @@ const APPROVED_TOOLS: Tool[] = [
     featured: false,
     approvedDate: '2026-08',
     tags: ['GDPR', 'CCPA', 'rights', 'legal', 'multilingual'],
+  },
+  // Approved tool from an outside author. Reviewed October 2026 at commit 429e8f8:
+  // published package run in a clean environment with all outbound traffic blocked
+  // (local only, nothing written outside its own folder, cloud sync requires an
+  // explicit connect), Python dependency audit clean, Rust lockfile audited, and the
+  // native runtime built from the repository's Rust source. The repository stays
+  // with the author per the policy. Not a line-by-line read, see reviewScope.
+  {
+    id: 'hol-guard',
+    name: 'HOL Guard',
+    tagline: 'A local firewall for AI coding agents that checks shell commands, secrets, MCP calls, and package installs before they run.',
+    desc: 'Sits between an AI coding agent (Codex, Claude Code, Copilot, Cursor, and others) and your machine. Intercepts tool calls before they execute, pauses when trust is unclear, and routes risky actions into an approval step so secrets and data are gated before they leave the machine. Runs entirely locally with no account. An optional hosted service exists but only engages after an explicit sign-in, and is not part of this listing.',
+    category: 'AI Agent Security',
+    author: 'Michael Kantor',
+    authorHandle: '@kantorcodes',
+    lang: 'Python',
+    platform: ['CLI', 'Python Package', 'Local Dashboard', 'Cross-platform'],
+    license: 'Apache-2.0',
+    github: 'https://github.com/hashgraph-online/hol-guard',
+    docs: 'https://github.com/hashgraph-online/hol-guard/tree/main/docs/guard',
+    stars: 0,
+    featured: false,
+    status: 'approved',
+    maintainer: 'community',
+    approvedDate: '2026-10',
+    reviewedCommit: '429e8f8',
+    reviewScope: 'Review covered the build from source, dependency audits, and verified local-only network behavior. The decision engine is compiled Rust. Not a line-by-line read of the full codebase.',
+    tags: ['AI agents', 'MCP', 'secrets', 'firewall', 'Python', 'Rust'],
   },
 ]
 
@@ -285,11 +322,18 @@ function ToolCard({ tool, stars }: { tool: Tool; stars: number }) {
           </a>
         </div>
       ) : (
+        <div className="flex flex-col gap-1.5">
         <div className="flex items-center gap-1.5 text-[10px] font-mono text-green-600 bg-green-50 border border-green-200 rounded-lg px-3 py-1.5">
           <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor" className="flex-shrink-0">
             <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm3.78-9.72a.75.75 0 0 0-1.06-1.06L6.75 9.19 5.28 7.72a.75.75 0 0 0-1.06 1.06l2 2a.75.75 0 0 0 1.06 0l4.5-4.5z"/>
           </svg>
-          ODIPA Built &amp; Maintained · {tool.approvedDate}
+          {tool.maintainer === 'community'
+            ? <>ODIPA Reviewed &amp; Approved · {tool.approvedDate}{tool.reviewedCommit ? ` · ${tool.reviewedCommit}` : ''}</>
+            : <>ODIPA Built &amp; Maintained · {tool.approvedDate}</>}
+        </div>
+        {tool.reviewScope && (
+          <p className="text-[11px] text-slate-500 leading-snug">{tool.reviewScope}</p>
+        )}
         </div>
       )}
     </div>
@@ -322,6 +366,25 @@ export default function CommunityTools() {
 
   // Repo name from the tool's github URL, used to look up live stars
   const repoName = (t: Tool) => t.github.split('/').pop()?.toLowerCase() ?? ''
+
+  // Tools whose code lives outside the ODIPA org are not in the org listing above,
+  // so each gets its own small request. Static counts remain the fallback.
+  useEffect(() => {
+    let cancelled = false
+    const external = ALL_TOOLS.filter(t => !/github\.com\/odipa\//i.test(t.github))
+    for (const t of external) {
+      const path = t.github.replace(/^https?:\/\/github\.com\//i, '').replace(/\/+$/, '')
+      fetch(`https://api.github.com/repos/${path}`)
+        .then(r => { if (!r.ok) throw new Error(String(r.status)); return r.json() })
+        .then((repo: { stargazers_count: number }) => {
+          if (cancelled) return
+          setLiveStars(prev => ({ ...prev, [repoName(t)]: repo.stargazers_count }))
+        })
+        .catch(() => { /* keep static fallback count */ })
+    }
+    return () => { cancelled = true }
+  }, [])
+
   const starsFor = (t: Tool) => liveStars[repoName(t)] ?? t.stars
 
   const filtered = useMemo(() => {
