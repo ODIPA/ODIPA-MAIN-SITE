@@ -1,0 +1,36 @@
+# Removes sign ups that were never confirmed (double opt-in link never clicked).
+# SWA managed functions cannot host timer triggers, so this workflow calls the admin
+# endpoint, the same way the daily inquiry drafting workflow does. Requires the repo
+# secret ODIPA_ADMIN_KEY set to the same value as NEWSLETTER_ADMIN_KEY.
+#
+# Run it by hand first with dry_run left on. The response shows how many rows would go.
+# When the count looks right, uncomment the schedule block to run it weekly.
+name: Purge unconfirmed sign ups
+
+on:
+  # schedule:
+  #   - cron: '0 11 * * 1'   # Mondays 11:00 UTC
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Only count, do not delete'
+        type: boolean
+        default: true
+      older_than_hours:
+        description: 'Minimum age in hours (24 or more)'
+        default: '72'
+
+jobs:
+  purge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Purge pass
+        run: |
+          DRY="${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || 'false' }}"
+          HOURS="${{ github.event_name == 'workflow_dispatch' && inputs.older_than_hours || '72' }}"
+          curl -sS -X POST "https://www.odipa.org/api/subscriber-purge-pending" \
+            -H "x-admin-key: ${{ secrets.ODIPA_ADMIN_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"dryRun\": ${DRY}, \"olderThanHours\": ${HOURS}}" \
+            -w "\nHTTP %{http_code}\n" \
+            --fail-with-body
