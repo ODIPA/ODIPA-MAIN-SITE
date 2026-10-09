@@ -15,6 +15,7 @@
  */
 
 import { useEffect, useState } from 'react'
+import { APPROVED_TOOL_COUNT, COMMUNITY_PROJECT_COUNT } from './CommunityTools'
 
 // ─── Config ─────────────────────────────────────────────────────────────────
 const GITHUB_OWNER = 'odipa'
@@ -22,10 +23,9 @@ const GITHUB_REPO  = 'odipa-privacy-tools'   // The repo where tool submissions 
 
 // Fallback counts shown while loading or on API error.
 // review/audit default to 0 so we never display an invented queue.
-// Fallback shown only when the GitHub API is unreachable. The approved
-// fallback mirrors the directory so an API outage never zeroes the count.
-// Keep in sync with APPROVED_TOOLS in CommunityTools.tsx.
-const FALLBACK = { review: 0, audit: 0, needsHelp: 0, approved: 6 }
+// The approved and needs-help fallbacks are read from the directory itself,
+// so an API outage never zeroes the count and the number cannot drift.
+const FALLBACK = { review: 0, audit: 0, needsHelp: COMMUNITY_PROJECT_COUNT, approved: APPROVED_TOOL_COUNT }
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface Counts {

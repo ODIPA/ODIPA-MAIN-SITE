@@ -211,6 +211,11 @@ const COMMUNITY_PROJECTS: Tool[] = [
 
 const ALL_TOOLS: Tool[] = [...APPROVED_TOOLS, ...COMMUNITY_PROJECTS]
 
+// Read by the review status panel as its fallback when GitHub is unreachable,
+// so the "Approved & live" count can never drift from the directory itself.
+export const APPROVED_TOOL_COUNT = APPROVED_TOOLS.length
+export const COMMUNITY_PROJECT_COUNT = COMMUNITY_PROJECTS.length
+
 const CATEGORIES = ['All', ...Array.from(new Set(ALL_TOOLS.map(t => t.category)))]
 const LANGS = ['All Languages', ...Array.from(new Set(ALL_TOOLS.map(t => t.lang)))]
 

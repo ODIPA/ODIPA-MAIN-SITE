@@ -14,6 +14,7 @@
  */
 
 import { useState } from 'react'
+import ToolSubmissionsPanel from './ToolSubmissionsPanel'
 
 type Inquiry = {
   id: string
@@ -262,6 +263,9 @@ export default function InquiriesAdminDashboard() {
       </div>
 
       {/* Detail panel */}
+      {/* Tool submissions live in the GitHub tracker, shown here so this page is the one place to look */}
+      <ToolSubmissionsPanel />
+
       {open && (
         <div className="fixed inset-0 z-50 bg-navy/40 flex items-start justify-center overflow-y-auto p-4 pt-20"
           onClick={() => setOpenId(null)}>

@@ -57,6 +57,60 @@ const good = {
       assert(/Listing Tier/.test(m.content.html) && m.content.html.includes(tier), 'tier row missing from the email')
     })
   }
+  console.log('\nacknowledgment to the submitter')
+  await t('a valid submission sends an acknowledgment to the submitter with their tier and the stages', async () => {
+    sent.length = 0
+    const r = await post({ ...good, 'Listing Tier': 'Community project' })
+    assert.strictEqual(r.status, 200)
+    const ack = sent.find(m => m.content.subject.startsWith('We received your ODIPA tool submission'))
+    assert(ack, 'acknowledgment missing')
+    assert.deepStrictEqual(ack.recipients.to, [{ address: 'jane@example.com' }])
+    assert.deepStrictEqual(ack.replyTo, [{ address: 'dev@odipa.org' }])
+    for (const text of [ack.content.html, ack.content.plainText]) {
+      assert(/Hi Jane Smith/.test(text))
+      assert(/Example Tool/.test(text))
+      assert(/Community Project listing/.test(text), 'tier line missing')
+      assert(/2 business days/.test(text) && /1 to 2 weeks/.test(text) && /1 to 3 weeks/.test(text), 'stages missing')
+      assert(/tool-listing-policy/.test(text))
+      assert(/not an endorsement/.test(text))
+    }
+    assert(!/—/.test(ack.content.html + ack.content.plainText), 'no em dashes')
+  })
+  await t('the acknowledgment links the tracking issue when one was created', async () => {
+    process.env.GITHUB_TOKEN = 'x'
+    const origFetch = global.fetch
+    global.fetch = async (url, opts) => {
+      if (String(url).includes('/issues') && opts && opts.method === 'POST') return { ok: true, status: 201, json: async () => ({ number: 42, html_url: 'https://github.com/odipa/odipa-privacy-tools/issues/42' }) }
+      return { ok: true, status: 200, json: async () => ({ size: 42 }) }
+    }
+    sent.length = 0
+    try {
+      const r = await post({ ...good, 'Listing Tier': 'Approved listing' })
+      assert.deepStrictEqual([r.status, r.body.issueNumber], [200, 42])
+      const ack = sent.find(m => m.content.subject.startsWith('We received your ODIPA tool submission'))
+      assert(/issues\/42/.test(ack.content.html) && /issues\/42/.test(ack.content.plainText), 'issue link missing')
+      assert(/Approved listing/.test(ack.content.plainText))
+    } finally { global.fetch = origFetch; delete process.env.GITHUB_TOKEN }
+  })
+  await t('the acknowledgment failing never fails the submission', async () => {
+    const orig = FakeEmailClient.prototype.beginSend
+    FakeEmailClient.prototype.beginSend = async function (m) {
+      if (m.content.subject.startsWith('We received')) throw new Error('smtp down')
+      return orig.call(this, m)
+    }
+    try {
+      const r = await post({ ...good, 'Listing Tier': 'Approved listing' })
+      assert.strictEqual(r.status, 200)
+    } finally { FakeEmailClient.prototype.beginSend = orig }
+  })
+  await t('a submitter cannot inject html into their own acknowledgment', async () => {
+    sent.length = 0
+    await post({ ...good, 'Listing Tier': 'Approved listing', 'Contributor Name': '<img src=x onerror=1>Jane', 'Tool Name': 'Tool <script>' })
+    const ack = sent.find(m => m.content.subject.startsWith('We received'))
+    assert(!/onerror|<script/.test(ack.content.html), 'html not escaped')
+    assert(/&lt;img src=x onerror=1&gt;Jane|Hi Jane/.test(ack.content.html), 'name should be escaped or cleaned')
+  })
+
   await t('the form and the server agree on the tier list', () => {
     const fs = require('fs')
     const form = fs.readFileSync(path.join(api, '..', 'components', 'ToolSubmissionForm.tsx'), 'utf8')

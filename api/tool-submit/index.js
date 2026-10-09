@@ -4,7 +4,7 @@
  *
  */
 
-const { sendFormEmail, respond, clean } = require('../_shared/mailer')
+const { sendFormEmail, sendHtmlEmail, respond, clean } = require('../_shared/mailer')
 const { checkRateLimit, getClientIp } = require('../_shared/rateLimiter')
 
 const GITHUB_OWNER = 'odipa'
@@ -59,6 +59,43 @@ async function openGitHubIssue({ toolName, github, description, authorName, auth
 
   const issue = await res.json()
   return { number: issue.number, url: issue.html_url }
+}
+
+const TIER_LINES = {
+  'Approved listing': 'You asked for an Approved listing. If it passes review, the tool is listed with the green Approved badge, the repository stays where it is, and you keep full ownership and control. The listing identifies the exact version we reviewed.',
+  'Community project': 'You asked for a Community Project listing. The tool is featured under the amber Needs Help badge so contributors can help close its gaps. It is labeled experimental and not yet reviewed until it completes the full review.',
+  'ODIPA adopted': 'You asked about ODIPA adoption. That means transferring the repository into ODIPA\'s GitHub organization with you continuing as lead maintainer. We will discuss the details with you before anything moves, and adoption on its own does not grant Approved status.',
+}
+
+function ackParagraphs({ toolName, tier, issueUrl }) {
+  return [
+    `Thanks for submitting ${toolName} to ODIPA's Community Privacy Tools directory. This note confirms we received it.`,
+    TIER_LINES[tier] || 'We have recorded the listing arrangement you chose.',
+    'What happens next. We acknowledge within 2 business days. Our team then does an initial review of code quality, documentation, and stated purpose, which takes 1 to 2 weeks. Volunteer security engineers follow with a security review including dependency scanning and manual code review, which takes 1 to 3 weeks. The board then confirms mission and community alignment within about a week. Findings are posted in writing at each stage.',
+    issueUrl
+      ? `You can follow progress on the public tracking issue: ${issueUrl}`
+      : 'Progress is tracked publicly at https://github.com/odipa/odipa-privacy-tools/issues once an issue is opened for your submission.',
+    'A listing means the code was reviewed against our published criteria. It is not an endorsement or promotion, and there is no fee at any stage. Our Tool Listing Policy is at https://www.odipa.org/get-involved/tool-listing-policy',
+  ]
+}
+
+function ackText({ authorName, toolName, tier, issueUrl }) {
+  return [`Hi ${authorName},`, '', ...ackParagraphs({ toolName, tier, issueUrl }).join('\n\n').split('\n'), '', 'This confirmation was sent automatically. Replies go to dev@odipa.org.'].join('\n')
+}
+
+function ackHtml({ authorName, toolName, tier, issueUrl }) {
+  const esc = v => String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  const paragraphs = ackParagraphs({ toolName, tier, issueUrl }).map(t =>
+    `<p style="font-size:14px;line-height:1.7;color:#1C2536;margin:0 0 14px">${esc(t).replace(/(https?:\/\/[^\s]+)/g, '<a href="$1">$1</a>')}</p>`).join('')
+  return `
+    <div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;margin:0 auto;color:#1C2536">
+      <div style="background:#0B1F3A;padding:16px 20px;margin-bottom:22px;border-radius:8px">
+        <img src="https://www.odipa.org/logo-dark-sm.png" alt="ODIPA" height="36" style="display:block;height:36px" />
+      </div>
+      <p style="font-size:15px;margin:0 0 14px">Hi ${esc(authorName)},</p>
+      ${paragraphs}
+      <p style="font-size:12px;color:#667;margin:20px 0 0">This confirmation was sent automatically. Replies go to our team at dev@odipa.org.</p>
+    </div>`
 }
 
 module.exports = async function handler(context, req) {
@@ -161,6 +198,21 @@ module.exports = async function handler(context, req) {
 
     const issueResult = issue.status === 'fulfilled' ? issue.value : null
     context.log.info('Tool submission processed', { toolName, issue: issueResult })
+
+    // Acknowledgment to the submitter. Repeats the arrangement they chose, states the
+    // stages and timelines from the Contribute Code page, and links the tracking issue
+    // when one was created. A failure here never fails the submission.
+    try {
+      await sendHtmlEmail({
+        to: authorEmail,
+        subject: `We received your ODIPA tool submission: ${toolName}`,
+        replyTo: 'dev@odipa.org',
+        plainText: ackText({ authorName, toolName, tier, issueUrl: issueResult ? issueResult.url : null }),
+        html: ackHtml({ authorName, toolName, tier, issueUrl: issueResult ? issueResult.url : null }),
+      })
+    } catch (ackErr) {
+      context.log.warn('Submission acknowledgment email failed:', ackErr.message)
+    }
 
     respond(context, 200, {
       ok: true,
