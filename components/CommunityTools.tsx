@@ -2,10 +2,10 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
+import toolsData from '@/api/_shared/tools.json'
 
-// ─── Seed data — approved community tools ────────────────────────────────────
-// Add approved tools here after they clear the review process.
-// Each tool that passes review gets added to this array.
+// ─── Directory data ──────────────────────────────────────────────────────────
+// Tools are defined in api/_shared/tools.json. This file only types and renders them.
 type Tool = {
   id: string
   name: string
@@ -35,179 +35,17 @@ type Tool = {
   maintainer?: 'odipa' | 'community'
   // Approval attaches to a specific version. The short commit that was reviewed.
   reviewedCommit?: string
+  // Internal notes from the review, kept with the data. Not rendered.
+  reviewNotes?: string
   // One plain sentence on what the review covered, shown under the badge when the
   // project is too large for a line-by-line read and the badge should not imply one.
   reviewScope?: string
 }
 
-const APPROVED_TOOLS: Tool[] = [
-  {
-    id: 'cookie-harvester',
-    name: 'Cookie Harvester & Analyzer',
-    tagline: 'Scan, extract, and classify first- and third-party cookies from any domain.',
-    desc: 'A command-line tool that visits a target domain using a headless browser, harvests all cookies set during a browsing session, classifies them by purpose (analytics, advertising, functional, strictly necessary), and outputs a structured JSON/CSV report. Useful for CCPA/GDPR cookie audits.',
-    category: 'Cookie Analysis',
-    author: 'ODIPA',
-    authorHandle: '@odipa_org',
-    lang: 'Python',
-    platform: ['CLI', 'Cross-platform'],
-    license: 'MIT',
-    github: 'https://github.com/odipa/cookie-harvester',
-    docs: 'https://github.com/odipa/cookie-harvester#readme',
-    stars: 0,
-    featured: true,
-    approvedDate: '2026-08',
-    tags: ['cookies', 'CCPA', 'GDPR', 'audit', 'CLI', 'Python'],
-  },
-  {
-    id: 'tracker-lens',
-    name: 'Tracker Lens',
-    tagline: 'Identify and map all third-party trackers on a webpage in seconds.',
-    desc: 'Browser extension and CLI tool that intercepts network requests, identifies known tracking domains via the EasyList/EasyPrivacy blocklist, and produces a visual map of who is tracking whom on any page.',
-    category: 'Tracker Detection',
-    author: 'ODIPA',
-    authorHandle: '@odipa_org',
-    lang: 'JavaScript',
-    platform: ['Browser Extension', 'CLI'],
-    license: 'MIT',
-    github: 'https://github.com/odipa/tracker-lens',
-    docs: 'https://github.com/odipa/tracker-lens#readme',
-    stars: 0,
-    featured: false,
-    approvedDate: '2026-08',
-    tags: ['trackers', 'network', 'browser extension', 'JavaScript'],
-  },
-  {
-    id: 'policy-scanner',
-    name: 'Privacy Policy Scanner',
-    tagline: 'Grade any privacy policy with plain-language scoring and red-flag detection.',
-    desc: 'Paste or link a privacy policy URL and this tool uses NLP to detect red-flag clauses (data selling, indefinite retention, broad third-party sharing), scores the policy on a consumer-friendliness scale, and outputs a human-readable summary.',
-    category: 'Policy Analysis',
-    author: 'ODIPA',
-    authorHandle: '@odipa_org',
-    lang: 'Python',
-    platform: ['CLI', 'Web API'],
-    license: 'Apache 2.0',
-    github: 'https://github.com/odipa/policy-scanner',
-    docs: 'https://github.com/odipa/policy-scanner#readme',
-    stars: 0,
-    featured: true,
-    approvedDate: '2026-08',
-    tags: ['NLP', 'policy', 'scoring', 'Python', 'API'],
-  },
-  {
-    id: 'broker-opt-out',
-    name: 'Data Broker Opt-Out Bot',
-    tagline: 'Automate opt-out and removal requests to major data broker sites.',
-    desc: 'A Playwright-based automation script that submits consumer opt-out requests to over 40 data brokers on your behalf. Fills forms, generates opt-out emails, and logs completion status. Designed for individuals and privacy professionals.',
-    category: 'Data Broker',
-    author: 'ODIPA',
-    authorHandle: '@odipa_org',
-    lang: 'TypeScript',
-    platform: ['CLI', 'Node.js'],
-    license: 'MIT',
-    github: 'https://github.com/odipa/broker-opt-out',
-    docs: 'https://github.com/odipa/broker-opt-out#readme',
-    stars: 0,
-    featured: true,
-    approvedDate: '2026-08',
-    tags: ['opt-out', 'data brokers', 'automation', 'TypeScript'],
-  },
-  {
-    id: 'fingerprint-check',
-    name: 'Browser Fingerprint Inspector',
-    tagline: 'Reveal exactly how uniquely identifiable your browser is.',
-    desc: 'A lightweight web app that collects browser fingerprinting signals (canvas, WebGL, fonts, screen, timezone, plugins) and computes a uniqueness score benchmarked against a reference dataset. Shows users which attributes expose them most.',
-    category: 'Fingerprinting',
-    author: 'ODIPA',
-    authorHandle: '@odipa_org',
-    lang: 'JavaScript',
-    platform: ['Web App'],
-    license: 'MIT',
-    github: 'https://github.com/odipa/fingerprint-check',
-    docs: 'https://github.com/odipa/fingerprint-check#readme',
-    stars: 0,
-    featured: false,
-    approvedDate: '2026-08',
-    tags: ['fingerprinting', 'browser', 'JavaScript', 'web'],
-  },
-  {
-    id: 'gdpr-request-gen',
-    name: 'GDPR / CCPA Request Generator',
-    tagline: 'Generate legally-worded data subject requests in one click.',
-    desc: 'Fill in your name and the company you want to contact, and this tool generates a properly-worded GDPR Article 15 (access), Article 17 (deletion), or CCPA opt-out request email, ready to send. Supports 12 languages.',
-    category: 'Rights Requests',
-    author: 'ODIPA',
-    authorHandle: '@odipa_org',
-    lang: 'TypeScript',
-    platform: ['Web App', 'CLI'],
-    license: 'MIT',
-    github: 'https://github.com/odipa/gdpr-request-gen',
-    docs: 'https://github.com/odipa/gdpr-request-gen#readme',
-    stars: 0,
-    featured: false,
-    approvedDate: '2026-08',
-    tags: ['GDPR', 'CCPA', 'rights', 'legal', 'multilingual'],
-  },
-  // Approved tool from an outside author. Reviewed October 2026 at commit 429e8f8:
-  // published package run in a clean environment with all outbound traffic blocked
-  // (local only, nothing written outside its own folder, cloud sync requires an
-  // explicit connect), Python dependency audit clean, Rust lockfile audited, and the
-  // native runtime built from the repository's Rust source. The repository stays
-  // with the author per the policy. Not a line-by-line read, see reviewScope.
-  {
-    id: 'hol-guard',
-    name: 'HOL Guard',
-    tagline: 'A local firewall for AI coding agents that checks shell commands, secrets, MCP calls, and package installs before they run.',
-    desc: 'Sits between an AI coding agent (Codex, Claude Code, Copilot, Cursor, and others) and your machine. Intercepts tool calls before they execute, pauses when trust is unclear, and routes risky actions into an approval step so secrets and data are gated before they leave the machine. Runs entirely locally with no account. An optional hosted service exists but only engages after an explicit sign-in, and is not part of this listing.',
-    category: 'AI Agent Security',
-    author: 'Michael Kantor',
-    authorHandle: '@kantorcodes',
-    lang: 'Python',
-    platform: ['CLI', 'Python Package', 'Local Dashboard', 'Cross-platform'],
-    license: 'Apache-2.0',
-    github: 'https://github.com/hashgraph-online/hol-guard',
-    docs: 'https://github.com/hashgraph-online/hol-guard/tree/main/docs/guard',
-    stars: 0,
-    featured: false,
-    status: 'approved',
-    maintainer: 'community',
-    approvedDate: '2026-10',
-    reviewedCommit: '429e8f8',
-    reviewScope: 'Review covered the build from source, dependency audits, and verified local-only network behavior. The decision engine is compiled Rust. Not a line-by-line read of the full codebase.',
-    tags: ['AI agents', 'MCP', 'secrets', 'firewall', 'Python', 'Rust'],
-  },
-]
-
-// ─── Community projects (Needs Help) ─────────────────────────────────────────
-// Projects here are featured for community contribution with author consent.
-// They have NOT passed review. The card shows a Needs Help badge, an
-// experimental notice, and a Contribute call to action instead of approval.
-// A project graduates to APPROVED_TOOLS after the gaps close and it passes
-// the full review process.
-const COMMUNITY_PROJECTS: Tool[] = [
-  // Author confirmed participation 2026-08-10, repo stays at shawnbure/elm-chat
-  // per the Tier 2 arrangement, contributors work directly on the author's repo.
-  {
-    id: 'elm-chat',
-    name: 'elm.chat',
-    tagline: 'Disposable encrypted chat rooms with no accounts or server-side transcript.',
-    desc: 'An AGPL web messenger for account-free, temporary conversations. Browser clients encrypt content before a relay forwards ciphertext. Early stage. Message authentication and replay protection are the headline community challenge before this tool can be reviewed and approved.',
-    category: 'Encryption / Anonymization',
-    author: 'Shawn Bure',
-    authorHandle: '@shawnbure',
-    lang: 'TypeScript',
-    platform: ['Web App', 'Cross-platform'],
-    license: 'AGPL-3.0',
-    github: 'https://github.com/shawnbure/elm-chat',
-    docs: 'https://elm.chat/security-and-limitations',
-    contribute: 'https://github.com/shawnbure/elm-chat/issues',
-    stars: 0,
-    featured: false,
-    status: 'needs-help',
-    tags: ['encryption', 'messaging', 'ephemeral', 'TypeScript', 'needs help'],
-  },
-]
+// The tool list lives in api/_shared/tools.json, the single source of truth shared with
+// the newsletter generator. Add a tool there after it clears review. See the file's comment.
+const APPROVED_TOOLS: Tool[] = toolsData.approved as Tool[]
+const COMMUNITY_PROJECTS: Tool[] = toolsData.communityProjects as Tool[]
 
 const ALL_TOOLS: Tool[] = [...APPROVED_TOOLS, ...COMMUNITY_PROJECTS]
 

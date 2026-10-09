@@ -28,16 +28,14 @@ const SECTIONS = {
   },
 }
 
-// ODIPA's real approved open source tool catalog. The model may ONLY pick
-// from this list, never invent a tool. Keep in sync with CommunityTools.tsx.
-const TOOL_CATALOG = [
-  { name: 'Cookie Harvester & Analyzer', tagline: 'Scan, extract, and classify first and third party cookies from any domain.', url: 'https://github.com/odipa/cookie-harvester' },
-  { name: 'Tracker Lens', tagline: 'Identify and map all third party trackers on a webpage in seconds.', url: 'https://github.com/odipa/tracker-lens' },
-  { name: 'Privacy Policy Scanner', tagline: 'Grade any privacy policy with plain language scoring and red flag detection.', url: 'https://github.com/odipa/policy-scanner' },
-  { name: 'Data Broker Opt-Out Bot', tagline: 'Automate opt out and removal requests to major data broker sites.', url: 'https://github.com/odipa/broker-opt-out' },
-  { name: 'Browser Fingerprint Inspector', tagline: 'Reveal exactly how uniquely identifiable your browser is.', url: 'https://github.com/odipa/fingerprint-check' },
-  { name: 'GDPR / CCPA Request Generator', tagline: 'Generate legally worded data subject requests in one click.', url: 'https://github.com/odipa/gdpr-request-gen' },
-]
+// The tools the model may recommend, read from the shared directory data so a tool
+// approved today is eligible tonight. Approved tools only, never community projects,
+// since ODIPA does not recommend tools it has not reviewed. The model gets name,
+// tagline, and link, nothing more, and may only copy them verbatim.
+const TOOLS = require('../_shared/tools.json')
+const TOOL_CATALOG = TOOLS.approved
+  .filter(t => t.status !== 'needs-help')
+  .map(t => ({ name: t.name, tagline: t.tagline, url: t.github }))
 
 module.exports = async function handler(context, req) {
   if (req.method === 'OPTIONS') return respond(context, 200, {})
