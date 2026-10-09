@@ -21,6 +21,9 @@ const TOPIC_GUIDANCE = {
   dev: 'Open source inquiry. Point to the tool listing policy at https://www.odipa.org/get-involved/tool-listing-policy when relevant.',
   press: 'ALWAYS flag press inquiries as needs-attention. Media deserves a personal reply.',
   privacy: 'ALWAYS flag privacy-policy or data-request inquiries as needs-attention. These can be legal matters.',
+  sponsor: 'Corporate sponsorship application. The auto-acknowledgment already promised contact within 2 business days. A good draft thanks them, names the tier they chose, says sponsorship is a public acknowledgment relationship with no services or influence in return, and invites a short call. Never quote or negotiate amounts, never promise placement or recognition beyond the published tiers at https://www.odipa.org/become-a-sponsor. Flag if the message asks for anything in return, mentions a product to feature, or comes from a company whose business is at odds with privacy.',
+  'research-sponsor': 'Research sponsorship inquiry. The auto-acknowledgment already promised contact within 2 business days. A good draft thanks them, restates that sponsored research is published freely and sponsors do not direct findings or pre-review results, and invites a short call. Never commit to a topic, timeline, or deliverable. Flag if the message proposes a specific conclusion, asks for pre-publication review, or wants exclusivity.',
+  board: 'ALWAYS flag board applications as needs-attention. Board recruitment is a governance matter for the current directors, not something to draft a reply to. The acknowledgment already told the applicant to expect confirmation within 2 business days and that decisions follow seat availability.',
 }
 
 const SYSTEM = `You draft replies for ODIPA, a small California 501(c)(3) digital privacy nonprofit. You write on behalf of a volunteer-run team.

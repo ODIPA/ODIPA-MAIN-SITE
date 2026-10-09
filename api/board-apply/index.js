@@ -5,6 +5,7 @@
 
 const { sendFormEmail, respond, clean } = require('../_shared/mailer')
 const { checkRateLimit, getClientIp } = require('../_shared/rateLimiter')
+const { sendAck, saveToPipeline } = require('../_shared/formAck')
 
 module.exports = async function handler(context, req) {
   if (req.method === 'OPTIONS') return respond(context, 200, {})
@@ -59,6 +60,31 @@ module.exports = async function handler(context, req) {
         'Conflicts':           clean(body['Conflicts'] || body.conflict, 1000) || '—',
         'References':          clean(body['References'] || body.references, 1000) || '—',
         'Consented':           clean(body['Consented'] || body.consent, 10) || 'No',
+      },
+    })
+
+    // Receipt to the applicant, then into the admin pipeline. Neither can fail the submission.
+    await sendAck(context, {
+      to: email, name: firstName, teamAddress: 'board@odipa.org',
+      subject: 'We received your ODIPA board application',
+      paragraphs: [
+        `Thank you for applying to serve on ODIPA's Board of Directors${position ? ` for the ${position} seat` : ''}. This note confirms we received your application.`,
+        'Board applications are reviewed by the current board and considered as seats open, so this is not a fast process. We will confirm within 2 business days that your application is complete, and we will tell you the expected timeline for a decision at that point. If a seat is not open, we keep applications on file and reach out when one is.',
+        'Board service at ODIPA is unpaid. Directors govern the organization under its bylaws and serve without compensation.',
+        'If you have a question before you hear from us, reply to this email.',
+      ],
+    })
+    await saveToPipeline(context, {
+      topic: 'board', name, email, organization: clean(body['Organization'] || body.currentOrg, 200), routedTo: 'board@odipa.org',
+      fields: {
+        'Position': position, 'Phone': clean(body['Phone'] || body.phone, 50), 'LinkedIn': clean(body['LinkedIn'] || body.linkedin, 300),
+        'Current role': clean(body['Current Role'] || body.currentRole, 200), 'City': clean(body['City'] || body.city, 100),
+        'Expertise': clean(body['Areas of Expertise'] || (body.expertise || []).join(', '), 500),
+        'Why interested': clean(body['Why Interested'] || body.whyInterested, 2000),
+        'Relevant experience': clean(body['Relevant Experience'] || body.relevantExperience, 2000),
+        'Privacy vision': clean(body['Privacy Vision'] || body.privacyVision, 2000),
+        'Time commitment': clean(body['Time Commitment'] || body.commitment, 1000),
+        'Conflicts': clean(body['Conflicts'] || body.conflict, 1000), 'References': clean(body['References'] || body.references, 1000),
       },
     })
 

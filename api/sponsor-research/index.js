@@ -5,6 +5,7 @@
 
 const { sendFormEmail, respond, clean } = require('../_shared/mailer')
 const { checkRateLimit, getClientIp } = require('../_shared/rateLimiter')
+const { sendAck, saveToPipeline } = require('../_shared/formAck')
 
 module.exports = async function handler(context, req) {
   if (req.method === 'OPTIONS') return respond(context, 200, {})
@@ -55,6 +56,25 @@ module.exports = async function handler(context, req) {
         'Hear About':        clean(body.hearAbout, 200) || '—',
         'Additional Notes':  clean(body.notes, 2000) || '—',
         'Consented':         clean(body.consent, 10) || 'No',
+      },
+    })
+
+    // Receipt to the sender, then into the admin pipeline. Neither can fail the submission.
+    await sendAck(context, {
+      to: email, name: contactName, teamAddress: 'research@odipa.org',
+      subject: 'We received your ODIPA research sponsorship inquiry',
+      paragraphs: [
+        `Thank you for your interest in sponsoring ODIPA research on behalf of ${orgName}. This note confirms we received your inquiry.`,
+        'Our research team will be in touch within 2 business days. Sponsored research at ODIPA is published freely to the public, and sponsors do not direct findings or review results before publication. We will be plain about that boundary when we talk, so there are no surprises later.',
+        'If you have a question before you hear from us, reply to this email.',
+      ],
+    })
+    await saveToPipeline(context, {
+      topic: 'research-sponsor', name: contactName, email, organization: orgName, routedTo: 'research@odipa.org',
+      fields: {
+        'Research tier': tier, 'Title': clean(body.title, 100), 'Phone': clean(body.phone, 50), 'Website': clean(body.website, 300),
+        'Research topic': clean(body.researchTopic, 1000), 'Timeline': clean(body.timeline, 200), 'Audience': clean(body.audience, 500),
+        'Heard about ODIPA': clean(body.hearAbout, 200), 'Notes': clean(body.notes, 2000),
       },
     })
 

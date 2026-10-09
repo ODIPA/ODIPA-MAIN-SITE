@@ -5,6 +5,7 @@
 
 const { sendFormEmail, respond, clean } = require('../_shared/mailer')
 const { checkRateLimit, getClientIp } = require('../_shared/rateLimiter')
+const { sendAck, saveToPipeline } = require('../_shared/formAck')
 
 module.exports = async function handler(context, req) {
   if (req.method === 'OPTIONS') return respond(context, 200, {})
@@ -58,6 +59,21 @@ module.exports = async function handler(context, req) {
         'Message':        message,
         'Consented':      consent,
       },
+    })
+
+    // Receipt to the sender, then into the admin pipeline. Neither can fail the submission.
+    await sendAck(context, {
+      to: email, name: contactName, teamAddress: 'partnerships@odipa.org',
+      subject: 'We received your ODIPA sponsorship application',
+      paragraphs: [
+        `Thank you for applying to sponsor ODIPA on behalf of ${orgName}. This note confirms we received your application.`,
+        'Someone from our partnerships team will be in touch within 2 business days to talk through the tier you chose and the next steps. Sponsorship is a public acknowledgment relationship. ODIPA recognizes sponsors by name and logo and does not provide services, endorsements, or influence over our programs or positions in return.',
+        'If you have a question before you hear from us, reply to this email.',
+      ],
+    })
+    await saveToPipeline(context, {
+      topic: 'sponsor', name: contactName, email, organization: orgName, routedTo: 'partnerships@odipa.org',
+      fields: { 'Tier interest': tier, 'Title': title, 'Phone': phone, 'Website': website, 'Heard about ODIPA': hearAbout, 'Message': message },
     })
 
     respond(context, 200, { ok: true })
