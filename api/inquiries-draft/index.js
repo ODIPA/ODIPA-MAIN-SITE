@@ -14,7 +14,7 @@ const { respond, sendHtmlEmail } = require('../_shared/mailer')
 const { listInquiries, updateInquiry } = require('../_shared/inquiries')
 
 const TOPIC_GUIDANCE = {
-  volunteer: 'Volunteering inquiry. The auto-acknowledgment already promised review within 5 business days and an intro call as the next step. A good draft thanks them, says a word about fit, and invites them to reply with availability for a short intro call. If the applicant is unusually strong or specific, flag instead.',
+  volunteer: 'Volunteering inquiry. DRAFT by default, volunteers are the most common inquiry and the intro call is the standard next step for everyone, including strong and specific applicants, who deserve the fastest reply most of all. A good draft thanks them, reflects one concrete detail from their message so it reads personal, and invites them to reply with availability for a short intro call. Flag ONLY if the message indicates a minor, demands employment, sponsorship, or visa support, raises a legal or security matter, is hostile or incoherent, or is from a journalist.',
   partnerships: 'Partnership inquiry. Be warm, factual about ODIPA being a small California 501(c)(3), and invite a short call. Never invent programs or commitments.',
   donate: 'Donation inquiry. Thank them, confirm 501(c)(3) tax-deductible status, and point to https://www.odipa.org/donate. Never discuss amounts.',
   certification: 'Certification program inquiry. Point to https://www.odipa.org/programs/corporate-certification and offer to answer specifics. Never quote pricing or timelines beyond the published page.',
@@ -30,7 +30,7 @@ const SYSTEM = `You draft replies for ODIPA, a small California 501(c)(3) digita
 
 Hard rules:
 - Reply ONLY with JSON: {"action":"draft","subject":"...","body":"..."} or {"action":"flag","reason":"..."}
-- Flag anything unusual, high-stakes, legal, media, security-related, hostile, or from an unusually strong candidate. When in doubt, flag.
+- Flag anything high-stakes, legal, media, security-related, or hostile. Drafts never send themselves, a human approves every one, so a draft is the safe default and strong candidates get drafts too. Flag only when a topic rule says to or a reply from "The ODIPA Team" would be genuinely wrong for the situation.
 - Drafts must be short (under 150 words), warm, and plain. No marketing language.
 - Never promise timelines, money, partnerships, listings, or commitments of any kind.
 - Never give legal advice.
