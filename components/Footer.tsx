@@ -25,6 +25,7 @@ const columns = [
       { label: 'About ODIPA', href: '/about' },
       { label: 'Board of Directors', href: '/about#board' },
       { label: 'Annual Report', href: '/annual-report' },
+      { label: 'Research Releases', href: '/research-releases' },
       { label: 'Transparency', href: '/transparency' },
       { label: 'Press & Media', href: '/press' },
       { label: 'Our Impact', href: '/#impact' },

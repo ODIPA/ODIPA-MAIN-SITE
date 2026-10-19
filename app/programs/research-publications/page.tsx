@@ -27,7 +27,7 @@ export default function Page() {
         { icon: <FileText className="w-5 h-5" />, title: 'Research Briefs', desc: 'Focused 10–15 page briefings on specific emerging threats, regulatory changes, or industry trends.' },
         { icon: <Search className="w-5 h-5" />, title: 'Special Investigations', desc: 'Deep-dive reports on significant privacy incidents, platform practices, or data broker activities that demand public attention.' },
         { icon: <Handshake className="w-5 h-5" />, title: 'Sponsored Research', desc: 'Fee-based custom research partnerships with businesses seeking independent, credible privacy analysis — structured to preserve editorial independence.' },
-        { icon: <Library className="w-5 h-5" />, title: 'Resource Library', desc: 'A publicly accessible library of all ODIPA publications, organized by topic, date, and industry sector.' },
+        { icon: <Library className="w-5 h-5" />, title: 'Research Releases', desc: 'Every ODIPA publication in one place, including our monthly Privacy Digest, each with a named author and linked sources.' },
         { icon: <Newspaper className="w-5 h-5" />, title: 'Media Briefings', desc: 'Research summaries and expert commentary provided to journalists covering privacy and data protection topics.' },
       ],
       whoWeServe: [
@@ -43,12 +43,12 @@ export default function Page() {
         { metric: '3+', label: 'Year 1 investigation target' },
       ],
       faqs: [
-        { q: 'How can I access ODIPA research?', a: 'All publications are freely available in our Resource Library at no charge. No account or registration is required.' },
+        { q: 'How can I access ODIPA research?', a: 'All publications are freely available on our Research Releases page at no charge. No account or registration is required.' },
         { q: 'How does sponsored research preserve independence?', a: 'Sponsors fund a research topic but have no influence over methodology, findings, or conclusions. ODIPA\'s editorial team controls all research outputs, and any sponsor relationship is disclosed prominently in the publication.' },
         { q: 'How do I sponsor a research project?', a: 'Visit our Research Sponsorship page or contact partnerships@odipa.org to discuss scope and pricing. Our research team follows up within 3 business days to discuss topic, timeline, and methodology.' },
         { q: 'Can journalists interview ODIPA researchers?', a: 'Yes. Contact press@odipa.org with your publication, deadline, and topic. We aim to respond within one business day for media requests.' },
       ],
-      cta: { label: 'Sponsor Research', href: '/sponsor-research', secondary: { label: 'Volunteer as a Researcher', href: '/get-involved/volunteer' } },
+      cta: { label: 'Read Research Releases', href: '/research-releases', secondary: { label: 'Sponsor Research', href: '/sponsor-research' } },
     }} />
   )
 }
