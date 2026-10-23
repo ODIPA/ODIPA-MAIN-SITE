@@ -1,5 +1,5 @@
 /**
- * POST /api/inquiries-draft — draft replies for stale unanswered inquiries.
+ * POST /api/inquiries-draft, draft replies for stale unanswered inquiries.
  * Admin-only (x-admin-key). Intended to be called daily by the scheduled
  * GitHub Action, and available as a button in the admin inbox.
  *
@@ -12,9 +12,14 @@
  */
 const { respond, sendHtmlEmail } = require('../_shared/mailer')
 const { listInquiries, updateInquiry } = require('../_shared/inquiries')
+const { rolesForPrompt, GRC_RULE } = require('../_shared/volunteerRoles')
 
 const TOPIC_GUIDANCE = {
-  volunteer: 'Volunteering inquiry. DRAFT by default, volunteers are the most common inquiry and the intro call is the standard next step for everyone, including strong and specific applicants, who deserve the fastest reply most of all. A good draft thanks them, reflects one concrete detail from their message so it reads personal, and invites them to reply with availability for a short intro call. Flag ONLY if the message indicates a minor, demands employment, sponsorship, or visa support, raises a legal or security matter, is hostile or incoherent, or is from a journalist.',
+  volunteer: `Volunteering inquiry. DRAFT by default, volunteers are the most common inquiry and the intro call is the standard next step for everyone, including strong and specific applicants, who deserve the fastest reply most of all. A good draft thanks them, reflects one concrete detail from their message so it reads personal, and invites them to reply with availability for a short intro call. Never decline, redirect or discourage a volunteer because of their field or the kind of work they want. ${GRC_RULE} Flag ONLY if the message indicates a minor, explicitly demands pay, employment, sponsorship, or visa support as a condition, raises a legal or security matter, is hostile or incoherent, or is from a journalist. A wish for GRC or compliance experience is none of those.
+
+Volunteer roles that really exist, the only ones you may name:
+${rolesForPrompt()}
+You may name at most one or two roles, only when their message clearly points to them, and only as possibilities to discuss on the call. Never promise a role, title, start date or outcome.`,
   partnerships: 'Partnership inquiry. Be warm, factual about ODIPA being a small California 501(c)(3), and invite a short call. Never invent programs or commitments.',
   donate: 'Donation inquiry. Thank them, confirm 501(c)(3) tax-deductible status, and point to https://www.odipa.org/donate. Never discuss amounts.',
   certification: 'Certification program inquiry. Point to https://www.odipa.org/programs/corporate-certification and offer to answer specifics. Never quote pricing or timelines beyond the published page.',
@@ -35,6 +40,7 @@ Hard rules:
 - Never promise timelines, money, partnerships, listings, or commitments of any kind.
 - Never give legal advice.
 - Never use em dashes.
+- Never turn away or talk down a volunteer applicant. If you are unsure whether they fit, invite them to the intro call, which exists to find the fit.
 - Sign off as "The ODIPA Team".
 - The recipient already received an automatic acknowledgment days ago. Do not re-acknowledge receipt. Get to substance.`
 
