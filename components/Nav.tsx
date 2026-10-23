@@ -16,6 +16,9 @@ export default function Nav() {
   const pathname = usePathname()
   const isHome = pathname === '/'
   const [scrolled, setScrolled] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+
+  useEffect(() => { setMenuOpen(false) }, [pathname])
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 60)
@@ -90,13 +93,69 @@ export default function Nav() {
         </li>
       </ul>
 
-      {/* Mobile: the desktop links are hidden below md, so keep Join Free reachable */}
-      <a
-        href="/join"
-        className="md:hidden border border-gold text-gold-light px-4 py-1.5 rounded text-[12px] font-semibold hover:bg-gold hover:text-navy transition-colors no-underline whitespace-nowrap"
-      >
-        Join Free
-      </a>
+      {/* Mobile: Join Free stays reachable, hamburger opens the full menu */}
+      <div className="md:hidden flex items-center gap-3">
+        <a
+          href="/join"
+          className="border border-gold text-gold-light px-4 py-1.5 rounded text-[12px] font-semibold hover:bg-gold hover:text-navy transition-colors no-underline whitespace-nowrap"
+        >
+          Join Free
+        </a>
+        <button
+          type="button"
+          onClick={() => setMenuOpen(o => !o)}
+          aria-expanded={menuOpen}
+          aria-controls="mobile-menu"
+          aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+          className="flex flex-col justify-center items-center w-10 h-10 gap-[5px] bg-transparent border-0 cursor-pointer"
+        >
+          <span className={`block w-5 h-[2px] bg-white transition-transform duration-200 ${menuOpen ? 'translate-y-[7px] rotate-45' : ''}`} />
+          <span className={`block w-5 h-[2px] bg-white transition-opacity duration-200 ${menuOpen ? 'opacity-0' : ''}`} />
+          <span className={`block w-5 h-[2px] bg-white transition-transform duration-200 ${menuOpen ? '-translate-y-[7px] -rotate-45' : ''}`} />
+        </button>
+      </div>
+
+      {/* Mobile menu panel */}
+      {menuOpen && (
+        <div
+          id="mobile-menu"
+          className="md:hidden absolute top-full left-0 right-0 bg-[rgba(6,15,29,0.98)] backdrop-blur-md border-b border-white/[0.08] px-6 py-4"
+        >
+          <ul className="list-none m-0 p-0 flex flex-col">
+            {links.map((l) => (
+              <li key={l.href} className="border-b border-white/[0.06] last:border-0">
+                <a
+                  href={isHome ? l.href : '/' + l.href}
+                  onClick={() => setMenuOpen(false)}
+                  className="block py-3 text-white/85 text-[15px] font-medium no-underline hover:text-gold-light transition-colors"
+                >
+                  {l.label}
+                </a>
+              </li>
+            ))}
+            <li className="border-b border-white/[0.06]">
+              <a
+                href="https://github.com/odipa/ODIPA-MAIN-SITE"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setMenuOpen(false)}
+                className="block py-3 text-white/60 text-[15px] font-medium no-underline hover:text-white transition-colors"
+              >
+                Source
+              </a>
+            </li>
+            <li className="pt-4 pb-1">
+              <a
+                href="/donate"
+                onClick={() => setMenuOpen(false)}
+                className="block text-center bg-gold text-navy px-5 py-2.5 rounded text-[14px] font-semibold no-underline hover:bg-gold-light transition-colors"
+              >
+                Donate
+              </a>
+            </li>
+          </ul>
+        </div>
+      )}
     </nav>
   )
 }
