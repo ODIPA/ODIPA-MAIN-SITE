@@ -9,6 +9,8 @@ const prep = require(path.join(api, '_shared/prepSheet.js'))
 const roles = require(path.join(api, '_shared/volunteerRoles.js'))
 
 // ---- Prep sheet --------------------------------------------------------
+for (const title of roles.ROLE_TITLES)
+  assert(prep.ORG_CONTEXT.includes(title), `org context lists the ${title} role`)
 assert(prep.ORG_CONTEXT.includes('Certification Assessor'), 'org context lists the assessor role')
 assert(prep.ORG_CONTEXT.includes('Privacy Researcher'), 'org context lists the researcher role')
 assert(prep.ORG_CONTEXT.includes('Research and publications facts'), 'org context explains the research program')
