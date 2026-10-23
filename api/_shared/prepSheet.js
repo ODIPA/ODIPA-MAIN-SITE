@@ -39,6 +39,8 @@ Things a volunteer could start on, each small and shippable by one person:
 - A visitor's-eye UX review of odipa.org, or user research on how people understand privacy and consent language
 - Community outreach and educational content writing
 
+Research and publications facts. ODIPA publishes an annual privacy report, research briefs of 10 to 15 pages, special investigations, and a monthly Privacy Digest. All of it appears first at odipa.org/research-releases, names its author, links its sources, and is free to read, cite and share. Sponsors can fund a topic but have no say over methods, findings or conclusions. Year 1 targets are 1 annual report, at least 4 briefs and at least 3 special investigations. The Privacy Researcher role is about 4 to 6 hours a month. The site does not describe a formal review process or how topics are chosen, so never claim peer review.
+
 Certification facts. It is an organization level conformity assessment against ODIPA's published criteria. It is not an audit and not a legal compliance determination. The program is at the founding cohort stage. Never claim any business has been certified.
 
 First projects must be small, self-contained, shippable in weeks by one person, and produce something public the volunteer can point to. Portfolio value is often the volunteer's real compensation.`
@@ -206,6 +208,7 @@ function renderPrepSheet(inq, gen) {
   <nav>
     <a href="#plan">Plan</a>
     <a href="#who">Who they are</a>
+    <a href="#research">Research program</a>
     <a href="#theirs">Their questions</a>
     <a href="#yours">Your questions</a>
     <a href="#fit">Fit map</a>
@@ -260,6 +263,21 @@ ${say('The honest move, if they raise something you have not worked with', 'I ha
 <h2>The honest picture <span class="dur">14:00 to 17:00</span></h2>
 ${say('Say it plainly', `Let me give you the honest picture of where ODIPA actually is today, no website gloss. It's early, I'm the founder and right now most of the operation is me, which means two things for you. Your work would ship and be visible, not sit in a queue behind a committee. And you'd be helping build the thing, not slotting into it. Some people find that exciting, some want more structure, both are legitimate, so tell me which you are.`)}
 </section>
+
+<h2 id="research">How the research and publications program works</h2>
+<div class="card">
+  <p><strong>What ODIPA publishes</strong></p>
+  <ul>
+    <li><strong>Annual Privacy Report.</strong> The yearly review of breaches, new laws, enforcement actions and emerging threats.</li>
+    <li><strong>Research briefs.</strong> Focused papers of 10 to 15 pages on one threat, rule change or trend.</li>
+    <li><strong>Special investigations.</strong> Deeper looks at a major incident, platform practice or data broker activity.</li>
+    <li><strong>Monthly Privacy Digest.</strong> New privacy laws and developments.</li>
+  </ul>
+  <p><strong>How it reaches the public.</strong> Everything is published first at odipa.org/research-releases and the newsletter links back to it. Every release names its author, lists its sources, and is free to read, cite and share. Sponsors can fund a topic but have no say over methods, findings or conclusions.</p>
+  <p><strong>The volunteer role.</strong> Privacy Researcher, about 4 to 6 hours a month. Independent research, co-writing briefs and the annual report, and tracking new threats and enforcement actions. Year 1 targets on the site are 1 annual report, at least 4 briefs and at least 3 special investigations.</p>
+  <div class="watch"><b>Watch.</b> The site does not describe a formal review process or how topics are chosen. Decide beforehand how you review drafts and who has the final say on wording. Never call it peer review.</div>
+</div>
+${qaCard('How would my research get written and published?', 'We pick a topic together. You write it with your sources linked. I review the draft for accuracy and citations and send notes back. It is published on odipa.org under your name, free for anyone to read. Short pieces can go into the monthly digest and longer ones can become a research brief.', 'Only say this if it is how you want to run it. The site does not describe a review process.')}
 
 <h2 id="theirs">Questions they may ask</h2>
 ${gen.qa.map(x => qaCard(x.q, x.a, x.watch)).join('\n')}

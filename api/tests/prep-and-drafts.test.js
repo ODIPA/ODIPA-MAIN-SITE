@@ -11,6 +11,7 @@ const roles = require(path.join(api, '_shared/volunteerRoles.js'))
 // ---- Prep sheet --------------------------------------------------------
 assert(prep.ORG_CONTEXT.includes('Certification Assessor'), 'org context lists the assessor role')
 assert(prep.ORG_CONTEXT.includes('Privacy Researcher'), 'org context lists the researcher role')
+assert(prep.ORG_CONTEXT.includes('Research and publications facts'), 'org context explains the research program')
 assert(prep.PROMPT_SYSTEM.includes('never as a poor fit'), 'prompt carries the GRC rule')
 assert(!/Publicly listed volunteer roles: Community Advocate, Content Writer, Educator\/Trainer\./.test(prep.ORG_CONTEXT),
   'the old three role list is gone')
@@ -41,7 +42,7 @@ assert.throws(() => prep.normalizeGenerated({ ...sample, fit: [{ lane: 'Nope', e
 assert.throws(() => prep.normalizeGenerated({ ...sample, asked: '' }), /missing required/)
 
 const html = prep.renderPrepSheet({ name: 'Iram Jafry', email: 'i@example.com', receivedAt: Date.now() }, gen)
-for (const needle of ['id="fit"', 'id="theirs"', 'id="watch"', 'Privacy Researcher', 'Certification Assessor', 'They asked for', 'Is this paid?'])
+for (const needle of ['id="fit"', 'id="theirs"', 'id="watch"', 'id="research"', 'research-releases', 'Research briefs', 'Privacy Researcher', 'Certification Assessor', 'They asked for', 'Is this paid?'])
   assert(html.includes(needle), `sheet contains ${needle}`)
 assert(!/[\u2014\u2013]/.test(html), 'no em or en dashes in the sheet')
 assert(!html.includes('Fifteen plus years'), 'no years of experience in the credibility line')
