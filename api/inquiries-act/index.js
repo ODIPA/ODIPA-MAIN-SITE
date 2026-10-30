@@ -46,7 +46,12 @@ module.exports = async function (context, req) {
       const allowed = ['acked', 'needs-attention', 'sent', 'meeting']
       const target = String(req.body && req.body.status || '')
       if (!allowed.includes(target)) return respond(context, 400, { error: 'Invalid target status' })
-      await updateInquiry(id, { status: target })
+      // A manual move to 'sent' means handled outside the system. Record when,
+      // so the dashboard can tell it apart from a reply the system emailed.
+      const patch = { status: target }
+      if (target === 'sent' && !inq.sentAt) patch.handledAt = Date.now()
+      if (target === 'acked' || target === 'needs-attention') patch.handledAt = 0
+      await updateInquiry(id, patch)
       return respond(context, 200, { ok: true, status: target })
     }
 
