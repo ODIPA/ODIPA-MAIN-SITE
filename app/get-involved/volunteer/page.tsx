@@ -76,7 +76,7 @@ const roles = [
 ]
 
 const process = [
-  { num: '01', title: 'Apply', desc: 'Submit your volunteer application below with your background, skills, and availability.' },
+  { num: '01', title: 'Apply', desc: 'Complete the short volunteer application with your background, skills, availability and a link to your resume or LinkedIn.' },
   { num: '02', title: 'Intro Call', desc: 'A 20-minute call with our founder to discuss your interests and match you with the right role.' },
   { num: '03', title: 'Onboarding', desc: 'Complete a short onboarding process covering background context, tools access, and your first assignment.' },
   { num: '04', title: 'Contribute', desc: 'Start making an impact. Most volunteers contribute remotely on a flexible schedule.' },
@@ -206,7 +206,7 @@ export default function VolunteerPage() {
               <p className="text-[14px] text-white/55">We review all applications within 5 business days.</p>
             </div>
             <div className="flex gap-3 flex-wrap flex-shrink-0">
-              <Link href="/contact"
+              <Link href="/contact?topic=volunteer"
                 className="inline-block bg-gold hover:bg-gold-light text-navy font-bold text-[14px] px-6 py-3 rounded-lg transition-colors no-underline">
                 Apply to Volunteer
               </Link>
@@ -239,7 +239,7 @@ export default function VolunteerPage() {
               ))}
             </div>
 
-            <Link href="/contact"
+            <Link href="/contact?topic=volunteer"
               className="block w-full text-center bg-gold hover:bg-gold-light text-navy font-bold text-[13px] py-3 rounded-lg transition-colors no-underline">
               Apply to Volunteer
             </Link>

@@ -29,6 +29,36 @@ const TOPICS = [
 
 type FormState = 'idle' | 'submitting' | 'success' | 'error'
 
+// Keep in sync with the roles on /get-involved/volunteer and api/_shared/volunteerRoles.js
+const VOLUNTEER_ROLES = [
+  'Certification Assessor', 'Privacy Researcher', 'Educator / Trainer', 'Privacy Attorney',
+  'Data Analyst', 'Software Developer', 'Community Advocate', 'Content Writer', 'Translator',
+  'Not sure yet',
+]
+const VOLUNTEER_HOURS = [
+  '2 to 4 hours a month', '4 to 6 hours a month', '6 to 10 hours a month',
+  'More than 10 hours a month', 'Not sure yet',
+]
+
+interface VolunteerData {
+  why: string
+  roles: string[]
+  experience: string
+  profileLink: string
+  credentials: string
+  hours: string
+  location: string
+  heardFrom: string
+  extra: string
+}
+
+const VOLUNTEER_INITIAL: VolunteerData = {
+  why: '', roles: [], experience: '', profileLink: '', credentials: '',
+  hours: '', location: '', heardFrom: '', extra: '',
+}
+
+const INPUT_CLASS = 'w-full px-4 py-3 rounded-lg border border-slate-200 bg-white text-[14px] text-navy placeholder-slate-400 focus:outline-none focus:border-blue-brand focus:ring-2 focus:ring-blue-brand/10 transition-all'
+
 interface AppFormData {
   topic: string
   name: string
@@ -61,6 +91,10 @@ export default function ContactForm() {
   const [state, setState] = useState<FormState>('idle')
   const [errors, setErrors] = useState<Partial<Record<keyof AppFormData, string>>>({})
   const [honeypot, setHoneypot] = useState('')
+  const [vol, setVol] = useState<VolunteerData>(VOLUNTEER_INITIAL)
+  const [volErrors, setVolErrors] = useState<Partial<Record<keyof VolunteerData, string>>>({})
+  const [submittedTopic, setSubmittedTopic] = useState('')
+  const isVolunteer = form.topic === 'volunteer'
  
   // Pre-select topic from ?topic= query param (e.g. /contact?topic=certification)
   useEffect(() => {
@@ -79,6 +113,15 @@ export default function ContactForm() {
     }
   }
 
+  function setVolField<K extends keyof VolunteerData>(field: K, value: VolunteerData[K]) {
+    setVol(prev => ({ ...prev, [field]: value }))
+    setVolErrors(prev => ({ ...prev, [field]: undefined }))
+  }
+
+  function toggleRole(role: string) {
+    setVolField('roles', vol.roles.includes(role) ? vol.roles.filter(r => r !== role) : [...vol.roles, role])
+  }
+
   const fmtEmail = (v: string) => v.toLowerCase().replace(/\s/g, '')
 
   function validate(): boolean {
@@ -87,10 +130,21 @@ export default function ContactForm() {
     if (!form.name.trim())   e.name    = 'Your name is required'
     if (!form.email.trim())  e.email   = 'Your email address is required'
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = 'Please enter a valid email'
-    if (!form.message.trim() || form.message.trim().length < 10) e.message = 'Please enter a message (at least 10 characters)'
+    if (!isVolunteer && (!form.message.trim() || form.message.trim().length < 10)) e.message = 'Please enter a message (at least 10 characters)'
     if (!form.consent)       e.consent = 'Please confirm you agree to our privacy policy'
+
+    const ve: Partial<Record<keyof VolunteerData, string>> = {}
+    if (isVolunteer) {
+      if (vol.why.trim().length < 40) ve.why = 'Please tell us in a few sentences why you want to volunteer with ODIPA'
+      if (!vol.roles.length) ve.roles = 'Choose at least one role, or "Not sure yet"'
+      if (vol.experience.trim().length < 30) ve.experience = 'Please describe your relevant experience or skills'
+      if (!vol.profileLink.trim()) ve.profileLink = 'Please add a link to your resume, LinkedIn profile or personal site'
+      else if (!/^(https?:\/\/)?[^\s/]+\.[^\s/]+/i.test(vol.profileLink.trim())) ve.profileLink = 'That does not look like a web link'
+      if (!vol.hours) ve.hours = 'Please choose how much time you can give'
+    }
     setErrors(e)
-    return Object.keys(e).length === 0
+    setVolErrors(ve)
+    return Object.keys(e).length === 0 && Object.keys(ve).length === 0
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -108,14 +162,15 @@ export default function ContactForm() {
           'Name':         form.name,
           'Email':        form.email,
           'Organization': form.organization || '—',
-          'Message':      form.message,
+          'Message':      isVolunteer ? vol.why : form.message,
+          ...(isVolunteer ? { volunteer: vol } : {}),
           _hp: honeypot,
           '_replyto':     form.email,
           '_subject':     `ODIPA Contact: ${selectedTopic?.label ?? form.topic}`,
           'Consented':    form.consent ? 'Yes' : 'No',
         }),
       })
-      if (res.ok) { setState('success'); setForm(INITIAL) }
+      if (res.ok) { setSubmittedTopic(form.topic); setState('success'); setForm(INITIAL); setVol(VOLUNTEER_INITIAL) }
       else setState('error')
     } catch { setState('error') }
   }
@@ -129,9 +184,11 @@ export default function ContactForm() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h2 className="font-display text-[28px] font-bold text-navy mb-3">Message Sent</h2>
+          <h2 className="font-display text-[28px] font-bold text-navy mb-3">{submittedTopic === 'volunteer' ? 'Application Received' : 'Message Sent'}</h2>
           <p className="text-[15px] text-slate-500 leading-[1.8] mb-2">
-            Thank you for reaching out. We&apos;ve received your message and will respond within <strong className="text-navy">2 business days</strong>.
+            {submittedTopic === 'volunteer'
+              ? <>Thank you for offering your time. We review volunteer applications within <strong className="text-navy">5 business days</strong> and will invite you to a short intro call.</>
+              : <>Thank you for reaching out. We&apos;ve received your message and will respond within <strong className="text-navy">2 business days</strong>.</>}
           </p>
           {selectedTopic && (
             <p className="font-mono text-[12px] text-slate-400 mb-8">
@@ -263,7 +320,113 @@ export default function ContactForm() {
             </div>
           </div>
 
-          {/* Message */}
+          {/* Volunteer application questions */}
+          {isVolunteer && (
+            <div className="bg-white rounded-2xl border border-slate-200 p-8 space-y-6">
+              <div>
+                <h2 className="font-display text-[20px] font-bold text-navy mb-2 pb-4 border-b border-slate-100">
+                  About You and ODIPA
+                </h2>
+                <p className="text-[13px] text-slate-500 leading-relaxed">
+                  Your answers are your volunteer application. The more you tell us, the faster we can match you with the right role and book your intro call.
+                </p>
+              </div>
+
+              <div>
+                <FieldLabel required>Why do you want to volunteer with ODIPA?</FieldLabel>
+                <textarea rows={4} value={vol.why} maxLength={1000}
+                  onChange={e => setVolField('why', e.target.value)}
+                  placeholder="What draws you to digital privacy, and what would you like to get out of volunteering?"
+                  className={`${INPUT_CLASS} resize-none`} />
+                {volErrors.why && <p className="text-red-500 text-[12px] mt-1">{volErrors.why}</p>}
+              </div>
+
+              <div>
+                <FieldLabel required>Which roles interest you?</FieldLabel>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {VOLUNTEER_ROLES.map(role => (
+                    <label key={role}
+                      className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg border text-[13px] cursor-pointer transition-all ${
+                        vol.roles.includes(role) ? 'border-gold bg-gold/8 text-navy' : 'border-slate-200 text-slate-600 hover:border-slate-300'
+                      }`}>
+                      <input type="checkbox" checked={vol.roles.includes(role)} onChange={() => toggleRole(role)}
+                        className="accent-gold w-4 h-4 flex-shrink-0" />
+                      <span>{role}</span>
+                    </label>
+                  ))}
+                </div>
+                <p className="text-[12px] text-slate-400 mt-2">
+                  See what each role involves on the <Link href="/get-involved/volunteer" className="text-blue-brand underline">volunteer page</Link>.
+                </p>
+                {volErrors.roles && <p className="text-red-500 text-[12px] mt-1">{volErrors.roles}</p>}
+              </div>
+
+              <div>
+                <FieldLabel required>Relevant experience and skills</FieldLabel>
+                <textarea rows={4} value={vol.experience} maxLength={1000}
+                  onChange={e => setVolField('experience', e.target.value)}
+                  placeholder="Your work, studies or projects that relate to privacy, research, law, security, writing, teaching or the roles above."
+                  className={`${INPUT_CLASS} resize-none`} />
+                {volErrors.experience && <p className="text-red-500 text-[12px] mt-1">{volErrors.experience}</p>}
+              </div>
+
+              <div>
+                <FieldLabel required>Link to your resume, LinkedIn or personal site</FieldLabel>
+                <input type="text" inputMode="url" value={vol.profileLink} maxLength={300}
+                  onChange={e => setVolField('profileLink', e.target.value)}
+                  placeholder="https://www.linkedin.com/in/your-name"
+                  className={INPUT_CLASS} />
+                <p className="text-[12px] text-slate-400 mt-1">
+                  Please share a link rather than attaching a file. A shared resume link from Google Drive, Dropbox or OneDrive works too.
+                </p>
+                {volErrors.profileLink && <p className="text-red-500 text-[12px] mt-1">{volErrors.profileLink}</p>}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div>
+                  <FieldLabel required>How much time can you give?</FieldLabel>
+                  <select value={vol.hours} onChange={e => setVolField('hours', e.target.value)} className={INPUT_CLASS}>
+                    <option value="">Choose one</option>
+                    {VOLUNTEER_HOURS.map(h => <option key={h} value={h}>{h}</option>)}
+                  </select>
+                  {volErrors.hours && <p className="text-red-500 text-[12px] mt-1">{volErrors.hours}</p>}
+                </div>
+                <div>
+                  <FieldLabel>Credentials <span className="font-normal text-slate-400">(optional)</span></FieldLabel>
+                  <input type="text" value={vol.credentials} maxLength={300}
+                    onChange={e => setVolField('credentials', e.target.value)}
+                    placeholder="For example CIPP, CIPM, CISA, CISSP, bar admission"
+                    className={INPUT_CLASS} />
+                </div>
+                <div>
+                  <FieldLabel>Where are you based? <span className="font-normal text-slate-400">(optional)</span></FieldLabel>
+                  <input type="text" value={vol.location} maxLength={120}
+                    onChange={e => setVolField('location', e.target.value)}
+                    placeholder="City or country, so we can schedule your call"
+                    className={INPUT_CLASS} />
+                </div>
+                <div>
+                  <FieldLabel>How did you hear about ODIPA? <span className="font-normal text-slate-400">(optional)</span></FieldLabel>
+                  <input type="text" value={vol.heardFrom} maxLength={200}
+                    onChange={e => setVolField('heardFrom', e.target.value)}
+                    className={INPUT_CLASS} />
+                </div>
+              </div>
+
+              <div>
+                <FieldLabel>Anything else we should know? <span className="font-normal text-slate-400">(optional)</span></FieldLabel>
+                <textarea rows={3} value={vol.extra} maxLength={800}
+                  onChange={e => setVolField('extra', e.target.value)}
+                  className={`${INPUT_CLASS} resize-none`} />
+              </div>
+              <p className="text-[12px] text-slate-400">
+                Volunteer roles are unpaid and remote. We do not ask for your age, citizenship or immigration status here.
+              </p>
+            </div>
+          )}
+
+          {/* Message (volunteers answer the questions above instead) */}
+          {!isVolunteer && (
           <div className="bg-white rounded-2xl border border-slate-200 p-8">
             <h2 className="font-display text-[20px] font-bold text-navy mb-5 pb-4 border-b border-slate-100">
               Your Message
@@ -285,6 +448,7 @@ export default function ContactForm() {
               </span>
             </div>
           </div>
+          )}
 
           {/* Consent + submit */}
           <div className="bg-white rounded-2xl border border-slate-200 p-8">
@@ -295,7 +459,7 @@ export default function ContactForm() {
                 className="accent-gold w-4 h-4 mt-0.5 flex-shrink-0"
               />
               <span className="text-[13px] text-slate-600 leading-relaxed">
-                I agree that ODIPA may use the information I&apos;ve provided to respond to my inquiry. 
+                I agree that ODIPA may use the information I&apos;ve provided to respond to my inquiry{isVolunteer ? ' and to review my volunteer application' : ''}. 
                 My data will not be shared with third parties or used for marketing without my consent. 
                 See our{' '}
                 <Link href="/privacy-policy" className="text-blue-brand underline hover:text-navy transition-colors">
@@ -330,12 +494,12 @@ export default function ContactForm() {
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                   </svg>
-                  Send Message
+                  {isVolunteer ? 'Submit Application' : 'Send Message'}
                 </>
               )}
             </button>
             <p className="text-center text-[12px] text-slate-400 mt-3 font-mono">
-              We respond to all messages within 2 business days
+              {isVolunteer ? 'We review volunteer applications within 5 business days' : 'We respond to all messages within 2 business days'}
             </p>
           </div>
 
