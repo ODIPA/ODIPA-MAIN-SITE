@@ -7,6 +7,7 @@
  * 'send' uses the provided subject/body (the admin may have edited the
  * draft), emails the submitter with reply-to routed to the team address,
  * and marks the inquiry sent. Nothing sends without this explicit call.
+ * Each reply is also copied to the team address (see EMAIL_COPY_TO below).
  */
 const { respond, sendHtmlEmail } = require('../_shared/mailer')
 const { getInquiry, updateInquiry } = require('../_shared/inquiries')
@@ -54,8 +55,13 @@ module.exports = async function (context, req) {
       if (!subject || !body) return respond(context, 400, { error: 'subject and body are required to send' })
       if (inq.status === 'sent') return respond(context, 409, { error: 'Already sent' })
       const teamAddress = inq.routedTo || 'info@odipa.org'
+      // Every portal reply is also copied (bcc) to the team address, so there is
+      // a record in a real mailbox. Set EMAIL_COPY_TO to use another address,
+      // or to "off" to turn the copy off.
+      const copyTo = (process.env.EMAIL_COPY_TO || teamAddress).trim()
       await sendHtmlEmail({
         to: inq.email,
+        bcc: copyTo.toLowerCase() === 'off' ? undefined : copyTo,
         replyTo: teamAddress,
         subject: String(subject).slice(0, 200),
         html: replyHtml(inq.name, String(body).slice(0, 4000), teamAddress),
