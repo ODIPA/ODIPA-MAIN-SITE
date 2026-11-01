@@ -31,6 +31,8 @@ type Inquiry = {
   draftReason: string
   draftedAt: number
   prepSheetAt: number
+  sentAt: number
+  handledAt: number
 }
 
 const COLUMNS: { id: string; title: string; hint: string }[] = [
@@ -104,7 +106,7 @@ export default function InquiriesAdminDashboard() {
       const data = await res.json()
       if (res.ok) {
         if (action === 'send') {
-          setItems(prev => prev.map(i => i.id === id ? { ...i, status: 'sent' } : i))
+          setItems(prev => prev.map(i => i.id === id ? { ...i, status: 'sent', sentAt: Date.now() } : i))
           setNotice(`Reply sent to ${item?.email}`)
         } else {
           setItems(prev => prev.filter(i => i.id !== id))
@@ -120,6 +122,7 @@ export default function InquiriesAdminDashboard() {
     if (!MOVE_TARGETS.has(status)) return
     const item = items.find(i => i.id === id)
     if (!item || item.status === status) return
+    if (status === 'sent' && !window.confirm(`Mark ${item.name} as replied? This records that you answered from your own inbox. It does not send an email.`)) return
     setBusy(id); setNotice('')
     try {
       const res = await fetch('/api/inquiries-act', {
@@ -128,7 +131,7 @@ export default function InquiriesAdminDashboard() {
         body: JSON.stringify({ id, action: 'move', status }),
       })
       const data = await res.json()
-      if (res.ok) setItems(prev => prev.map(i => i.id === id ? { ...i, status } : i))
+      if (res.ok) setItems(prev => prev.map(i => i.id === id ? { ...i, status, handledAt: status === 'sent' && !i.sentAt ? Date.now() : (status === 'acked' || status === 'needs-attention') ? 0 : i.handledAt } : i))
       else setNotice(data.error || 'Move failed')
     } catch { setNotice('Move failed') }
     finally { setBusy(null) }
@@ -246,6 +249,11 @@ export default function InquiriesAdminDashboard() {
                         {inq.topic === 'volunteer' && !!inq.prepSheetAt && (
                           <span className="text-[10px] font-mono font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-1">prep ✓</span>
                         )}
+                        {inq.status === 'sent' && (
+                          <span className={`text-[10px] font-mono rounded px-1 border ${inq.sentAt ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-amber-700 bg-amber-50 border-amber-200'}`}>
+                            {inq.sentAt ? 'emailed' : 'manual'}
+                          </span>
+                        )}
                         <span className="text-[10px] text-slate-400 ml-auto">{ageDays(inq.receivedAt)}d</span>
                       </div>
                       <p className="text-sm font-semibold text-navy truncate">{inq.name || inq.email}</p>
@@ -307,7 +315,11 @@ export default function InquiriesAdminDashboard() {
                   <p className="text-sm text-slate-400 italic">In grace period. Run drafting to propose a reply now, or reply personally and drag to Replied.</p>
                 ) : (
                   <p className="text-sm text-slate-400 italic">
-                    {open.status === 'sent' ? 'Replied. Drag to Meeting scheduled once a call is booked.' : 'Meeting scheduled. Generate or review the prep sheet below before the call.'}
+                    {open.status === 'sent'
+                      ? (open.sentAt
+                        ? `Reply emailed by the system on ${fmtDate(open.sentAt)}. Drag to Meeting scheduled once a call is booked.`
+                        : `Marked as handled personally${open.handledAt ? ` on ${fmtDate(open.handledAt)}` : ''}. No email was sent by the system. If that was a mistake, drag the card back to Received.`)
+                      : 'Meeting scheduled. Generate or review the prep sheet below before the call.'}
                   </p>
                 )}
               </div>

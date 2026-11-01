@@ -24,6 +24,7 @@ module.exports = async function (context, req) {
         draftSubject: r.draftSubject || '', draftBody: r.draftBody || '',
         draftReason: r.draftReason || '', draftedAt: Number(r.draftedAt) || 0,
         prepSheetAt: Number(r.prepSheetAt) || 0,
+        sentAt: Number(r.sentAt) || 0, handledAt: Number(r.handledAt) || 0,
       })),
     })
   } catch (err) {
