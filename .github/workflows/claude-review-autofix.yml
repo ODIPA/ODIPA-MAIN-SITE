@@ -71,10 +71,10 @@ jobs:
 
             ${{ steps.rounds.outputs.can_fix == 'true' && 'Fix clear, low-risk problems directly on this branch. Make one commit whose message starts with "Claude review fix:" and push it. Do not change statistics, program percentages, or legal wording; flag those for a human instead.' || 'Do not change any files. Report findings only, the fix limit has been reached.' }}
 
-            Post a short review summary as a PR comment. Then report counts in the structured result.
+            Post a short review summary with `gh pr comment ${{ github.event.pull_request.number }} --body-file <file>` (list each finding with file and line, and say which you fixed). Then report counts in the structured result.
           claude_args: |
             --max-turns 20
-            --allowedTools "Read,Grep,Glob,Edit,Bash(git add:*),Bash(git commit:*),Bash(git push:*),Bash(git diff:*),Bash(git log:*),Bash(npx tsc --noEmit)"
+            --allowedTools "Read,Grep,Glob,Edit,Bash(gh pr comment:*),mcp__github_inline_comment__create_inline_comment,Bash(git add:*),Bash(git commit:*),Bash(git push:*),Bash(git diff:*),Bash(git log:*),Bash(npx tsc --noEmit)"
             --json-schema '{"type":"object","properties":{"found":{"type":"integer"},"fixed":{"type":"integer"},"needs_human":{"type":"integer"}},"required":["found","fixed","needs_human"]}'
 
       - name: Log result
