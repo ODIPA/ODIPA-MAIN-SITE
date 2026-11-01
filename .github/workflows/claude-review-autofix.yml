@@ -28,13 +28,25 @@ jobs:
       issues: write
       id-token: write
     steps:
+      - name: Check for API key
+        id: key
+        env:
+          HAS_KEY: ${{ secrets.ANTHROPIC_API_KEY != '' }}
+        run: |
+          echo "present=$HAS_KEY" >> "$GITHUB_OUTPUT"
+          if [ "$HAS_KEY" != "true" ]; then
+            echo "::notice::ANTHROPIC_API_KEY is not set, skipping Claude review."
+          fi
+
       - uses: actions/checkout@v4
+        if: steps.key.outputs.present == 'true'
         with:
           ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0
 
       - name: Count earlier fix rounds
         id: rounds
+        if: steps.key.outputs.present == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -45,6 +57,7 @@ jobs:
 
       - name: Claude review
         id: claude
+        if: steps.key.outputs.present == 'true'
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -65,7 +78,7 @@ jobs:
             --json-schema '{"type":"object","properties":{"found":{"type":"integer"},"fixed":{"type":"integer"},"needs_human":{"type":"integer"}},"required":["found","fixed","needs_human"]}'
 
       - name: Log result
-        if: always()
+        if: always() && steps.key.outputs.present == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           STRUCTURED: ${{ steps.claude.outputs.structured_output }}
