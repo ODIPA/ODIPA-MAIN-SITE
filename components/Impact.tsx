@@ -100,12 +100,12 @@ export default function Impact() {
 
         <p className="mt-6 text-center text-[12px] leading-relaxed text-white/60 max-w-[760px] mx-auto">
           Sources:{' '}
-          <a className="underline hover:text-white" href="https://www.ibm.com/reports/data-breach" target="_blank" rel="noopener noreferrer">IBM Cost of a Data Breach Report 2026</a>,{' '}
-          <a className="underline hover:text-white" href="https://www.idtheftcenter.org/post/2025-annual-data-breach-report/" target="_blank" rel="noopener noreferrer">ITRC 2025 Annual Data Breach Report</a>,{' '}
-          <a className="underline hover:text-white" href="https://iapp.org/resources/article/us-state-privacy-legislation-tracker/" target="_blank" rel="noopener noreferrer">IAPP US State Privacy Legislation Tracker</a>,{' '}
-          <a className="underline hover:text-white" href="https://www.scrippsnews.com/us-news/billions-of-login-credentials-have-been-leaked-online-cybernews-researchers-say" target="_blank" rel="noopener noreferrer">Cybernews, June 2025 (via Scripps News)</a> and{' '}
-          <a className="underline hover:text-white" href="https://www.varonis.com/blog/state-of-data-security-report" target="_blank" rel="noopener noreferrer">Varonis 2025 State of Data Security Report</a>.
-          ODIPA's own figure is from our published budget. Third party figures are as reported by each source.
+          <a className="underline hover:text-white" href="https://www.ibm.com/reports/data-breach" target="_blank" rel="noopener noreferrer">IBM Cost of a Data Breach Report 2026<span className="sr-only"> (opens in a new tab)</span></a>,{' '}
+          <a className="underline hover:text-white" href="https://www.idtheftcenter.org/post/2025-annual-data-breach-report/" target="_blank" rel="noopener noreferrer">ITRC 2025 Annual Data Breach Report<span className="sr-only"> (opens in a new tab)</span></a>,{' '}
+          <a className="underline hover:text-white" href="https://iapp.org/resources/article/us-state-privacy-legislation-tracker/" target="_blank" rel="noopener noreferrer">IAPP US State Privacy Legislation Tracker<span className="sr-only"> (opens in a new tab)</span></a>,{' '}
+          <a className="underline hover:text-white" href="https://www.scrippsnews.com/us-news/billions-of-login-credentials-have-been-leaked-online-cybernews-researchers-say" target="_blank" rel="noopener noreferrer">Cybernews, June 2025 (via Scripps News)<span className="sr-only"> (opens in a new tab)</span></a> and{' '}
+          <a className="underline hover:text-white" href="https://www.varonis.com/blog/state-of-data-security-report" target="_blank" rel="noopener noreferrer">Varonis 2025 State of Data Security Report<span className="sr-only"> (opens in a new tab)</span></a>.
+          ODIPA's own figure is from our published budget. Third-party figures are as reported by each source.
         </p>
       </div>
     </section>

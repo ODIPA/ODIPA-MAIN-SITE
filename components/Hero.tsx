@@ -39,7 +39,7 @@ export default function Hero() {
 
       <div className="relative max-w-content mx-auto px-6 pt-[120px] pb-20 grid grid-cols-1 lg:grid-cols-2 gap-20 items-center w-full">
 
-        {/* Left — copy */}
+        {/* Left: copy */}
         <div>
           <div className="inline-flex items-center gap-2.5 font-mono text-[11px] text-gold-light uppercase tracking-[3px] mb-6">
             <span className="block w-8 h-px bg-gold-light" />
@@ -78,7 +78,7 @@ export default function Hero() {
           </div>
         </div>
 
-        {/* Right — stats */}
+        {/* Right: stats */}
         <div className="hidden lg:grid gap-5">
           {[
             { num: '16B+', label: 'Login credentials in one exposed 2025 data compilation (Cybernews)' },
