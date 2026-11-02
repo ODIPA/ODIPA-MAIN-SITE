@@ -32,9 +32,13 @@ jobs:
             curl -sS --fail-with-body --max-time 60 -X POST "$URL" \
               -H "x-admin-key: $ODIPA_ADMIN_KEY" -H "Content-Type: application/json" -d "$1"
           }
-          skip='[]'; drafted=0; flagged=0
+          skip='[]'; drafted=0; flagged=0; broke=0
           for run in $(seq 1 40); do
-            resp=$(post "$(jq -nc --argjson skip "$skip" '{limit: 3, skip: $skip}')")
+            # A failed request (timeout, 500) stops the loop but not the reminder.
+            if ! resp=$(post "$(jq -nc --argjson skip "$skip" '{limit: 3, skip: $skip}')"); then
+              echo "::warning::Batch $run failed, stopping the drafting pass."
+              broke=1; break
+            fi
             d=$(jq '.drafted' <<<"$resp"); f=$(jq '.flagged' <<<"$resp")
             bad=$(jq '.failed | length' <<<"$resp"); rem=$(jq '.remaining' <<<"$resp")
             echo "batch $run: $d drafted, $f flagged, $bad failed, $rem remaining"
@@ -45,5 +49,6 @@ jobs:
           done
           echo "Drafting pass finished: $drafted drafted, $flagged flagged."
           if [ $((drafted + flagged)) -gt 0 ]; then
-            echo "Reminder: $(post '{"nudge": true}')"
+            echo "Reminder: $(post '{"nudge": true}')" || echo "::warning::The reminder request failed."
           fi
+          if [ "$broke" -ne 0 ]; then exit 1; fi
