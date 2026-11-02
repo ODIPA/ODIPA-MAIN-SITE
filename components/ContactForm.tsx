@@ -273,7 +273,7 @@ export default function ContactForm() {
                 Contact ODIPA
               </h1>
               <p className="text-[16px] text-white/60 leading-[1.8]">
-                Questions about our programs, partnerships, volunteering, press, or anything else — we&apos;re here. Select a topic and we&apos;ll route your message to the right team.
+                Questions about our programs, partnerships, volunteering, press, or anything else, we&apos;re here. Select a topic and we&apos;ll route your message to the right team.
               </p>
             </div>
             <div className="hidden lg:flex justify-center opacity-[0.08]">
@@ -562,7 +562,7 @@ export default function ContactForm() {
             </p>
           </div>
 
-          {/* Honeypot — hidden from real users, bots fill it in */}
+          {/* Honeypot: hidden from real users, bots fill it in */}
           <input
             type="text"
             name="website"
