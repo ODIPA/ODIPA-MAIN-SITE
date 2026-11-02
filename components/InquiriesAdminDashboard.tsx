@@ -102,7 +102,7 @@ export default function InquiriesAdminDashboard() {
         data = await res.json()
       } catch { /* a timeout returns an error page, not JSON */ }
       if (!ok || !data) {
-        stopped = data && data.error ? `${data.error}${data.detail ? ` (${data.detail})` : ''}.` : `A drafting request failed or timed out${data ? '' : ' (no JSON reply)'}.`
+        stopped = data && data.error ? `${data.error}${data.detail ? ` (${data.detail})` : ''}`.replace(/([^.!?])$/, '$1.') :`A drafting request failed or timed out${data ? '' : ' (no JSON reply)'}.`
         break
       }
       drafted += data.drafted; flagged += data.flagged; remaining = data.remaining
