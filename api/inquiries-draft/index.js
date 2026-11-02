@@ -62,8 +62,16 @@ module.exports = async function (context, req) {
     const cutoff = Date.now() - graceDays * 24 * 60 * 60 * 1000
     const acked = (await listInquiries(['acked'])).filter(r => Number(r.receivedAt) < cutoff)
 
+    // Azure Static Web Apps cuts API requests off after 45 seconds, and each
+    // draft is a model call. The admin board asks for small batches with
+    // { limit } and repeats until nothing remains. No limit means the usual
+    // run of up to 20, as the scheduled workflow does.
+    const asked = Number(req.body && req.body.limit)
+    const batched = Number.isInteger(asked) && asked >= 1
+    const limit = batched ? Math.min(asked, 20) : 20
+
     let drafted = 0, flagged = 0
-    for (const inq of acked.slice(0, 20)) {
+    for (const inq of acked.slice(0, limit)) {
       const guidance = TOPIC_GUIDANCE[inq.topic] || 'General inquiry.'
       const completeness = inq.topic === 'volunteer' ? `Application completeness: ${volunteerCompleteness(inq.message)}\n` : ''
       const user = `Topic: ${inq.topic}\nGuidance: ${guidance}\n${completeness}From: ${inq.name} <${inq.email}>${inq.organization ? ` (${inq.organization})` : ''}\nReceived: ${new Date(Number(inq.receivedAt)).toUTCString()}\n\nTheir message:\n${inq.message}`
@@ -109,9 +117,10 @@ module.exports = async function (context, req) {
       }
     }
 
-    // Nudge email so the inbox never accumulates silently
+    // Nudge email so the inbox never accumulates silently. Skipped for the
+    // board's small batches, which would send one email per batch.
     const nudgeTo = process.env.INQUIRY_NUDGE_EMAIL
-    if (nudgeTo && (drafted + flagged) > 0) {
+    if (nudgeTo && !batched && (drafted + flagged) > 0) {
       try {
         await sendHtmlEmail({
           to: nudgeTo,
@@ -122,7 +131,7 @@ module.exports = async function (context, req) {
       } catch (e) { context.log.warn('Nudge failed:', e.message) }
     }
 
-    respond(context, 200, { ok: true, examined: acked.length, drafted, flagged })
+    respond(context, 200, { ok: true, examined: acked.length, drafted, flagged, remaining: Math.max(acked.length - drafted - flagged, 0) })
   } catch (err) {
     context.log.error('Inquiry drafting error:', err.message)
     respond(context, 500, { error: 'Drafting run failed' })
