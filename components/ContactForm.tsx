@@ -432,7 +432,7 @@ export default function ContactForm() {
                     onChange={pickResume} aria-describedby="vol-resume-either vol-resume-help"
                     className="block w-full text-[13px] text-navy file:mr-3 file:rounded-lg file:border file:border-slate-200 file:bg-white file:px-4 file:py-2 file:text-[13px] file:font-medium file:text-navy hover:file:border-blue-brand" />
                   <p id="vol-resume-help" className="text-[12px] text-slate-400 mt-1">
-                    PDF or Word, up to 2 MB. Your file is stored privately by ODIPA and used only to review your application.
+                    PDF or Word, up to 2 MB. Your file is stored privately by ODIPA, used only to review your application, and deleted after 90 days.
                   </p>
                   {resumeFile && <p className="text-[12px] text-navy mt-1">Selected: {resumeFile.name}</p>}
                   {resumeError && <p role="alert" className="text-red-500 text-[12px] mt-1">{resumeError}</p>}
