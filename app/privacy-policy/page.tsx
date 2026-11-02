@@ -177,7 +177,7 @@ export default function PrivacyPolicy() {
               />
               <InfoBox
                 label="Volunteer applications"
-                value="The answers you give on the volunteer form, and a resume file if you choose to attach one. Resume files are stored privately in ODIPA's own Microsoft Azure storage, read only by ODIPA's team to review your application, deleted automatically 90 days after you submit it, and never sold. You can ask us to delete your file sooner at any time."
+                value="The answers you give on the volunteer form, and a resume file if you choose to attach one. Resume files are stored privately in ODIPA's own Microsoft Azure storage, read only by ODIPA's team to review your application, deleted automatically 90 days after you submit your application, and never sold. You can ask us to delete your file sooner at any time."
               />
               <InfoBox
                 label="Cookie consent preference"
