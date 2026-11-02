@@ -15,11 +15,14 @@ const { listInquiries, updateInquiry } = require('../_shared/inquiries')
 const { rolesForPrompt, GRC_RULE } = require('../_shared/volunteerRoles')
 
 const TOPIC_GUIDANCE = {
-  volunteer: `Volunteering inquiry. DRAFT by default, volunteers are the most common inquiry and the intro call is the standard next step for everyone, including strong and specific applicants, who deserve the fastest reply most of all. A good draft thanks them, reflects one concrete detail from their message so it reads personal, and invites them to reply with availability for a short intro call. Never decline, redirect or discourage a volunteer because of their field or the kind of work they want. ${GRC_RULE} Flag ONLY if the message indicates a minor, explicitly demands pay, employment, sponsorship, or visa support as a condition, raises a legal or security matter, is hostile or incoherent, or is from a journalist. A wish for GRC or compliance experience is none of those.
+  volunteer: `Volunteering inquiry. DRAFT by default, volunteers are the most common inquiry. The line "Application completeness" below tells you which kind of reply to write.
+If it says THIN, the person has not yet said enough for ODIPA to match them to a role. Write a warm reply that thanks them, reflects one concrete detail from their message so it reads personal, and asks them to reply with a resume or a LinkedIn or portfolio link, why they want to volunteer with ODIPA, their relevant experience and any credentials, which roles interest them, and about how many hours a month they can give. Ask only for what their message does not already say. Do NOT invite a call, propose times or mention scheduling in a THIN reply. Say that once ODIPA has this, the team will follow up. Wanting global or practical experience is a normal reason to volunteer, so welcome it.
+If it says COMPLETE, a good draft thanks them, reflects one concrete detail from their message so it reads personal, and invites them to reply with availability for a short intro call. Strong and specific applicants deserve the fastest reply of all.
+Never decline, redirect or discourage a volunteer because of their field or the kind of work they want. ${GRC_RULE} Flag ONLY if the message indicates a minor, explicitly demands pay, employment, sponsorship, or visa support as a condition, raises a legal or security matter, is hostile or incoherent, or is from a journalist. A wish for GRC or compliance experience is none of those.
 
 Volunteer roles that really exist, the only ones you may name:
 ${rolesForPrompt()}
-You may name at most one or two roles, only when their message clearly points to them, and only as possibilities to discuss on the call. Never promise a role, title, start date or outcome.`,
+You may name at most one or two roles, only when their message clearly points to them, and only as possibilities to discuss later. Never promise a role, title, start date or outcome.`,
   partnerships: 'Partnership inquiry. Be warm, factual about ODIPA being a small California 501(c)(3), and invite a short call. Never invent programs or commitments.',
   donate: 'Donation inquiry. Thank them, confirm 501(c)(3) tax-deductible status, and point to https://www.odipa.org/donate. Never discuss amounts.',
   certification: 'Certification program inquiry. Point to https://www.odipa.org/programs/corporate-certification and offer to answer specifics. Never quote pricing or timelines beyond the published page.',
@@ -29,6 +32,20 @@ You may name at most one or two roles, only when their message clearly points to
   sponsor: 'Corporate sponsorship application. The auto-acknowledgment already promised contact within 2 business days. A good draft thanks them, names the tier they chose, says sponsorship is a public acknowledgment relationship with no services or influence in return, and invites a short call. Never quote or negotiate amounts, never promise placement or recognition beyond the published tiers at https://www.odipa.org/become-a-sponsor. Flag if the message asks for anything in return, mentions a product to feature, or comes from a company whose business is at odds with privacy.',
   'research-sponsor': 'Research sponsorship inquiry. The auto-acknowledgment already promised contact within 2 business days. A good draft thanks them, restates that sponsored research is published freely and sponsors do not direct findings or pre-review results, and invites a short call. Never commit to a topic, timeline, or deliverable. Flag if the message proposes a specific conclusion, asks for pre-publication review, or wants exclusivity.',
   board: 'ALWAYS flag board applications as needs-attention. Board recruitment is a governance matter for the current directors, not something to draft a reply to. The acknowledgment already told the applicant to expect confirmation within 2 business days and that decisions follow seat availability.',
+}
+
+/**
+ * Decide in code, not in the model, whether a volunteer message has enough
+ * information to match the person to a role. Messages from the structured
+ * volunteer form start with "VOLUNTEER APPLICATION" and always carry the
+ * answers ODIPA needs. Anything else (older submissions, short free text)
+ * counts as THIN unless it includes a link to a resume or profile.
+ */
+function volunteerCompleteness(message) {
+  const text = String(message || '').trim()
+  if (/^VOLUNTEER APPLICATION/i.test(text)) return 'COMPLETE'
+  if (/https?:\/\/|www\.|linkedin\.com/i.test(text)) return 'COMPLETE'
+  return 'THIN'
 }
 
 const SYSTEM = `You draft replies for ODIPA, a small California 501(c)(3) digital privacy nonprofit. You write on behalf of a volunteer-run team.
@@ -61,7 +78,8 @@ module.exports = async function (context, req) {
     let drafted = 0, flagged = 0
     for (const inq of acked.slice(0, 20)) {
       const guidance = TOPIC_GUIDANCE[inq.topic] || 'General inquiry.'
-      const user = `Topic: ${inq.topic}\nGuidance: ${guidance}\nFrom: ${inq.name} <${inq.email}>${inq.organization ? ` (${inq.organization})` : ''}\nReceived: ${new Date(Number(inq.receivedAt)).toUTCString()}\n\nTheir message:\n${inq.message}`
+      const completeness = inq.topic === 'volunteer' ? `Application completeness: ${volunteerCompleteness(inq.message)}\n` : ''
+      const user = `Topic: ${inq.topic}\nGuidance: ${guidance}\n${completeness}From: ${inq.name} <${inq.email}>${inq.organization ? ` (${inq.organization})` : ''}\nReceived: ${new Date(Number(inq.receivedAt)).toUTCString()}\n\nTheir message:\n${inq.message}`
 
       let result = null
       try {
@@ -122,3 +140,5 @@ module.exports = async function (context, req) {
     respond(context, 500, { error: 'Drafting run failed' })
   }
 }
+
+module.exports.volunteerCompleteness = volunteerCompleteness

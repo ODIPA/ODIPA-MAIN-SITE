@@ -52,11 +52,12 @@ assert(!html.includes('Fifteen plus years'), 'no years of experience in the cred
 // ---- Reply drafts ------------------------------------------------------
 const calls = []
 const store = []
+let inboxMessage = 'I want GRC experience and would like to support privacy research.'
 const oL = Module._load
 Module._load = function (req, parent, ...rest) {
   if (/_shared\/mailer$/.test(req)) return { respond: (c, status, body) => { c.res = { status, body } }, sendHtmlEmail: async () => {} }
   if (/_shared\/inquiries$/.test(req)) return {
-    listInquiries: async () => [{ rowKey: 'r1', topic: 'volunteer', name: 'Iram', email: 'i@example.com', receivedAt: 1, message: 'I want GRC experience and would like to support privacy research.' }],
+    listInquiries: async () => [{ rowKey: 'r1', topic: 'volunteer', name: 'Iram', email: 'i@example.com', receivedAt: 1, message: inboxMessage }],
     updateInquiry: async (k, v) => { store.push([k, v]) },
   }
   return oL.call(this, req, parent, ...rest)
@@ -81,5 +82,25 @@ global.fetch = async (url, opts) => {
   assert(userMsg.includes('Never decline, redirect or discourage a volunteer'), 'draft prompt forbids turning applicants away')
   assert(sent.system.includes('Never turn away or talk down a volunteer applicant'), 'system prompt forbids turning applicants away')
   assert.strictEqual(store[0][1].status, 'drafted', 'result is stored as a draft, not flagged')
+  assert(userMsg.includes('Application completeness: THIN'), 'a short message with no resume or link is marked THIN')
+  assert(userMsg.includes('Do NOT invite a call'), 'draft prompt tells the model not to schedule a call for thin messages')
+  assert(userMsg.includes('resume'), 'draft prompt asks for a resume')
+
+  // A short note like this one must be asked for more, not invited to a call.
+  inboxMessage = 'I would like to be matched for a cybersecurity volunteer role, so as to gain a global practical experience'
+  calls.length = 0
+  await draft(ctx, { method: 'POST', headers: { 'x-admin-key': 'k' } })
+  assert(calls[0].messages[0].content.includes('Application completeness: THIN'), 'cybersecurity one-liner is THIN')
+
+  // The structured form always counts as complete and still gets the call invite.
+  inboxMessage = 'VOLUNTEER APPLICATION\nWhy ODIPA: I care about privacy\nRoles of interest: Privacy Researcher'
+  calls.length = 0
+  await draft(ctx, { method: 'POST', headers: { 'x-admin-key': 'k' } })
+  assert(calls[0].messages[0].content.includes('Application completeness: COMPLETE'), 'form application is COMPLETE')
+
+  assert.strictEqual(draft.volunteerCompleteness('Hi, my profile is https://linkedin.com/in/x and I want to help'), 'COMPLETE')
+  assert.strictEqual(draft.volunteerCompleteness('please match me to a role'), 'THIN')
+  assert.strictEqual(draft.volunteerCompleteness(''), 'THIN')
+  assert(!/[\u2014\u2013]/.test(require('fs').readFileSync(path.join(api, 'inquiries-draft/index.js'), 'utf8')), 'no em or en dashes in the drafter')
   console.log('prep-and-drafts: all checks passed')
 })().catch(e => { console.error(e); process.exit(1) })
