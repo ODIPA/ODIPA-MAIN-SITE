@@ -129,7 +129,7 @@ function respond(context, status, body) {
   }
 }
 
-async function sendHtmlEmail({ to, subject, html, plainText, replyTo }) {
+async function sendHtmlEmail({ to, subject, html, plainText, replyTo, bcc }) {
   const client = getClient()
   const sender = getSender()
   const content = { subject, html }
@@ -139,6 +139,10 @@ async function sendHtmlEmail({ to, subject, html, plainText, replyTo }) {
     content,
     recipients: { to: [{ address: to }] },
   }
+  // Optional hidden copy, so the team keeps a record it can open. Skipped when
+  // it would copy the recipient to themselves.
+  if (bcc && String(bcc).toLowerCase() !== String(to).toLowerCase())
+    message.recipients.bcc = [{ address: bcc }]
   if (replyTo) message.replyTo = [{ address: replyTo }]
   return sendAndVerify(client, message)
 }
