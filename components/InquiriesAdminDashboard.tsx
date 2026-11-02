@@ -90,7 +90,7 @@ export default function InquiriesAdminDashboard() {
     const failed: string[] = []
     for (let i = 0; i < 40; i++) {
       setNotice(`Drafting. ${drafted + flagged} done${queued ? `, ${queued} were queued` : ''}.`)
-      let data: { drafted: number; flagged: number; failed: string[]; remaining: number; error?: string } | null = null
+      let data: { drafted: number; flagged: number; failed: string[]; remaining: number; error?: string; detail?: string } | null = null
       let ok = false
       try {
         const res = await fetch('/api/inquiries-draft', {
@@ -102,7 +102,7 @@ export default function InquiriesAdminDashboard() {
         data = await res.json()
       } catch { /* a timeout returns an error page, not JSON */ }
       if (!ok || !data) {
-        stopped = (data && data.error) || 'A drafting request failed or timed out.'
+        stopped = data && data.error ? `${data.error}${data.detail ? ` (${data.detail})` : ''}`.replace(/([^.!?])$/, '$1.') :`A drafting request failed or timed out${data ? '' : ' (no JSON reply)'}.`
         break
       }
       drafted += data.drafted; flagged += data.flagged; remaining = data.remaining
