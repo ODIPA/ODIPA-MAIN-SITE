@@ -20,7 +20,7 @@ permissions: {}
 jobs:
   draft:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 45
     steps:
       - name: Run drafting pass
         env:
@@ -29,7 +29,7 @@ jobs:
           set -euo pipefail
           URL="${DRAFT_URL:-https://www.odipa.org/api/inquiries-draft}"
           post() {
-            curl -sS --fail-with-body --max-time 60 -X POST "$URL" \
+            curl -sS --fail-with-body --max-time 50 -X POST "$URL" \
               -H "x-admin-key: $ODIPA_ADMIN_KEY" -H "Content-Type: application/json" -d "$1"
           }
           skip='[]'; drafted=0; flagged=0; broke=0
@@ -39,8 +39,12 @@ jobs:
               echo "::warning::Batch $run failed, stopping the drafting pass."
               broke=1; break
             fi
-            d=$(jq '.drafted' <<<"$resp"); f=$(jq '.flagged' <<<"$resp")
-            bad=$(jq '.failed | length' <<<"$resp"); rem=$(jq '.remaining' <<<"$resp")
+            # A reply that is not the expected JSON stops the loop like a failed request.
+            if ! nums=$(jq -re '[(.drafted|numbers), (.flagged|numbers), (.failed|arrays|length), (.remaining|numbers)] | @tsv' <<<"$resp" 2>/dev/null); then
+              echo "::warning::Batch $run returned an unexpected reply, stopping the drafting pass."
+              broke=1; break
+            fi
+            read -r d f bad rem <<<"$nums"
             echo "batch $run: $d drafted, $f flagged, $bad failed, $rem remaining"
             drafted=$((drafted + d)); flagged=$((flagged + f))
             skip=$(jq -nc --argjson a "$skip" --argjson b "$(jq '.failed' <<<"$resp")" '$a + $b')
