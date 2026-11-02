@@ -58,7 +58,7 @@ export default function Hero() {
 
           <p className="text-[17px] text-white/65 leading-[1.75] max-w-[480px] mb-10">
             ODIPA educates consumers and organizations about digital information
-            privacy — advocating for practices and policies that protect people
+            privacy and advocates for practices and policies that protect people
             in an increasingly data-driven world.
           </p>
 
