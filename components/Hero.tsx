@@ -81,7 +81,7 @@ export default function Hero() {
         {/* Right: stats */}
         <div className="hidden lg:grid gap-5">
           {[
-            { num: '16B+', label: 'Login credentials in one exposed 2025 data compilation (Cybernews)' },
+            { num: '16B+', label: 'Login credentials in one exposed 2025 data compilation, including duplicates (Cybernews)' },
             { num: '99%', label: 'Of organizations had sensitive data exposed to AI tools (Varonis, 2025)' },
             { num: '$11.5M', label: 'Average cost of a U.S. data breach in 2026 (IBM)' },
           ].map((s, i) => (
