@@ -85,17 +85,18 @@ export default function InquiriesAdminDashboard() {
   // after 45 seconds, and a full run of 20 model calls can take longer, so ask
   // for a few at a time and repeat. A failed request stops the loop but keeps
   // everything drafted so far.
-  const draftInBatches = async (expected: number) => {
+  const draftInBatches = async (queued: number) => {
     let drafted = 0, flagged = 0, remaining = 0, stopped = ''
+    const failed: string[] = []
     for (let i = 0; i < 40; i++) {
-      setNotice(expected ? `Drafting. ${drafted + flagged} of ${expected} done.` : `Drafting. ${drafted + flagged} done.`)
-      let data: { drafted: number; flagged: number; remaining: number; error?: string } | null = null
+      setNotice(`Drafting. ${drafted + flagged} done${queued ? `, ${queued} were queued` : ''}.`)
+      let data: { drafted: number; flagged: number; failed: string[]; remaining: number; error?: string } | null = null
       let ok = false
       try {
         const res = await fetch('/api/inquiries-draft', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', ...hdrs() },
-          body: JSON.stringify({ limit: 3 }),
+          body: JSON.stringify({ limit: 3, skip: failed }),
         })
         ok = res.ok
         data = await res.json()
@@ -105,13 +106,15 @@ export default function InquiriesAdminDashboard() {
         break
       }
       drafted += data.drafted; flagged += data.flagged; remaining = data.remaining
-      if (!remaining || data.drafted + data.flagged === 0) break
+      failed.push(...(data.failed || []))
+      // Stop when nothing is left or a whole batch made no progress.
+      if (!remaining || data.drafted + data.flagged + (data.failed || []).length === 0) break
     }
-    return { drafted, flagged, remaining, stopped }
+    return { drafted, flagged, remaining, stopped, failed: failed.length }
   }
 
-  const draftSummary = (r: { drafted: number; flagged: number; remaining: number; stopped: string }) =>
-    `${r.stopped ? `${r.stopped} Drafts finished so far are kept. ` : ''}${r.drafted} drafted, ${r.flagged} flagged for a personal reply.${r.remaining ? ` ${r.remaining} still waiting, run drafting again.` : ''}`
+  const draftSummary = (r: { drafted: number; flagged: number; remaining: number; stopped: string; failed: number }) =>
+    `${r.stopped ? `${r.stopped} Drafts finished so far are kept. ` : ''}${r.drafted} drafted, ${r.flagged} flagged for a personal reply.${r.failed ? ` ${r.failed} could not be drafted and stay in Received.` : ''}${r.remaining ? ` ${r.remaining} still waiting, run drafting again.` : ''}`
 
   const runDrafting = async () => {
     setBusy('draft-run'); setNotice('')

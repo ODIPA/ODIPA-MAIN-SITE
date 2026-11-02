@@ -10,6 +10,7 @@ process.env.INQUIRY_NUDGE_EMAIL = 'team@example.com'
 
 const DAY = 24 * 60 * 60 * 1000
 let rows, updates, nudges, modelCalls
+let failFor = []
 const reset = n => {
   rows = Array.from({ length: n }, (_, i) => ({ rowKey: `r${i}`, status: 'acked', topic: 'volunteer', name: `P${i}`, email: `p${i}@example.com`, message: 'I want to volunteer', receivedAt: Date.now() - 10 * DAY }))
   updates = []; nudges = []; modelCalls = 0
@@ -23,8 +24,10 @@ Module._load = function (req, parent, ...rest) {
   }
   return oL.call(this, req, parent, ...rest)
 }
-global.fetch = async () => {
+global.fetch = async (url, opts) => {
   modelCalls++
+  const user = JSON.parse(opts.body).messages[0].content
+  if (failFor.some(n => user.includes(`From: ${n} <`))) throw new Error('model down')
   return { json: async () => ({ content: [{ type: 'text', text: '{"action":"draft","subject":"Hello","body":"Thanks. Please send a resume link."}' }] }) }
 }
 const draft = require(path.join(api, 'inquiries-draft/index.js'))
@@ -54,6 +57,19 @@ const run = async body => {
   r = await run(undefined)
   assert.strictEqual(r.body.drafted, 5, 'no body behaves as before')
   assert.strictEqual(nudges.length, 1, 'a full run still sends the nudge email')
+
+  // A card whose model call keeps failing is reported, and skipping it lets the rest through.
+  reset(6); failFor = ['P0', 'P1', 'P2']
+  r = await run({ limit: 3 })
+  assert.strictEqual(r.body.drafted, 0, 'a batch of failing cards drafts nothing')
+  assert.deepStrictEqual(r.body.failed, ['r0', 'r1', 'r2'], 'the failed cards are named')
+  assert.strictEqual(r.body.remaining, 3, 'failed cards are not counted as waiting')
+  assert.strictEqual(rows[0].status, 'acked', 'a failed card stays in Received')
+  r = await run({ limit: 3, skip: r.body.failed })
+  assert.strictEqual(r.body.drafted, 3, 'with the failures skipped the next batch gets through')
+  assert.strictEqual(r.body.remaining, 0)
+  assert.deepStrictEqual(r.body.failed, [])
+  failFor = []
 
   for (const bad of [{ limit: 0 }, { limit: -3 }, { limit: 'abc' }, { limit: 1.5 }]) {
     reset(25)
