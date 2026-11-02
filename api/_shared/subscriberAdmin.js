@@ -36,15 +36,8 @@ function emailKey(email) {
 
 // ----------------------------------------------------------------- auth
 
-/** Constant time check of the x-admin-key header against NEWSLETTER_ADMIN_KEY. */
-function isAdminRequest(req) {
-  const key = process.env.NEWSLETTER_ADMIN_KEY
-  const given = req && req.headers ? req.headers['x-admin-key'] : ''
-  if (!key || !given) return false
-  const a = Buffer.from(String(key))
-  const b = Buffer.from(String(given))
-  return a.length === b.length && crypto.timingSafeEqual(a, b)
-}
+// isAdminRequest lives in ./adminAuth so every admin endpoint shares one check.
+const { isAdminRequest } = require('./adminAuth')
 
 // ----------------------------------------------------------------- helpers
 

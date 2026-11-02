@@ -3,13 +3,13 @@
  * Requires header x-admin-key matching NEWSLETTER_ADMIN_KEY.
  * ?status=drafted,needs-attention,acked (comma list, default all active)
  */
+const { isAdminRequest } = require('../_shared/adminAuth')
 const { respond } = require('../_shared/mailer')
 const { listInquiries } = require('../_shared/inquiries')
 
 module.exports = async function (context, req) {
   if (req.method === 'OPTIONS') return respond(context, 200, {})
-  const key = process.env.NEWSLETTER_ADMIN_KEY
-  if (!key || req.headers['x-admin-key'] !== key)
+  if (!isAdminRequest(req))
     return respond(context, 401, { error: 'Unauthorized' })
 
   try {

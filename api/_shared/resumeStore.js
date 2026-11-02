@@ -31,7 +31,11 @@ function sniff(buf) {
   // A Word file is a ZIP that lists word/document.xml. Names in a ZIP are stored
   // uncompressed, so a renamed .zip, spreadsheet or jar does not pass.
   if (buf.length >= 4 && buf[0] === 0x50 && buf[1] === 0x4b && buf[2] === 0x03 && buf[3] === 0x04 && buf.includes('word/document.xml')) return 'docx'
-  if (buf.length >= 8 && buf.slice(0, 8).equals(Buffer.from([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]))) return 'doc'
+  // An old Word file is an OLE container that lists a "WordDocument" stream. The
+  // names in an OLE directory are stored as UTF-16, so an Excel, PowerPoint or
+  // Outlook file in the same container does not pass.
+  if (buf.length >= 8 && buf.slice(0, 8).equals(Buffer.from([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]))
+      && buf.includes(Buffer.from('WordDocument', 'utf16le'))) return 'doc'
   return ''
 }
 

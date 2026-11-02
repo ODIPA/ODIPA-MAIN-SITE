@@ -5,6 +5,7 @@
  * or click tracking, aggregate counts only, consistent with ODIPA's
  * no-tracking commitment.
  */
+const { isAdminRequest } = require('../_shared/adminAuth')
 const crypto = require('crypto')
 const { TableClient } = require('@azure/data-tables')
 const { listIssues } = require('../_shared/subscribers')
@@ -22,8 +23,7 @@ function monthOf(iso) {
 module.exports = async function handler(context, req) {
   const respond = (status, body) => { context.res = { status, headers: { 'Content-Type': 'application/json' }, body } }
   try {
-    const key = process.env.NEWSLETTER_ADMIN_KEY
-    if (!key || req.headers['x-admin-key'] !== key) {
+    if (!isAdminRequest(req)) {
       return respond(401, { error: 'Unauthorized' })
     }
 
