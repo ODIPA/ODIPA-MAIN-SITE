@@ -232,7 +232,7 @@ export default function ContactForm() {
               : <>Thank you for reaching out. We&apos;ve received your message and will respond within <strong className="text-navy">2 business days</strong>.</>}
           </p>
           {selectedTopic && (
-            <p className="font-mono text-[12px] text-slate-400 mb-8">
+            <p className="font-mono text-[12px] text-slate-500 mb-8">
               Routed to: {selectedTopic.email}
             </p>
           )}
@@ -351,7 +351,7 @@ export default function ContactForm() {
                 {errors.email && <p className="text-red-500 text-[12px] mt-1">{errors.email}</p>}
               </div>
               <div className="sm:col-span-2">
-                <FieldLabel>Organization <span className="font-normal text-slate-400">(optional)</span></FieldLabel>
+                <FieldLabel>Organization <span className="font-normal text-slate-500">(optional)</span></FieldLabel>
                 <input
                   type="text" placeholder="Company, school, or nonprofit" value={form.organization}
                   onChange={e => set('organization')(e.target.value)}
@@ -398,7 +398,7 @@ export default function ContactForm() {
                     </label>
                   ))}
                 </div>
-                <p className="text-[12px] text-slate-400 mt-2">
+                <p className="text-[12px] text-slate-500 mt-2">
                   See what each role involves on the <Link href="/get-involved/volunteer" className="text-blue-brand underline">volunteer page</Link>.
                 </p>
                 {volErrors.roles && <p className="text-red-500 text-[12px] mt-1">{volErrors.roles}</p>}
@@ -421,17 +421,17 @@ export default function ContactForm() {
                   onChange={e => setVolField('profileLink', e.target.value)}
                   placeholder="https://www.linkedin.com/in/your-name"
                   className={INPUT_CLASS} />
-                <p className="text-[12px] text-slate-400 mt-1">
+                <p className="text-[12px] text-slate-500 mt-1">
                   A shared resume link from Google Drive, Dropbox or OneDrive works too.
                 </p>
                 {volErrors.profileLink && <p className="text-red-500 text-[12px] mt-1">{volErrors.profileLink}</p>}
 
                 <div className="mt-4">
-                  <FieldLabel htmlFor="vol-resume">Attach your resume <span className="font-normal text-slate-400">(optional)</span></FieldLabel>
+                  <FieldLabel htmlFor="vol-resume">Attach your resume <span className="font-normal text-slate-500">(optional)</span></FieldLabel>
                   <input id="vol-resume" type="file" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                     onChange={pickResume} aria-describedby="vol-resume-either vol-resume-help"
                     className="block w-full text-[13px] text-navy file:mr-3 file:rounded-lg file:border file:border-slate-200 file:bg-white file:px-4 file:py-2 file:text-[13px] file:font-medium file:text-navy hover:file:border-blue-brand" />
-                  <p id="vol-resume-help" className="text-[12px] text-slate-400 mt-1">
+                  <p id="vol-resume-help" className="text-[12px] text-slate-500 mt-1">
                     PDF or Word, up to 2 MB. Your file is stored privately by ODIPA, used only to review your application, and deleted after 90 days.
                   </p>
                   {resumeFile && <p className="text-[12px] text-navy mt-1">Selected: {resumeFile.name}</p>}
@@ -449,21 +449,21 @@ export default function ContactForm() {
                   {volErrors.hours && <p className="text-red-500 text-[12px] mt-1">{volErrors.hours}</p>}
                 </div>
                 <div>
-                  <FieldLabel htmlFor="vol-credentials">Credentials <span className="font-normal text-slate-400">(optional)</span></FieldLabel>
+                  <FieldLabel htmlFor="vol-credentials">Credentials <span className="font-normal text-slate-500">(optional)</span></FieldLabel>
                   <input id="vol-credentials" type="text" value={vol.credentials} maxLength={300}
                     onChange={e => setVolField('credentials', e.target.value)}
                     placeholder="For example CIPP, CIPM, CISA, CISSP, bar admission"
                     className={INPUT_CLASS} />
                 </div>
                 <div>
-                  <FieldLabel htmlFor="vol-location">Where are you based? <span className="font-normal text-slate-400">(optional)</span></FieldLabel>
+                  <FieldLabel htmlFor="vol-location">Where are you based? <span className="font-normal text-slate-500">(optional)</span></FieldLabel>
                   <input id="vol-location" type="text" value={vol.location} maxLength={120}
                     onChange={e => setVolField('location', e.target.value)}
                     placeholder="City or country, so we can schedule your call"
                     className={INPUT_CLASS} />
                 </div>
                 <div>
-                  <FieldLabel htmlFor="vol-heardFrom">How did you hear about ODIPA? <span className="font-normal text-slate-400">(optional)</span></FieldLabel>
+                  <FieldLabel htmlFor="vol-heardFrom">How did you hear about ODIPA? <span className="font-normal text-slate-500">(optional)</span></FieldLabel>
                   <input id="vol-heardFrom" type="text" value={vol.heardFrom} maxLength={200}
                     onChange={e => setVolField('heardFrom', e.target.value)}
                     className={INPUT_CLASS} />
@@ -471,12 +471,12 @@ export default function ContactForm() {
               </div>
 
               <div>
-                <FieldLabel htmlFor="vol-extra">Anything else we should know? <span className="font-normal text-slate-400">(optional)</span></FieldLabel>
+                <FieldLabel htmlFor="vol-extra">Anything else we should know? <span className="font-normal text-slate-500">(optional)</span></FieldLabel>
                 <textarea id="vol-extra" rows={3} value={vol.extra} maxLength={800}
                   onChange={e => setVolField('extra', e.target.value)}
                   className={`${INPUT_CLASS} resize-none`} />
               </div>
-              <p className="text-[12px] text-slate-400">
+              <p className="text-[12px] text-slate-500">
                 Volunteer roles are unpaid and remote. We do not ask for your age, citizenship or immigration status here.
               </p>
             </div>
@@ -557,7 +557,7 @@ export default function ContactForm() {
                 </>
               )}
             </button>
-            <p className="text-center text-[12px] text-slate-400 mt-3 font-mono">
+            <p className="text-center text-[12px] text-slate-500 mt-3 font-mono">
               {isVolunteer ? 'We review volunteer applications within 5 business days' : 'We respond to all messages within 2 business days'}
             </p>
           </div>
