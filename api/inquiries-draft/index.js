@@ -36,6 +36,21 @@ You may name at most one or two roles, only when their message clearly points to
   board: 'ALWAYS flag board applications as needs-attention. Board recruitment is a governance matter for the current directors, not something to draft a reply to. The acknowledgment already told the applicant to expect confirmation within 2 business days and that decisions follow seat availability.',
 }
 
+/** The reminder email to the team. A send failure only logs and never fails the request. */
+async function sendNudge(context, drafted, flagged) {
+  const nudgeTo = process.env.INQUIRY_NUDGE_EMAIL
+  if (!nudgeTo || (drafted + flagged) <= 0) return false
+  try {
+    await sendHtmlEmail({
+      to: nudgeTo,
+      subject: `ODIPA inbox: ${drafted} draft${drafted === 1 ? '' : 's'} awaiting approval, ${flagged} flagged`,
+      html: `<p style="font-family:sans-serif;font-size:14px">The inquiry inbox has ${drafted} AI draft${drafted === 1 ? '' : 's'} awaiting your approval and ${flagged} inquiry${flagged === 1 ? '' : 'ies'} flagged for a personal reply.</p><p style="font-family:sans-serif;font-size:14px">Review at https://www.odipa.org/admin/inquiries</p>`,
+      plainText: `${drafted} drafts awaiting approval, ${flagged} flagged. Review at https://www.odipa.org/admin/inquiries`,
+    })
+    return true
+  } catch (e) { context.log.warn('Nudge failed:', e.message); return false }
+}
+
 const SYSTEM = `You draft replies for ODIPA, a small California 501(c)(3) digital privacy nonprofit. You write on behalf of a volunteer-run team.
 
 Hard rules:
@@ -54,21 +69,37 @@ module.exports = async function (context, req) {
   if (!isAdminRequest(req))
     return respond(context, 401, { error: 'Unauthorized' })
 
+  // Reminder only. The daily workflow drafts in small batches (each request has
+  // to finish inside Azure's 45 seconds), then asks once for one email that
+  // reports what is actually waiting. No drafting and no model call happen here.
+  if (req.body && req.body.nudge === true) {
+    try {
+      const awaiting = (await listInquiries(['drafted'])).length
+      const flaggedNow = (await listInquiries(['needs-attention'])).length
+      const sent = await sendNudge(context, awaiting, flaggedNow)
+      return respond(context, 200, { ok: true, awaiting, flagged: flaggedNow, sent })
+    } catch (err) {
+      context.log.error('Inquiry nudge error:', err.message)
+      return respond(context, 500, { error: 'Reminder failed', detail: String(err && err.message || err).slice(0, 200) })
+    }
+  }
+
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) return respond(context, 400, { error: 'ANTHROPIC_API_KEY is not configured.' })
 
   try {
     const graceDays = Number(process.env.INQUIRY_GRACE_DAYS || 2)
     const cutoff = Date.now() - graceDays * 24 * 60 * 60 * 1000
-    // The board passes back inquiries that already failed this session, so a
-    // card whose model call keeps failing does not block the batches behind it.
+    // The board and the scheduled workflow pass back inquiries that already
+    // failed this session or run, so an inquiry whose model call keeps failing
+    // does not block the batches behind it.
     const skip = new Set(Array.isArray(req.body && req.body.skip) ? req.body.skip.map(String) : [])
     const acked = (await listInquiries(['acked'])).filter(r => Number(r.receivedAt) < cutoff && !skip.has(r.rowKey))
 
     // Azure Static Web Apps cuts API requests off after 45 seconds, and each
-    // draft is a model call. The admin board asks for small batches with
-    // { limit } and repeats until nothing remains. No limit means the usual
-    // run of up to 20, as the scheduled workflow does.
+    // draft is a model call. The admin board and the scheduled workflow ask
+    // for small batches with { limit } and repeat until nothing remains. No
+    // limit means a single run of up to 20.
     const asked = Number(req.body && req.body.limit)
     const batched = Number.isInteger(asked) && asked >= 1
     const limit = batched ? Math.min(asked, 20) : 20
@@ -123,18 +154,9 @@ module.exports = async function (context, req) {
     }
 
     // Nudge email so the inbox never accumulates silently. Skipped for the
-    // board's small batches, which would send one email per batch.
-    const nudgeTo = process.env.INQUIRY_NUDGE_EMAIL
-    if (nudgeTo && !batched && (drafted + flagged) > 0) {
-      try {
-        await sendHtmlEmail({
-          to: nudgeTo,
-          subject: `ODIPA inbox: ${drafted} draft${drafted === 1 ? '' : 's'} awaiting approval, ${flagged} flagged`,
-          html: `<p style="font-family:sans-serif;font-size:14px">The inquiry inbox has ${drafted} AI draft${drafted === 1 ? '' : 's'} awaiting your approval and ${flagged} inquiry${flagged === 1 ? '' : 'ies'} flagged for a personal reply.</p><p style="font-family:sans-serif;font-size:14px">Review at https://www.odipa.org/admin/inquiries</p>`,
-          plainText: `${drafted} drafts awaiting approval, ${flagged} flagged. Review at https://www.odipa.org/admin/inquiries`,
-        })
-      } catch (e) { context.log.warn('Nudge failed:', e.message) }
-    }
+    // small batches from the board and the scheduled workflow, which would send
+    // one email per batch. The workflow asks for one reminder with { nudge: true }.
+    if (!batched) await sendNudge(context, drafted, flagged)
 
     respond(context, 200, { ok: true, examined: acked.length, drafted, flagged, failed, remaining: Math.max(acked.length - drafted - flagged - failed.length, 0) })
   } catch (err) {

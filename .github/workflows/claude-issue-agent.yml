@@ -98,13 +98,23 @@ jobs:
             gh api "repos/$REPO/issues/$NUM/comments" --paginate --jq '.[] | select(.author_association | IN("OWNER","MEMBER","COLLABORATOR")) | "## " + .user.login + "\n" + .body + "\n"'
           } > agent-out/issue.md
 
-      # The agent can write files anywhere, including inside .git. Remember what
-      # the git settings looked like so a change to them is caught afterwards.
+      # The agent can write files anywhere, including inside .git. Remember every
+      # git setting in the repo and global config except the user name and email
+      # entries (credential helpers, gpg programs, merge drivers, remote and url
+      # rewrites and so on are all covered), the hook and info files including
+      # symlinks, and the files that redirect where git reads its config from, so
+      # a change to any of them is caught afterwards.
       - name: Fingerprint the git settings
         id: fp
         if: steps.key.outputs.present == 'true'
         run: |
-          echo "value=$({ sha256sum .git/config ~/.gitconfig ~/.config/git/config 2>&1; ls -la .git/hooks .git/info; } | sha256sum | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+          echo "value=$({
+            git config --local --list 2>/dev/null | grep -viE '^user\.(name|email)=' | sort
+            git config --global --list 2>/dev/null | grep -viE '^user\.(name|email)=' | sort
+            git config --system --list 2>/dev/null | grep -viE '^user\.(name|email)=' | sort
+            for f in commondir config.worktree; do [ -e ".git/$f" ] && echo "present:$f"; done
+            { find .git/hooks .git/info ! -type d -printf '%p %l %m\n'; find .git/hooks .git/info -type f -exec sha256sum {} +; } 2>/dev/null | sort
+          } | sha256sum | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
 
       - name: Claude proposes a change
         if: steps.key.outputs.present == 'true'
@@ -143,7 +153,13 @@ jobs:
         env:
           BEFORE: ${{ steps.fp.outputs.value }}
         run: |
-          now=$({ sha256sum .git/config ~/.gitconfig ~/.config/git/config 2>&1; ls -la .git/hooks .git/info; } | sha256sum | cut -d' ' -f1)
+          now=$({
+            git config --local --list 2>/dev/null | grep -viE '^user\.(name|email)=' | sort
+            git config --global --list 2>/dev/null | grep -viE '^user\.(name|email)=' | sort
+            git config --system --list 2>/dev/null | grep -viE '^user\.(name|email)=' | sort
+            for f in commondir config.worktree; do [ -e ".git/$f" ] && echo "present:$f"; done
+            { find .git/hooks .git/info ! -type d -printf '%p %l %m\n'; find .git/hooks .git/info -type f -exec sha256sum {} +; } 2>/dev/null | sort
+          } | sha256sum | cut -d' ' -f1)
           if [ "$now" != "$BEFORE" ]; then
             echo "::error::The git settings changed while the agent ran, so the output was dropped."
             exit 1
@@ -178,7 +194,7 @@ jobs:
           LEAK=0
           for f in agent-out/change.patch agent-out/summary.md; do
             [ -f "$f" ] || continue
-            if grep -qE 'sk-ant-[A-Za-z0-9_-]{10,}|gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}' "$f"; then LEAK=1; fi
+            if grep -qE 'sk-ant-[A-Za-z0-9_-]{10,}|gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}' "$f"; then LEAK=1; fi
           done
           if grep -q '^GIT binary patch' agent-out/change.patch; then LEAK=1; fi
           # A symlink added by a patch could make a later write land somewhere else.
