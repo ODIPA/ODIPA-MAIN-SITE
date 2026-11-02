@@ -42,6 +42,8 @@ bad({ hours: 'whenever' }, 'an unknown hours choice')
 
 const dirty = parseVolunteerApplication({ ...good, why: good.why + ' <script>alert(1)</script>', roles: ['Privacy Researcher', 'Privacy Researcher', 'Hacker'] })
 assert(!dirty.message.includes('<script>'), 'html is stripped')
+const nested = parseVolunteerApplication({ ...good, why: good.why + ' <scr<script>ipt>alert(1)</scr</script>ipt>' })
+assert(!/[<>]/.test(nested.message), 'nested tags cannot rebuild a tag')
 assert.deepStrictEqual(dirty.fields.roles, ['Privacy Researcher'], 'duplicate and unknown roles dropped')
 assert(ROLE_CHOICES.includes('Not sure yet') && ROLE_CHOICES.includes('Certification Assessor'), 'role choices include the real roles')
 assert(parseVolunteerApplication(undefined).error, 'missing answers are rejected')
@@ -54,7 +56,7 @@ Module._load = function (req, parent, ...rest) {
     sendFormEmail: async m => { emails.push(m) },
     sendHtmlEmail: async m => { acks.push(m) },
     respond: (c, status, body) => { c.res = { status, body } },
-    clean: (v, max = 2000) => (v == null ? '' : String(v).replace(/<[^>]*>/g, '').trim().slice(0, max)),
+    clean: (v, max = 2000) => (v == null ? '' : String(v).replace(/[<>]/g, '').trim().slice(0, max)),
   }
   if (/_shared\/inquiries$/.test(req)) return { saveInquiry: async r => { saved.push(r); return 'id' } }
   return oL.call(this, req, parent, ...rest)
@@ -77,7 +79,7 @@ const post = async body => { const c = ctx(); await contact(c, { method: 'POST',
   r = await post({ ...base, volunteer: good })
   assert.strictEqual(r.status, 200, 'a complete application is accepted')
   assert.strictEqual(saved.length, 1)
-  assert(saved[0].message.includes('Why ODIPA:') && saved[0].message.includes('https://linkedin.com/in/example'), 'the stored message carries the answers')
+  assert(saved[0].message.includes('Why ODIPA:') && /https:\/\/linkedin\.com\/in\/example(\s|$)/.test(saved[0].message), 'the stored message carries the answers')
   assert.strictEqual(saved[0].topic, 'volunteer')
   assert(emails[0].fields['Why ODIPA'] && emails[0].fields['Resume or profile'], 'the team email lists each answer')
   assert.strictEqual(acks.length, 1, 'the applicant still gets the automatic acknowledgment')

@@ -18,12 +18,23 @@ const NOT_SURE = 'Not sure yet'
 const ROLE_CHOICES = [...ROLE_TITLES, NOT_SURE]
 const HOURS_CHOICES = ['2 to 4 hours a month', '4 to 6 hours a month', '6 to 10 hours a month', 'More than 10 hours a month', 'Not sure yet']
 
+/**
+ * Remove HTML tags. A single pass can be beaten by nesting (<scr<b>ipt>), so
+ * repeat until nothing changes, then drop any stray angle brackets.
+ */
+function stripTags(v) {
+  let s = String(v == null ? '' : v)
+  let prev
+  do { prev = s; s = s.replace(/<[^>]*>/g, '') } while (s !== prev)
+  return s.replace(/[<>]/g, '')
+}
+
 function strip(v, max) {
-  return String(v == null ? '' : v).replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().slice(0, max)
+  return stripTags(v).replace(/\s+/g, ' ').trim().slice(0, max)
 }
 
 function stripKeepBreaks(v, max) {
-  return String(v == null ? '' : v).replace(/<[^>]*>/g, '').replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim().slice(0, max)
+  return stripTags(v).replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim().slice(0, max)
 }
 
 /** Accept only http or https links. Returns the cleaned link or ''. */
