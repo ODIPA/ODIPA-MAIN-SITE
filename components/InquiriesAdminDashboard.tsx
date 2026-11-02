@@ -81,13 +81,46 @@ export default function InquiriesAdminDashboard() {
     finally { setLoading(false) }
   }
 
+  // Drafts waiting inquiries in small batches. Azure cuts API requests off
+  // after 45 seconds, and a full run of 20 model calls can take longer, so ask
+  // for a few at a time and repeat. A failed request stops the loop but keeps
+  // everything drafted so far.
+  const draftInBatches = async (queued: number) => {
+    let drafted = 0, flagged = 0, remaining = 0, stopped = ''
+    const failed: string[] = []
+    for (let i = 0; i < 40; i++) {
+      setNotice(`Drafting. ${drafted + flagged} done${queued ? `, ${queued} were queued` : ''}.`)
+      let data: { drafted: number; flagged: number; failed: string[]; remaining: number; error?: string } | null = null
+      let ok = false
+      try {
+        const res = await fetch('/api/inquiries-draft', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...hdrs() },
+          body: JSON.stringify({ limit: 3, skip: failed }),
+        })
+        ok = res.ok
+        data = await res.json()
+      } catch { /* a timeout returns an error page, not JSON */ }
+      if (!ok || !data) {
+        stopped = (data && data.error) || 'A drafting request failed or timed out.'
+        break
+      }
+      drafted += data.drafted; flagged += data.flagged; remaining = data.remaining
+      failed.push(...(data.failed || []))
+      // Stop when nothing is left or a whole batch made no progress.
+      if (!remaining || data.drafted + data.flagged + (data.failed || []).length === 0) break
+    }
+    return { drafted, flagged, remaining, stopped, failed: failed.length }
+  }
+
+  const draftSummary = (r: { drafted: number; flagged: number; remaining: number; stopped: string; failed: number }) =>
+    `${r.stopped ? `${r.stopped} Drafts finished so far are kept. ` : ''}${r.drafted} drafted, ${r.flagged} flagged for a personal reply.${r.failed ? ` ${r.failed} could not be drafted and stay in Received.` : ''}${r.remaining ? ` ${r.remaining} still waiting, run drafting again.` : r.stopped ? ' Some may still be waiting, run drafting again.' : ''}`
+
   const runDrafting = async () => {
     setBusy('draft-run'); setNotice('')
     try {
-      const res = await fetch('/api/inquiries-draft', { method: 'POST', headers: hdrs() })
-      const data = await res.json()
-      if (res.ok) setNotice(`Drafting run complete. ${data.drafted} drafted, ${data.flagged} flagged, ${data.examined} examined.`)
-      else setNotice(data.error || 'Drafting run failed')
+      const r = await draftInBatches(0)
+      setNotice(`Drafting ${r.stopped ? 'stopped' : 'finished'}. ${draftSummary(r)}`)
       await load()
     } catch { setNotice('Drafting run failed') }
     finally { setBusy(null) }
@@ -114,18 +147,8 @@ export default function InquiriesAdminDashboard() {
       // progress against what was actually queued.
       const total = Number((await queued.json()).count) || 0
 
-      let drafted = 0, flagged = 0, more = false
-      // Each drafting run handles up to 20 inquiries, so repeat a few times.
-      for (let run = 0; run < 6; run++) {
-        setNotice(`Redrafting. ${drafted + flagged} of ${total} done.`)
-        const res = await fetch('/api/inquiries-draft', { method: 'POST', headers: hdrs() })
-        const data = await res.json()
-        if (!res.ok) { setNotice(data.error || 'Drafting run failed'); more = true; break }
-        drafted += data.drafted; flagged += data.flagged
-        more = data.examined > 20
-        if (!more || data.drafted + data.flagged === 0) break
-      }
-      setNotice(`Redraft finished. ${drafted} new drafts, ${flagged} flagged for a personal reply.${more ? ' Some are still waiting. Run drafting again.' : ''}`)
+      const r = await draftInBatches(total)
+      setNotice(`Redraft ${r.stopped ? 'stopped' : 'finished'}. ${draftSummary(r)}`)
       await load()
     } catch { setNotice('Redraft failed') }
     finally { setBusy(null) }
