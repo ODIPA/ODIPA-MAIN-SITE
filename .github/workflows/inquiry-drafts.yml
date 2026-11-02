@@ -2,6 +2,12 @@
 # SWA managed functions cannot host timer triggers, so this scheduled
 # workflow calls the admin drafting endpoint instead. Requires the repo
 # secret ODIPA_ADMIN_KEY set to the same value as NEWSLETTER_ADMIN_KEY.
+#
+# Azure Static Web Apps cuts an API request off after 45 seconds, and each
+# draft is a model call, so this drafts a few inquiries per request and repeats
+# until none are waiting. Inquiries whose draft fails are skipped for the rest
+# of the run. At the end it asks for one reminder email that reports what is
+# actually waiting.
 name: Daily inquiry drafting
 
 on:
@@ -9,13 +15,35 @@ on:
     - cron: '0 16 * * *'   # 16:00 UTC, morning Pacific
   workflow_dispatch: {}
 
+permissions: {}
+
 jobs:
   draft:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Run drafting pass
+        env:
+          ODIPA_ADMIN_KEY: ${{ secrets.ODIPA_ADMIN_KEY }}
         run: |
-          curl -sS -X POST "https://www.odipa.org/api/inquiries-draft" \
-            -H "x-admin-key: ${{ secrets.ODIPA_ADMIN_KEY }}" \
-            -w "\nHTTP %{http_code}\n" \
-            --fail-with-body
+          set -euo pipefail
+          URL="${DRAFT_URL:-https://www.odipa.org/api/inquiries-draft}"
+          post() {
+            curl -sS --fail-with-body --max-time 60 -X POST "$URL" \
+              -H "x-admin-key: $ODIPA_ADMIN_KEY" -H "Content-Type: application/json" -d "$1"
+          }
+          skip='[]'; drafted=0; flagged=0
+          for run in $(seq 1 40); do
+            resp=$(post "$(jq -nc --argjson skip "$skip" '{limit: 3, skip: $skip}')")
+            d=$(jq '.drafted' <<<"$resp"); f=$(jq '.flagged' <<<"$resp")
+            bad=$(jq '.failed | length' <<<"$resp"); rem=$(jq '.remaining' <<<"$resp")
+            echo "batch $run: $d drafted, $f flagged, $bad failed, $rem remaining"
+            drafted=$((drafted + d)); flagged=$((flagged + f))
+            skip=$(jq -nc --argjson a "$skip" --argjson b "$(jq '.failed' <<<"$resp")" '$a + $b')
+            # Stop when nothing is left, or a whole batch made no progress.
+            if [ "$rem" -le 0 ] || [ $((d + f + bad)) -eq 0 ]; then break; fi
+          done
+          echo "Drafting pass finished: $drafted drafted, $flagged flagged."
+          if [ $((drafted + flagged)) -gt 0 ]; then
+            echo "Reminder: $(post '{"nudge": true}')"
+          fi

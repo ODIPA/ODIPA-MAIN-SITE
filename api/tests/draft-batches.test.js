@@ -20,7 +20,7 @@ const oL = Module._load
 Module._load = function (req, parent, ...rest) {
   if (/_shared\/mailer$/.test(req)) return { respond: (c, status, body) => { c.res = { status, body } }, sendHtmlEmail: async m => { nudges.push(m) } }
   if (/_shared\/inquiries$/.test(req)) return {
-    listInquiries: async () => { if (listError) throw listError; return rows.filter(r => r.status === 'acked') },
+    listInquiries: async statuses => { if (listError) throw listError; return rows.filter(r => !statuses || statuses.includes(r.status)) },
     updateInquiry: async (id, patch) => { updates.push([id, patch]); Object.assign(rows.find(r => r.rowKey === id), patch) },
   }
   return oL.call(this, req, parent, ...rest)
@@ -81,6 +81,33 @@ const run = async body => {
   reset(25)
   r = await run({ limit: 100 })
   assert.strictEqual(r.body.drafted, 20, 'a large limit is capped at 20')
+
+  // The reminder only request: one email that reports what is actually waiting.
+  reset(3)
+  rows.push({ rowKey: 'd1', status: 'drafted', topic: 'volunteer' }, { rowKey: 'd2', status: 'drafted', topic: 'volunteer' }, { rowKey: 'n1', status: 'needs-attention', topic: 'press' })
+  r = await run({ nudge: true })
+  assert.strictEqual(r.status, 200)
+  assert.deepStrictEqual([r.body.awaiting, r.body.flagged, r.body.sent], [2, 1, true], 'it counts what is waiting, not what one run drafted')
+  assert.strictEqual(nudges.length, 1, 'exactly one reminder email')
+  assert(/2 drafts awaiting approval, 1 flagged/.test(nudges[0].plainText), 'the email carries those counts')
+  assert.strictEqual(modelCalls, 0, 'no drafting and no model call')
+  assert(!updates.length, 'nothing is changed')
+
+  reset(0)
+  r = await run({ nudge: true })
+  assert.deepStrictEqual([r.body.awaiting, r.body.flagged, r.body.sent], [0, 0, false], 'nothing waiting means no email')
+  assert.strictEqual(nudges.length, 0)
+
+  reset(1); rows.push({ rowKey: 'd1', status: 'drafted', topic: 'volunteer' })
+  const savedNudgeTo = process.env.INQUIRY_NUDGE_EMAIL; delete process.env.INQUIRY_NUDGE_EMAIL
+  r = await run({ nudge: true })
+  process.env.INQUIRY_NUDGE_EMAIL = savedNudgeTo
+  assert.strictEqual(r.body.sent, false, 'no address configured means no email, and no error')
+  assert.strictEqual(r.status, 200)
+
+  const c401 = { log: { warn() {}, error() {} } }
+  await draft(c401, { method: 'POST', headers: { 'x-admin-key': 'nope' }, body: { nudge: true } })
+  assert.strictEqual(c401.res.status, 401, 'the reminder needs the admin key too')
 
   // A storage failure is reported with its reason, not hidden.
   reset(1); listError = new Error('connection refused')

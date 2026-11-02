@@ -19,6 +19,15 @@ const REASONS = ['person-request', 'duplicate-or-test', 'other']
 const LOOKUP_LIMIT = 25
 const SCAN_CAP = 20000
 
+// A time that never repeats within this process, so two deletions in the same
+// millisecond still list newest first. The deletion log sorts by a key built from it.
+let lastStamp = 0
+function nextStamp() {
+  const now = Date.now()
+  lastStamp = now > lastStamp ? now : lastStamp + 1
+  return lastStamp
+}
+
 // ----------------------------------------------------------------- storage
 
 function conn() {
@@ -139,10 +148,11 @@ async function deletePerson({ email, reason }) {
   try {
     const log = table(DELETIONS)
     await ensure(log)
+    const at = nextStamp()
     await log.createEntity({
       partitionKey: 'del',
-      rowKey: `${String(9999999999999 - Date.now()).padStart(13, '0')}-${crypto.randomBytes(2).toString('hex')}`,
-      deletedAt: new Date().toISOString(),
+      rowKey: `${String(9999999999999 - at).padStart(13, '0')}-${crypto.randomBytes(2).toString('hex')}`,
+      deletedAt: new Date(at).toISOString(),
       reason,
       wasMember: info.wasMember,
       statusAtDeletion: info.status,
