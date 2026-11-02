@@ -4,15 +4,15 @@ import { useEffect, useRef, useState } from 'react'
 import SectionHeader from './SectionHeader'
 
 const stats = [
-  { target: 16, suffix: 'B+', label: 'Credentials exposed in a single 2025 data compilation — one of the largest ever documented' },
-  { target: 99, suffix: '%', label: 'Of organizations have sensitive data dangerously exposed to AI tools and unsanctioned apps' },
-  { target: 10.22, suffix: 'M', prefix: '$', label: 'Average cost of a U.S. data breach in 2025 — an all-time high for any region (IBM)' },
-  { target: 13, suffix: 'yr', label: 'Consecutive years financial services has led all industries in breach costs' },
-  { target: 50, suffix: '+', label: 'Different US state privacy laws now in effect or pending' },
+  { target: 16, suffix: 'B+', label: 'Login credentials found in one exposed 2025 data compilation, including duplicates (Cybernews)' },
+  { target: 99, suffix: '%', label: 'Of organizations had sensitive data exposed to AI tools, in an analysis of 1,000 environments (Varonis, 2025)' },
+  { target: 11.5, suffix: 'M', prefix: '$', label: 'Average cost of a U.S. data breach in 2026, more than double the global average of $4.99M (IBM)' },
+  { target: 3322, suffix: '', label: 'Data compromises reported in the U.S. in 2025, a record high (ITRC)' },
+  { target: 20, suffix: '+', label: 'U.S. states have comprehensive consumer privacy laws in effect (MultiState, 2026)' },
   { target: 77, suffix: '%', label: 'Of ODIPA\'s services delivered completely free to the public we serve' },
 ]
 
-function useCounter(target: number, triggered: boolean, isDecimal: boolean) {
+function useCounter(target: number, triggered: boolean, decimals: number) {
   const [value, setValue] = useState(0)
 
   useEffect(() => {
@@ -30,12 +30,12 @@ function useCounter(target: number, triggered: boolean, isDecimal: boolean) {
     requestAnimationFrame(update)
   }, [triggered, target])
 
-  return isDecimal ? value.toFixed(2) : Math.floor(value).toString()
+  return decimals > 0 ? value.toFixed(decimals) : Math.floor(value).toLocaleString('en-US')
 }
 
 function StatCard({ stat, triggered }: { stat: typeof stats[0]; triggered: boolean }) {
-  const isDecimal = stat.target % 1 !== 0
-  const value = useCounter(stat.target, triggered, isDecimal)
+  const decimals = (String(stat.target).split('.')[1] || '').length
+  const value = useCounter(stat.target, triggered, decimals)
 
   return (
     <div className="bg-navy-mid py-12 px-9 text-center hover:bg-white/5 transition-colors">
@@ -97,6 +97,16 @@ export default function Impact() {
             <StatCard key={s.label} stat={s} triggered={triggered} />
           ))}
         </div>
+
+        <p className="mt-6 text-center text-[12px] leading-relaxed text-white/60 max-w-[760px] mx-auto">
+          Sources:{' '}
+          <a className="underline hover:text-white" href="https://www.ibm.com/reports/data-breach" target="_blank" rel="noopener noreferrer">IBM Cost of a Data Breach Report 2026<span className="sr-only"> (opens in a new tab)</span></a>,{' '}
+          <a className="underline hover:text-white" href="https://www.idtheftcenter.org/post/2025-annual-data-breach-report/" target="_blank" rel="noopener noreferrer">ITRC 2025 Annual Data Breach Report<span className="sr-only"> (opens in a new tab)</span></a>,{' '}
+          <a className="underline hover:text-white" href="https://www.multistate.us/insider/2026/2/4/all-of-the-comprehensive-privacy-laws-that-take-effect-in-2026" target="_blank" rel="noopener noreferrer">MultiState, comprehensive state privacy laws in 2026<span className="sr-only"> (opens in a new tab)</span></a>,{' '}
+          <a className="underline hover:text-white" href="https://www.scrippsnews.com/us-news/billions-of-login-credentials-have-been-leaked-online-cybernews-researchers-say" target="_blank" rel="noopener noreferrer">Cybernews, June 2025 (via Scripps News)<span className="sr-only"> (opens in a new tab)</span></a> and{' '}
+          <a className="underline hover:text-white" href="https://www.varonis.com/blog/state-of-data-security-report" target="_blank" rel="noopener noreferrer">Varonis 2025 State of Data Security Report<span className="sr-only"> (opens in a new tab)</span></a>.
+          ODIPA's own figure is explained on our <a className="underline hover:text-white" href="/transparency/">Transparency page</a>. Third-party figures are as reported by each source.
+        </p>
       </div>
     </section>
   )
