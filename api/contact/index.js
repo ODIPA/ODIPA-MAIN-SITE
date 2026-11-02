@@ -8,6 +8,7 @@
 const { sendFormEmail, sendHtmlEmail, respond, clean } = require('../_shared/mailer')
 const { saveInquiry } = require('../_shared/inquiries')
 const { checkRateLimit, getClientIp } = require('../_shared/rateLimiter')
+const { parseVolunteerApplication } = require('../_shared/volunteerApplication')
 
 // ── Auto-acknowledgment templates per topic ──────────────────────────────────
 // Instant canned response to the submitter. Templates only, no AI, every word
@@ -109,13 +110,23 @@ module.exports = async function handler(context, req) {
     const name    = clean(body['Name'] || body.name, 100)
     const email   = clean(body['Email'] || body.email, 200)
     const organization = clean(body['Organization'] || body.organization, 200) || '—'
-    const message = clean(body['Message'] || body.message, 2000) || '—'
+    let message = clean(body['Message'] || body.message, 2000) || '—'
 
     if (!name)    return respond(context, 400, { error: 'Name is required' })
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
       return respond(context, 400, { error: 'Valid email is required' })
-    if (!message || message.length < 10)
+
+    // Volunteer applications carry their own questions. They are checked here
+    // and written into the message, so everything downstream reads them.
+    let volunteerFields = null
+    if (topic === 'volunteer') {
+      const parsed = parseVolunteerApplication(body.volunteer)
+      if (parsed.error) return respond(context, 400, { error: parsed.error })
+      volunteerFields = parsed.fields
+      message = parsed.message
+    } else if (!message || message.length < 10) {
       return respond(context, 400, { error: 'Message is required' })
+    }
 
     const toAddress = TOPIC_ROUTING[topic] || TOPIC_ROUTING.general
     const topicLabel = clean(body['Topic'] || topic || 'General Inquiry', 100)
@@ -125,7 +136,23 @@ module.exports = async function handler(context, req) {
       to:      toAddress,
       subject: `Contact Form: ${topicLabel} — from ${name}`,
       replyTo: email,
-      fields: {
+      fields: volunteerFields ? {
+        'Topic':              topicLabel,
+        'Name':               name,
+        'Email':              email,
+        'Organization':       organization,
+        'Why ODIPA':          volunteerFields.why,
+        'Roles of interest':  volunteerFields.roles.join(', '),
+        'Experience':         volunteerFields.experience,
+        'Resume or profile':  volunteerFields.link,
+        'Credentials':        volunteerFields.credentials || '—',
+        'Time available':     volunteerFields.hours,
+        'Based in':           volunteerFields.location || '—',
+        'Heard from':         volunteerFields.heardFrom || '—',
+        'Anything else':      volunteerFields.extra || '—',
+        'Routed to':          toAddress,
+        'Consented':          consent,
+      } : {
         'Topic':        topicLabel,
         'Name':         name,
         'Email':        email,
