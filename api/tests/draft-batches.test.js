@@ -11,6 +11,7 @@ process.env.INQUIRY_NUDGE_EMAIL = 'team@example.com'
 const DAY = 24 * 60 * 60 * 1000
 let rows, updates, nudges, modelCalls
 let failFor = []
+let listError = null
 const reset = n => {
   rows = Array.from({ length: n }, (_, i) => ({ rowKey: `r${i}`, status: 'acked', topic: 'volunteer', name: `P${i}`, email: `p${i}@example.com`, message: 'I want to volunteer', receivedAt: Date.now() - 10 * DAY }))
   updates = []; nudges = []; modelCalls = 0
@@ -19,7 +20,7 @@ const oL = Module._load
 Module._load = function (req, parent, ...rest) {
   if (/_shared\/mailer$/.test(req)) return { respond: (c, status, body) => { c.res = { status, body } }, sendHtmlEmail: async m => { nudges.push(m) } }
   if (/_shared\/inquiries$/.test(req)) return {
-    listInquiries: async () => rows.filter(r => r.status === 'acked'),
+    listInquiries: async () => { if (listError) throw listError; return rows.filter(r => r.status === 'acked') },
     updateInquiry: async (id, patch) => { updates.push([id, patch]); Object.assign(rows.find(r => r.rowKey === id), patch) },
   }
   return oL.call(this, req, parent, ...rest)
@@ -80,6 +81,14 @@ const run = async body => {
   reset(25)
   r = await run({ limit: 100 })
   assert.strictEqual(r.body.drafted, 20, 'a large limit is capped at 20')
+
+  // A storage failure is reported with its reason, not hidden.
+  reset(1); listError = new Error('connection refused')
+  r = await run({ limit: 3 })
+  assert.strictEqual(r.status, 500, 'a storage failure is a 500')
+  assert.strictEqual(r.body.error, 'Drafting run failed')
+  assert.strictEqual(r.body.detail, 'connection refused', 'the response says why')
+  listError = null
 
   const fs = require('fs')
   assert(!/[—–]/.test(fs.readFileSync(path.join(api, 'inquiries-draft/index.js'), 'utf8')), 'no em or en dashes in the drafter')

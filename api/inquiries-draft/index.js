@@ -139,7 +139,8 @@ module.exports = async function (context, req) {
     respond(context, 200, { ok: true, examined: acked.length, drafted, flagged, failed, remaining: Math.max(acked.length - drafted - flagged - failed.length, 0) })
   } catch (err) {
     context.log.error('Inquiry drafting error:', err.message)
-    respond(context, 500, { error: 'Drafting run failed' })
+    // The admin key is required to reach this endpoint, so the reason is safe to show.
+    respond(context, 500, { error: 'Drafting run failed', detail: String(err && err.message || err).slice(0, 200) })
   }
 }
 
