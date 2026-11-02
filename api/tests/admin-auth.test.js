@@ -28,13 +28,14 @@ assert.strictEqual(isAdminRequest(req('')), false, 'and an empty header does not
 process.env.NEWSLETTER_ADMIN_KEY = ''
 assert.strictEqual(isAdminRequest(req('')), false, 'an empty configured key is not a key')
 
-// Every endpoint that reads the header must go through the helper.
+// Every endpoint must go through the helper. Any direct read of the header
+// counts, whatever the comparison (== , !=, reversed order, or a variable).
 const offenders = []
 for (const dir of fs.readdirSync(api)) {
   const f = path.join(api, dir, 'index.js')
   if (!fs.existsSync(f)) continue
   const src = fs.readFileSync(f, 'utf8')
-  if (/headers\[['"]x-admin-key['"]\]\s*[!=]==/.test(src)) offenders.push(dir)
+  if (/headers\s*\[\s*['"`]x-admin-key['"`]\s*\]/i.test(src)) offenders.push(dir)
 }
 assert.deepStrictEqual(offenders, [], `these endpoints compare the admin key directly: ${offenders.join(', ')}`)
 
