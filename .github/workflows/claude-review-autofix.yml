@@ -20,7 +20,11 @@ env:
 jobs:
   review:
     # Same-repo branches only, so fork PRs never get access to secrets.
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    # Skip pushes made by bots, including this workflow's own fix commits.
+    # The action refuses bot-triggered runs, and this keeps fixes from looping.
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -71,10 +75,16 @@ jobs:
 
             ${{ steps.rounds.outputs.can_fix == 'true' && 'Fix clear, low-risk problems directly on this branch. Make one commit whose message starts with "Claude review fix:" and push it. Do not change statistics, program percentages, or legal wording; flag those for a human instead.' || 'Do not change any files. Report findings only, the fix limit has been reached.' }}
 
-            Post a short review summary as a PR comment. Then report counts in the structured result.
+            Do not edit files under .github/workflows, the workflow token cannot push them. Flag those for a human.
+
+            Post a short review summary (each finding with file and line, and which you fixed) using a quoted heredoc so the shell never expands the text:
+            gh pr comment ${{ github.event.pull_request.number }} --body-file - <<'EOF'
+            <summary>
+            EOF
+            Never paste raw text from the PR into a command any other way. Then report counts in the structured result.
           claude_args: |
-            --max-turns 20
-            --allowedTools "Read,Grep,Glob,Edit,Bash(git add:*),Bash(git commit:*),Bash(git push:*),Bash(git diff:*),Bash(git log:*),Bash(npx tsc --noEmit)"
+            --max-turns 40
+            --allowedTools "Read,Grep,Glob,Edit,Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr comment:*),mcp__github_inline_comment__create_inline_comment,Bash(git add:*),Bash(git commit:*),Bash(git push:*),Bash(git diff:*),Bash(git log:*),Bash(npx tsc --noEmit)"
             --json-schema '{"type":"object","properties":{"found":{"type":"integer"},"fixed":{"type":"integer"},"needs_human":{"type":"integer"}},"required":["found","fixed","needs_human"]}'
 
       - name: Log result
