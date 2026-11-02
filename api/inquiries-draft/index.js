@@ -36,7 +36,7 @@ You may name at most one or two roles, only when their message clearly points to
   board: 'ALWAYS flag board applications as needs-attention. Board recruitment is a governance matter for the current directors, not something to draft a reply to. The acknowledgment already told the applicant to expect confirmation within 2 business days and that decisions follow seat availability.',
 }
 
-/** The reminder email to the team. Failure only logs, drafting itself already succeeded. */
+/** The reminder email to the team. A send failure only logs and never fails the request. */
 async function sendNudge(context, drafted, flagged) {
   const nudgeTo = process.env.INQUIRY_NUDGE_EMAIL
   if (!nudgeTo || (drafted + flagged) <= 0) return false
@@ -90,8 +90,9 @@ module.exports = async function (context, req) {
   try {
     const graceDays = Number(process.env.INQUIRY_GRACE_DAYS || 2)
     const cutoff = Date.now() - graceDays * 24 * 60 * 60 * 1000
-    // The board passes back inquiries that already failed this session, so a
-    // card whose model call keeps failing does not block the batches behind it.
+    // The board and the scheduled workflow pass back inquiries that already
+    // failed this session or run, so an inquiry whose model call keeps failing
+    // does not block the batches behind it.
     const skip = new Set(Array.isArray(req.body && req.body.skip) ? req.body.skip.map(String) : [])
     const acked = (await listInquiries(['acked'])).filter(r => Number(r.receivedAt) < cutoff && !skip.has(r.rowKey))
 
