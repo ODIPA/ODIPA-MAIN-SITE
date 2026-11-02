@@ -96,9 +96,9 @@ module.exports = async function (context, req) {
     const acked = (await listInquiries(['acked'])).filter(r => Number(r.receivedAt) < cutoff && !skip.has(r.rowKey))
 
     // Azure Static Web Apps cuts API requests off after 45 seconds, and each
-    // draft is a model call. The admin board asks for small batches with
-    // { limit } and repeats until nothing remains. No limit means the usual
-    // run of up to 20, as the scheduled workflow does.
+    // draft is a model call. The admin board and the scheduled workflow ask
+    // for small batches with { limit } and repeat until nothing remains. No
+    // limit means a single run of up to 20.
     const asked = Number(req.body && req.body.limit)
     const batched = Number.isInteger(asked) && asked >= 1
     const limit = batched ? Math.min(asked, 20) : 20
@@ -153,7 +153,8 @@ module.exports = async function (context, req) {
     }
 
     // Nudge email so the inbox never accumulates silently. Skipped for the
-    // board's small batches, which would send one email per batch.
+    // small batches from the board and the scheduled workflow, which would send
+    // one email per batch. The workflow asks for one reminder with { nudge: true }.
     if (!batched) await sendNudge(context, drafted, flagged)
 
     respond(context, 200, { ok: true, examined: acked.length, drafted, flagged, failed, remaining: Math.max(acked.length - drafted - flagged - failed.length, 0) })
