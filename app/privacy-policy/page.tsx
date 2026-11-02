@@ -272,7 +272,7 @@ export default function PrivacyPolicy() {
                   {[
                     ['Plausible Analytics', 'Website analytics', 'Aggregate only — no personal data', '✓ Excellent'],
                     ['Azure Static Web Apps', 'Website hosting', 'Standard HTTP request logs (IP, timestamp) — retained briefly per Microsoft policy', '~ Standard'],
-                    ['Microsoft Azure (Table Storage and Communication Services)', 'Storing newsletter and community sign ups and volunteer resume files, and sending our email', 'Email address, and for community members their name. Resume files only when a volunteer chooses to attach one. Handled on ODIPA\'s behalf only', '✓ Service provider'],
+                    ['Microsoft Azure (Table Storage, Blob Storage and Communication Services)', 'Storing newsletter and community sign ups and volunteer resume files, and sending our email', 'Email address, and for community members their name. Resume files only when a volunteer chooses to attach one. Handled on ODIPA\'s behalf only', '✓ Service provider'],
                     ['Google Fonts', 'Typography', 'Font file requests only', '~ Standard'],
                     ['Unsplash', 'Stock photography', 'Image requests only', '~ Standard'],
                   ].map(([service, purpose, data, privacy], i) => (

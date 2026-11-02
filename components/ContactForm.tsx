@@ -414,7 +414,7 @@ export default function ContactForm() {
               </div>
 
               <div>
-                <FieldLabel required htmlFor="vol-profileLink">Link to your resume, LinkedIn or personal site</FieldLabel>
+                <FieldLabel htmlFor="vol-profileLink">Link to your resume, LinkedIn or personal site</FieldLabel>
                 <p id="vol-resume-either" className="text-[12px] text-slate-500 mb-1.5">Add a link, attach your resume below, or both. One of the two is needed.</p>
                 <input id="vol-profileLink" type="text" inputMode="url" value={vol.profileLink} maxLength={300}
                   aria-describedby="vol-resume-either"
