@@ -2,6 +2,8 @@
  * POST /api/inquiries-act, approve-and-send or dismiss an inquiry draft.
  * Admin-only (x-admin-key).
  * Body: { id, action: 'send' | 'dismiss' | 'move', subject?, body?, status? }
+ * or { action: 'redraft-thin', dryRun? } to queue old thin volunteer drafts for
+ * a fresh drafting run.
  * 'move' sets a whitelisted pipeline status (kanban drag or button). Moving
  * to 'sent' marks an inquiry handled personally and emails nothing.
  * 'send' uses the provided subject/body (the admin may have edited the
@@ -10,7 +12,8 @@
  * Each reply is also copied to the team address (see EMAIL_COPY_TO below).
  */
 const { respond, sendHtmlEmail } = require('../_shared/mailer')
-const { getInquiry, updateInquiry } = require('../_shared/inquiries')
+const { getInquiry, listInquiries, updateInquiry } = require('../_shared/inquiries')
+const { volunteerCompleteness, DRAFT_RULES } = require('../_shared/volunteerCompleteness')
 
 function replyHtml(name, bodyText, teamAddress) {
   const paragraphs = bodyText.split('\n').filter(p => p.trim()).map(p =>
@@ -33,6 +36,20 @@ module.exports = async function (context, req) {
 
   try {
     const { id, action, subject, body } = req.body || {}
+
+    // Bulk: send thin volunteer drafts that predate the current drafting rules
+    // back to 'acked' so the next drafting run writes them again. Sends nothing
+    // and does not touch anything else. dryRun only counts.
+    if (action === 'redraft-thin') {
+      const stale = (await listInquiries(['drafted'])).filter(r =>
+        r.topic === 'volunteer' &&
+        volunteerCompleteness(r.message) === 'THIN' &&
+        r.draftRules !== DRAFT_RULES)
+      const dryRun = !!(req.body && req.body.dryRun)
+      if (!dryRun) for (const r of stale) await updateInquiry(r.rowKey, { status: 'acked', handledAt: 0 })
+      return respond(context, 200, { ok: true, count: stale.length, dryRun })
+    }
+
     if (!id || !action) return respond(context, 400, { error: 'id and action are required' })
 
     const inq = await getInquiry(id).catch(() => null)

@@ -93,6 +93,44 @@ export default function InquiriesAdminDashboard() {
     finally { setBusy(null) }
   }
 
+  // Regenerate thin volunteer drafts written under the old rules. Nothing is
+  // sent. Each new draft still waits for approval, like any other.
+  const redraftThin = async () => {
+    setBusy('redraft'); setNotice('')
+    const call = (payload: object) => fetch('/api/inquiries-act', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...hdrs() },
+      body: JSON.stringify(payload),
+    })
+    try {
+      const probe = await call({ action: 'redraft-thin', dryRun: true })
+      const found = await probe.json()
+      if (!probe.ok) { setNotice(found.error || 'Redraft failed'); return }
+      if (!found.count) { setNotice('No thin volunteer drafts need redoing.'); return }
+      if (!window.confirm(`Regenerate ${found.count} volunteer drafts written before the current reply rules? Nothing is sent, and you still approve every draft.`)) return
+      const queued = await call({ action: 'redraft-thin' })
+      if (!queued.ok) { setNotice('Could not queue the drafts'); return }
+      // The set can change between the dry run and the real call, so report
+      // progress against what was actually queued.
+      const total = Number((await queued.json()).count) || 0
+
+      let drafted = 0, flagged = 0, more = false
+      // Each drafting run handles up to 20 inquiries, so repeat a few times.
+      for (let run = 0; run < 6; run++) {
+        setNotice(`Redrafting. ${drafted + flagged} of ${total} done.`)
+        const res = await fetch('/api/inquiries-draft', { method: 'POST', headers: hdrs() })
+        const data = await res.json()
+        if (!res.ok) { setNotice(data.error || 'Drafting run failed'); more = true; break }
+        drafted += data.drafted; flagged += data.flagged
+        more = data.examined > 20
+        if (!more || data.drafted + data.flagged === 0) break
+      }
+      setNotice(`Redraft finished. ${drafted} new drafts, ${flagged} flagged for a personal reply.${more ? ' Some are still waiting. Run drafting again.' : ''}`)
+      await load()
+    } catch { setNotice('Redraft failed') }
+    finally { setBusy(null) }
+  }
+
   const act = async (id: string, action: 'send' | 'dismiss') => {
     setBusy(id); setNotice('')
     try {
@@ -203,9 +241,13 @@ export default function InquiriesAdminDashboard() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={runDrafting} disabled={busy === 'draft-run'}
+            <button onClick={runDrafting} disabled={busy === 'draft-run' || busy === 'redraft'}
               className="bg-gold text-navy rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-50">
               {busy === 'draft-run' ? 'Drafting…' : 'Run drafting now'}
+            </button>
+            <button onClick={redraftThin} disabled={busy === 'redraft' || busy === 'draft-run'}
+              className="border border-white/30 text-white rounded-lg px-4 py-2 text-sm disabled:opacity-50">
+              {busy === 'redraft' ? 'Redrafting…' : 'Redraft thin volunteer drafts'}
             </button>
             <button onClick={load} className="border border-white/30 text-white rounded-lg px-4 py-2 text-sm">Refresh</button>
           </div>
@@ -213,7 +255,9 @@ export default function InquiriesAdminDashboard() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-6">
-        {notice && <div className="mb-4 bg-white border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-navy">{notice}</div>}
+        <div role="status" aria-live="polite">
+          {notice && <div className="mb-4 bg-white border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-navy">{notice}</div>}
+        </div>
 
         {/* Board */}
         <div className="flex gap-3 overflow-x-auto pb-4 items-start">
