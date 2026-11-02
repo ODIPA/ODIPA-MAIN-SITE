@@ -176,6 +176,10 @@ export default function PrivacyPolicy() {
                 value="Only when you contact us directly (e.g., volunteer@odipa.org). We retain only what is needed to respond."
               />
               <InfoBox
+                label="Volunteer applications"
+                value="The answers you give on the volunteer form, and a resume file if you choose to attach one. Resume files are stored privately in ODIPA's own Microsoft Azure storage, read only by ODIPA's team to review your application, kept only as long as needed for that, and never sold. You can ask us to delete your file at any time."
+              />
+              <InfoBox
                 label="Cookie consent preference"
                 value="Stored locally in your browser's localStorage — never transmitted to our servers"
               />
@@ -268,7 +272,7 @@ export default function PrivacyPolicy() {
                   {[
                     ['Plausible Analytics', 'Website analytics', 'Aggregate only — no personal data', '✓ Excellent'],
                     ['Azure Static Web Apps', 'Website hosting', 'Standard HTTP request logs (IP, timestamp) — retained briefly per Microsoft policy', '~ Standard'],
-                    ['Microsoft Azure (Table Storage and Communication Services)', 'Storing newsletter and community sign ups and sending our email', 'Email address, and for community members their name, handled on ODIPA\'s behalf only', '✓ Service provider'],
+                    ['Microsoft Azure (Table Storage and Communication Services)', 'Storing newsletter and community sign ups and volunteer resume files, and sending our email', 'Email address, and for community members their name. Resume files only when a volunteer chooses to attach one. Handled on ODIPA\'s behalf only', '✓ Service provider'],
                     ['Google Fonts', 'Typography', 'Font file requests only', '~ Standard'],
                     ['Unsplash', 'Stock photography', 'Image requests only', '~ Standard'],
                   ].map(([service, purpose, data, privacy], i) => (
