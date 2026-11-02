@@ -13,6 +13,7 @@
 const { respond, sendHtmlEmail } = require('../_shared/mailer')
 const { listInquiries, updateInquiry } = require('../_shared/inquiries')
 const { rolesForPrompt, GRC_RULE } = require('../_shared/volunteerRoles')
+const { volunteerCompleteness, DRAFT_RULES } = require('../_shared/volunteerCompleteness')
 
 const TOPIC_GUIDANCE = {
   volunteer: `Volunteering inquiry. DRAFT by default, volunteers are the most common inquiry. The line "Application completeness" below tells you which kind of reply to write.
@@ -32,20 +33,6 @@ You may name at most one or two roles, only when their message clearly points to
   sponsor: 'Corporate sponsorship application. The auto-acknowledgment already promised contact within 2 business days. A good draft thanks them, names the tier they chose, says sponsorship is a public acknowledgment relationship with no services or influence in return, and invites a short call. Never quote or negotiate amounts, never promise placement or recognition beyond the published tiers at https://www.odipa.org/become-a-sponsor. Flag if the message asks for anything in return, mentions a product to feature, or comes from a company whose business is at odds with privacy.',
   'research-sponsor': 'Research sponsorship inquiry. The auto-acknowledgment already promised contact within 2 business days. A good draft thanks them, restates that sponsored research is published freely and sponsors do not direct findings or pre-review results, and invites a short call. Never commit to a topic, timeline, or deliverable. Flag if the message proposes a specific conclusion, asks for pre-publication review, or wants exclusivity.',
   board: 'ALWAYS flag board applications as needs-attention. Board recruitment is a governance matter for the current directors, not something to draft a reply to. The acknowledgment already told the applicant to expect confirmation within 2 business days and that decisions follow seat availability.',
-}
-
-/**
- * Decide in code, not in the model, whether a volunteer message has enough
- * information to match the person to a role. Messages from the structured
- * volunteer form start with "VOLUNTEER APPLICATION" and always carry the
- * answers ODIPA needs. Anything else (older submissions, short free text)
- * counts as THIN unless it includes a link to a resume or profile.
- */
-function volunteerCompleteness(message) {
-  const text = String(message || '').trim()
-  if (/^VOLUNTEER APPLICATION/i.test(text)) return 'COMPLETE'
-  if (/https?:\/\/|www\.|linkedin\.com/i.test(text)) return 'COMPLETE'
-  return 'THIN'
 }
 
 const SYSTEM = `You draft replies for ODIPA, a small California 501(c)(3) digital privacy nonprofit. You write on behalf of a volunteer-run team.
@@ -109,6 +96,7 @@ module.exports = async function (context, req) {
           draftBody: String(result.body).slice(0, 4000),
           draftReason: '',
           draftedAt: Date.now(),
+          draftRules: DRAFT_RULES,
         })
         drafted++
       } else {

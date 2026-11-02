@@ -82,6 +82,7 @@ global.fetch = async (url, opts) => {
   assert(userMsg.includes('Never decline, redirect or discourage a volunteer'), 'draft prompt forbids turning applicants away')
   assert(sent.system.includes('Never turn away or talk down a volunteer applicant'), 'system prompt forbids turning applicants away')
   assert.strictEqual(store[0][1].status, 'drafted', 'result is stored as a draft, not flagged')
+  assert.strictEqual(store[0][1].draftRules, 'v2', 'the draft is stamped with the current rules version')
   assert(userMsg.includes('Application completeness: THIN'), 'a short message with no resume or link is marked THIN')
   assert(userMsg.includes('Do NOT invite a call'), 'draft prompt tells the model not to schedule a call for thin messages')
   assert(userMsg.includes('resume'), 'draft prompt asks for a resume')
