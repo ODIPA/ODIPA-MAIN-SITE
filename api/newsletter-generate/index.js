@@ -7,6 +7,7 @@
  * 45 second limit. The dashboard fires the three sections in parallel.
  * Nothing is ever sent automatically, a human reviews in the composer.
  */
+const { isAdminRequest } = require('../_shared/adminAuth')
 const { respond, clean } = require('../_shared/mailer')
 
 const SECTIONS = {
@@ -41,8 +42,7 @@ module.exports = async function handler(context, req) {
   if (req.method === 'OPTIONS') return respond(context, 200, {})
   if (req.method !== 'POST') return respond(context, 405, { error: 'Method not allowed' })
   try {
-    const key = process.env.NEWSLETTER_ADMIN_KEY
-    if (!key || req.headers['x-admin-key'] !== key) {
+    if (!isAdminRequest(req)) {
       return respond(context, 401, { error: 'Unauthorized' })
     }
     const apiKey = process.env.ANTHROPIC_API_KEY

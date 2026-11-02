@@ -10,6 +10,7 @@
  * reports, anything unusual). Drafts NEVER send themselves. Every draft
  * waits for human approval in /admin/inquiries.
  */
+const { isAdminRequest } = require('../_shared/adminAuth')
 const { respond, sendHtmlEmail } = require('../_shared/mailer')
 const { listInquiries, updateInquiry } = require('../_shared/inquiries')
 const { rolesForPrompt, GRC_RULE } = require('../_shared/volunteerRoles')
@@ -65,8 +66,7 @@ Hard rules:
 
 module.exports = async function (context, req) {
   if (req.method === 'OPTIONS') return respond(context, 200, {})
-  const key = process.env.NEWSLETTER_ADMIN_KEY
-  if (!key || req.headers['x-admin-key'] !== key)
+  if (!isAdminRequest(req))
     return respond(context, 401, { error: 'Unauthorized' })
 
   // Reminder only. The daily workflow drafts in small batches (each request has

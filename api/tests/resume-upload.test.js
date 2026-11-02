@@ -56,7 +56,8 @@ const b64 = b => b.toString('base64')
 const pdf = Buffer.concat([Buffer.from('%PDF-1.4\n'), Buffer.from('resume body '.repeat(50))])
 const docx = Buffer.concat([Buffer.from([0x50, 0x4b, 0x03, 0x04]), Buffer.alloc(40, 1), Buffer.from('word/document.xml'), Buffer.alloc(200, 1)])
 const zip = Buffer.concat([Buffer.from([0x50, 0x4b, 0x03, 0x04]), Buffer.alloc(40, 1), Buffer.from('xl/workbook.xml'), Buffer.alloc(200, 1)])
-const doc = Buffer.concat([Buffer.from([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]), Buffer.alloc(200, 2)])
+const doc = Buffer.concat([Buffer.from([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]), Buffer.alloc(40, 2), Buffer.from('WordDocument', 'utf16le'), Buffer.alloc(200, 2)])
+const xls = Buffer.concat([Buffer.from([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]), Buffer.alloc(40, 2), Buffer.from('Workbook', 'utf16le'), Buffer.alloc(200, 2)])
 
 const good = {
   why: 'I care about digital privacy and want to help people understand their rights.',
@@ -87,6 +88,7 @@ const admin = (query, key = 'k') => ({ method: 'GET', headers: { 'x-admin-key': 
   assert(store.validateResume({ name: 'resume.pdf', data: b64(exe) }).error, 'a program renamed .pdf is refused, the bytes decide')
   assert(store.validateResume({ name: 'resume.pdf', data: b64(Buffer.from('plain text resume, not a document')) }).error, 'plain text is refused')
   assert(store.validateResume({ name: 'resume.docx', data: b64(zip) }).error, 'a ZIP or spreadsheet renamed .docx is refused')
+  assert(store.validateResume({ name: 'resume.doc', data: b64(xls) }).error, 'an old Excel or PowerPoint file renamed .doc is refused')
   assert(store.validateResume({ name: 'x.pdf', data: '' }).error, 'an empty file is refused')
   assert(store.validateResume({ name: 'x.pdf', data: '***not base64***' }).error, 'junk data is refused')
   assert(store.validateResume(null).error, 'no file object is refused')

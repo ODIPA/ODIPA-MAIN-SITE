@@ -13,14 +13,14 @@
  * policy sections (scale honesty, work-authorization gate, do/don'ts) live
  * verbatim in _shared/prepSheet.js and are never model-generated.
  */
+const { isAdminRequest } = require('../_shared/adminAuth')
 const { respond } = require('../_shared/mailer')
 const { getInquiry, updateInquiry } = require('../_shared/inquiries')
 const { ORG_CONTEXT, PROMPT_SYSTEM, normalizeGenerated, renderPrepSheet } = require('../_shared/prepSheet')
 
 module.exports = async function (context, req) {
   if (req.method === 'OPTIONS') return respond(context, 200, {})
-  const key = process.env.NEWSLETTER_ADMIN_KEY
-  if (!key || req.headers['x-admin-key'] !== key)
+  if (!isAdminRequest(req))
     return respond(context, 401, { error: 'Unauthorized' })
 
   try {
