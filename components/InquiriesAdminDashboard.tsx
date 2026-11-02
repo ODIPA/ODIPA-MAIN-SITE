@@ -114,13 +114,13 @@ export default function InquiriesAdminDashboard() {
   }
 
   const draftSummary = (r: { drafted: number; flagged: number; remaining: number; stopped: string; failed: number }) =>
-    `${r.stopped ? `${r.stopped} Drafts finished so far are kept. ` : ''}${r.drafted} drafted, ${r.flagged} flagged for a personal reply.${r.failed ? ` ${r.failed} could not be drafted and stay in Received.` : ''}${r.remaining ? ` ${r.remaining} still waiting, run drafting again.` : ''}`
+    `${r.stopped ? `${r.stopped} Drafts finished so far are kept. ` : ''}${r.drafted} drafted, ${r.flagged} flagged for a personal reply.${r.failed ? ` ${r.failed} could not be drafted and stay in Received.` : ''}${r.remaining ? ` ${r.remaining} still waiting, run drafting again.` : r.stopped ? ' Some may still be waiting, run drafting again.' : ''}`
 
   const runDrafting = async () => {
     setBusy('draft-run'); setNotice('')
     try {
       const r = await draftInBatches(0)
-      setNotice(`Drafting finished. ${draftSummary(r)}`)
+      setNotice(`Drafting ${r.stopped ? 'stopped' : 'finished'}. ${draftSummary(r)}`)
       await load()
     } catch { setNotice('Drafting run failed') }
     finally { setBusy(null) }
@@ -148,7 +148,7 @@ export default function InquiriesAdminDashboard() {
       const total = Number((await queued.json()).count) || 0
 
       const r = await draftInBatches(total)
-      setNotice(`Redraft finished. ${draftSummary(r)}`)
+      setNotice(`Redraft ${r.stopped ? 'stopped' : 'finished'}. ${draftSummary(r)}`)
       await load()
     } catch { setNotice('Redraft failed') }
     finally { setBusy(null) }
