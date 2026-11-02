@@ -77,9 +77,9 @@ const INITIAL: AppFormData = {
   consent: false,
 }
 
-function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
+function FieldLabel({ children, required, htmlFor }: { children: React.ReactNode; required?: boolean; htmlFor?: string }) {
   return (
-    <label className="block font-semibold text-[13px] text-navy mb-1.5">
+    <label htmlFor={htmlFor} className="block font-semibold text-[13px] text-navy mb-1.5">
       {children}{required && <span className="text-gold ml-1">*</span>}
     </label>
   )
@@ -139,7 +139,7 @@ export default function ContactForm() {
       if (!vol.roles.length) ve.roles = 'Choose at least one role, or "Not sure yet"'
       if (vol.experience.trim().length < 30) ve.experience = 'Please describe your relevant experience or skills'
       if (!vol.profileLink.trim()) ve.profileLink = 'Please add a link to your resume, LinkedIn profile or personal site'
-      else if (!/^(https?:\/\/)?[^\s/]+\.[^\s/]+/i.test(vol.profileLink.trim())) ve.profileLink = 'That does not look like a web link'
+      else if (!/^(https?:\/\/)?[^\s/:]+\.[^\s/]+/i.test(vol.profileLink.trim())) ve.profileLink = 'That does not look like a web link'
       if (!vol.hours) ve.hours = 'Please choose how much time you can give'
     }
     setErrors(e)
@@ -333,16 +333,18 @@ export default function ContactForm() {
               </div>
 
               <div>
-                <FieldLabel required>Why do you want to volunteer with ODIPA?</FieldLabel>
-                <textarea rows={4} value={vol.why} maxLength={1000}
+                <FieldLabel required htmlFor="vol-why">Why do you want to volunteer with ODIPA?</FieldLabel>
+                <textarea id="vol-why" rows={4} value={vol.why} maxLength={1000}
                   onChange={e => setVolField('why', e.target.value)}
                   placeholder="What draws you to digital privacy, and what would you like to get out of volunteering?"
                   className={`${INPUT_CLASS} resize-none`} />
                 {volErrors.why && <p className="text-red-500 text-[12px] mt-1">{volErrors.why}</p>}
               </div>
 
-              <div>
-                <FieldLabel required>Which roles interest you?</FieldLabel>
+              <fieldset>
+                <legend className="block font-semibold text-[13px] text-navy mb-1.5">
+                  Which roles interest you?<span className="text-gold ml-1">*</span>
+                </legend>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {VOLUNTEER_ROLES.map(role => (
                     <label key={role}
@@ -359,11 +361,11 @@ export default function ContactForm() {
                   See what each role involves on the <Link href="/get-involved/volunteer" className="text-blue-brand underline">volunteer page</Link>.
                 </p>
                 {volErrors.roles && <p className="text-red-500 text-[12px] mt-1">{volErrors.roles}</p>}
-              </div>
+              </fieldset>
 
               <div>
-                <FieldLabel required>Relevant experience and skills</FieldLabel>
-                <textarea rows={4} value={vol.experience} maxLength={1000}
+                <FieldLabel required htmlFor="vol-experience">Relevant experience and skills</FieldLabel>
+                <textarea id="vol-experience" rows={4} value={vol.experience} maxLength={1000}
                   onChange={e => setVolField('experience', e.target.value)}
                   placeholder="Your work, studies or projects that relate to privacy, research, law, security, writing, teaching or the roles above."
                   className={`${INPUT_CLASS} resize-none`} />
@@ -371,8 +373,8 @@ export default function ContactForm() {
               </div>
 
               <div>
-                <FieldLabel required>Link to your resume, LinkedIn or personal site</FieldLabel>
-                <input type="text" inputMode="url" value={vol.profileLink} maxLength={300}
+                <FieldLabel required htmlFor="vol-profileLink">Link to your resume, LinkedIn or personal site</FieldLabel>
+                <input id="vol-profileLink" type="text" inputMode="url" value={vol.profileLink} maxLength={300}
                   onChange={e => setVolField('profileLink', e.target.value)}
                   placeholder="https://www.linkedin.com/in/your-name"
                   className={INPUT_CLASS} />
@@ -384,38 +386,38 @@ export default function ContactForm() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
-                  <FieldLabel required>How much time can you give?</FieldLabel>
-                  <select value={vol.hours} onChange={e => setVolField('hours', e.target.value)} className={INPUT_CLASS}>
+                  <FieldLabel required htmlFor="vol-hours">How much time can you give?</FieldLabel>
+                  <select id="vol-hours" value={vol.hours} onChange={e => setVolField('hours', e.target.value)} className={INPUT_CLASS}>
                     <option value="">Choose one</option>
                     {VOLUNTEER_HOURS.map(h => <option key={h} value={h}>{h}</option>)}
                   </select>
                   {volErrors.hours && <p className="text-red-500 text-[12px] mt-1">{volErrors.hours}</p>}
                 </div>
                 <div>
-                  <FieldLabel>Credentials <span className="font-normal text-slate-400">(optional)</span></FieldLabel>
-                  <input type="text" value={vol.credentials} maxLength={300}
+                  <FieldLabel htmlFor="vol-credentials">Credentials <span className="font-normal text-slate-400">(optional)</span></FieldLabel>
+                  <input id="vol-credentials" type="text" value={vol.credentials} maxLength={300}
                     onChange={e => setVolField('credentials', e.target.value)}
                     placeholder="For example CIPP, CIPM, CISA, CISSP, bar admission"
                     className={INPUT_CLASS} />
                 </div>
                 <div>
-                  <FieldLabel>Where are you based? <span className="font-normal text-slate-400">(optional)</span></FieldLabel>
-                  <input type="text" value={vol.location} maxLength={120}
+                  <FieldLabel htmlFor="vol-location">Where are you based? <span className="font-normal text-slate-400">(optional)</span></FieldLabel>
+                  <input id="vol-location" type="text" value={vol.location} maxLength={120}
                     onChange={e => setVolField('location', e.target.value)}
                     placeholder="City or country, so we can schedule your call"
                     className={INPUT_CLASS} />
                 </div>
                 <div>
-                  <FieldLabel>How did you hear about ODIPA? <span className="font-normal text-slate-400">(optional)</span></FieldLabel>
-                  <input type="text" value={vol.heardFrom} maxLength={200}
+                  <FieldLabel htmlFor="vol-heardFrom">How did you hear about ODIPA? <span className="font-normal text-slate-400">(optional)</span></FieldLabel>
+                  <input id="vol-heardFrom" type="text" value={vol.heardFrom} maxLength={200}
                     onChange={e => setVolField('heardFrom', e.target.value)}
                     className={INPUT_CLASS} />
                 </div>
               </div>
 
               <div>
-                <FieldLabel>Anything else we should know? <span className="font-normal text-slate-400">(optional)</span></FieldLabel>
-                <textarea rows={3} value={vol.extra} maxLength={800}
+                <FieldLabel htmlFor="vol-extra">Anything else we should know? <span className="font-normal text-slate-400">(optional)</span></FieldLabel>
+                <textarea id="vol-extra" rows={3} value={vol.extra} maxLength={800}
                   onChange={e => setVolField('extra', e.target.value)}
                   className={`${INPUT_CLASS} resize-none`} />
               </div>
