@@ -297,7 +297,7 @@ export default function InquiriesAdminDashboard() {
                   if (id && MOVE_TARGETS.has(col.id)) move(id, col.id)
                   setDragId(null)
                 }}
-                className={`flex-shrink-0 w-64 bg-white/70 rounded-xl border border-slate-200 border-t-4 ${COLUMN_ACCENT[col.id]} ${dragOver === col.id ? 'ring-2 ring-gold' : ''}`}>
+                className={`flex-1 min-w-[14rem] bg-white/70 rounded-xl border border-slate-200 border-t-4 ${COLUMN_ACCENT[col.id]} ${dragOver === col.id ? 'ring-2 ring-gold' : ''}`}>
                 <div className="px-3 pt-3 pb-2">
                   <p className="text-sm font-bold text-navy">{col.title}
                     <span className="ml-2 text-xs font-normal text-slate-400">{cards.length}</span></p>
