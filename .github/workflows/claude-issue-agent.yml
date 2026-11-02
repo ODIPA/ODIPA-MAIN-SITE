@@ -2,7 +2,7 @@ name: Claude issue agent
 
 # A repo collaborator hands an issue to Claude in one of two ways:
 #   - apply the "claude" label to the issue, or
-#   - write "@claude" in a comment on the issue.
+#   - start a comment on the issue with "@claude" followed by the task.
 # Claude proposes a change, the change is checked, and a pull request is opened
 # into main. Nothing is pushed to main, and every change still goes through the
 # same review and merge rules.
@@ -28,10 +28,6 @@ on:
   issue_comment:
     types: [created]
 
-concurrency:
-  group: claude-issue-${{ github.event.issue.number }}
-  cancel-in-progress: false
-
 permissions: {}
 
 jobs:
@@ -45,6 +41,11 @@ jobs:
          startsWith(github.event.comment.body, '@claude') &&
          contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association))
       )
+    # On the job, not the workflow, so an ordinary comment that this job skips
+    # cannot push a waiting "@claude" request out of the queue.
+    concurrency:
+      group: claude-issue-${{ github.event.issue.number }}
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
@@ -167,18 +168,17 @@ jobs:
       # collaborators reaches the agent. A secret that is split or encoded would
       # get past it. The publish job posts this output publicly, so drop it if it
       # holds a secret, or a binary hunk where a secret could hide.
+      # This step deliberately has no secrets in its environment, so code the
+      # agent managed to plant on the runner finds nothing here. It matches the
+      # shapes of Anthropic keys and GitHub tokens instead of the exact values.
       - name: Scan the output
         id: scan
         if: steps.key.outputs.present == 'true'
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          GH_TOKEN: ${{ github.token }}
         run: |
           LEAK=0
           for f in agent-out/change.patch agent-out/summary.md; do
             [ -f "$f" ] || continue
-            if grep -qF -e "$ANTHROPIC_API_KEY" -e "$GH_TOKEN" "$f" \
-               || grep -qE 'sk-ant-[A-Za-z0-9_-]{10,}|gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}' "$f"; then LEAK=1; fi
+            if grep -qE 'sk-ant-[A-Za-z0-9_-]{10,}|gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}' "$f"; then LEAK=1; fi
           done
           if grep -q '^GIT binary patch' agent-out/change.patch; then LEAK=1; fi
           # A symlink added by a patch could make a later write land somewhere else.
@@ -310,12 +310,6 @@ jobs:
           name: agent-output
           path: agent-out
 
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
-        continue-on-error: true
-        with:
-          name: verify-output
-          path: verify-out
-
       # Nothing from the agent's change is executed in this job. The patch is
       # applied as text, committed and pushed.
       - name: Open the pull request, or report back on the issue
@@ -324,8 +318,6 @@ jobs:
         run: |
           set -euo pipefail
           touch agent-out/summary.md
-          mkdir -p verify-out
-          touch verify-out/result.md
 
           if [ "$HAS_PATCH" != "true" ]; then
             {
@@ -344,7 +336,7 @@ jobs:
           git apply --exclude='.github/workflows/*' agent-out/change.patch
           BRANCH="claude/issue-${NUM}-${GITHUB_RUN_ID}"
           git checkout -q -b "$BRANCH"
-          git add -A -- . ':(exclude)agent-out' ':(exclude)verify-out'
+          git add -A -- . ':(exclude)agent-out'
           git commit -q -m "Claude issue fix: work on issue #${NUM}" -m "Refs #${NUM}"
           git push -q origin HEAD
 
