@@ -99,7 +99,8 @@ jobs:
 
       - name: Claude proposes a change
         if: steps.key.outputs.present == 'true'
-        uses: anthropics/claude-code-action@v1
+        # Pinned to a commit (v1.0.266) because this step receives the Anthropic key.
+        uses: anthropics/claude-code-action@d535f5172dec02b204866b393d6b20b9b2aaf98d
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           github_token: ${{ github.token }}
@@ -153,6 +154,9 @@ jobs:
             : > agent-out/change.patch
             echo "The proposed output was dropped because it held something that looks like a secret or a binary file. A person should look at the run before trying again." > agent-out/summary.md
           fi
+          # Keep only the two files that were scanned. The agent can write other
+          # files here, and an unscanned one must not be uploaded.
+          find agent-out -type f ! -name change.patch ! -name summary.md -delete
           if [ -s agent-out/change.patch ]; then
             if [ "$(wc -c < agent-out/change.patch)" -gt 2000000 ]; then
               echo "::error::The proposed change is larger than 2 MB, so it was dropped."
@@ -175,7 +179,9 @@ jobs:
         if: steps.patch.outputs.has_output == 'true'
         with:
           name: agent-output
-          path: agent-out
+          path: |
+            agent-out/change.patch
+            agent-out/summary.md
           retention-days: 7
 
   verify:
@@ -316,7 +322,7 @@ jobs:
               echo "**The type check and tests did not run or did not finish (result: $VERIFY_RESULT).** Run them before merging."
             fi
             echo
-            echo "**To start the checks:** pull requests opened by this workflow do not trigger CodeQL, the review or the preview by themselves. Close and reopen this pull request once."
+            echo "**Read the whole diff before you start the checks.** Pull requests opened by this workflow do not run CodeQL, the review or the preview by themselves. Closing and reopening one starts them, and they build this branch with the project's secrets, including the Azure deploy token and the Anthropic key. Look first at \`package.json\`, \`package-lock.json\`, \`next.config.js\`, anything under \`api/\`, and anything a workflow runs. Only then close and reopen."
             echo
             echo "[Run]($RUN_URL)"
           } > body.md
