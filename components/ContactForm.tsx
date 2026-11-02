@@ -528,7 +528,9 @@ export default function ContactForm() {
 
             {state === 'error' && (
               <div role="alert" className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-[13px] text-red-700">
-                {serverMessage || 'Something went wrong submitting the form.'} Please try again, or email us directly at{' '}
+                {serverMessage
+                  ? `${serverMessage} You can also email us directly at`
+                  : 'Something went wrong submitting the form. Please try again, or email us directly at'}{' '}
                 <a href="mailto:info@odipa.org" className="underline font-semibold">info@odipa.org</a>.
               </div>
             )}
