@@ -49,6 +49,6 @@ jobs:
           done
           echo "Drafting pass finished: $drafted drafted, $flagged flagged."
           if [ $((drafted + flagged)) -gt 0 ]; then
-            echo "Reminder: $(post '{"nudge": true}')" || echo "::warning::The reminder request failed."
+            if reminder=$(post '{"nudge": true}'); then echo "Reminder: $reminder"; else echo "::warning::The reminder request failed."; fi
           fi
           if [ "$broke" -ne 0 ]; then exit 1; fi
