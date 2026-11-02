@@ -7,21 +7,11 @@
 const { respond } = require('../_shared/mailer')
 const { getInquiry } = require('../_shared/inquiries')
 const { readResume, TYPES } = require('../_shared/resumeStore')
-const crypto = require('crypto')
-
-/** Constant time check of the x-admin-key header, as subscriberAdmin.js does. */
-function isAdmin(req) {
-  const key = process.env.NEWSLETTER_ADMIN_KEY
-  const given = req && req.headers ? req.headers['x-admin-key'] : ''
-  if (!key || !given) return false
-  const a = Buffer.from(String(key))
-  const b = Buffer.from(String(given))
-  return a.length === b.length && crypto.timingSafeEqual(a, b)
-}
+const { isAdminRequest } = require('../_shared/adminAuth')
 
 module.exports = async function (context, req) {
   if (req.method === 'OPTIONS') return respond(context, 200, {})
-  if (!isAdmin(req))
+  if (!isAdminRequest(req))
     return respond(context, 401, { error: 'Unauthorized' })
 
   try {

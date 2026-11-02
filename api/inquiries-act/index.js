@@ -11,6 +11,7 @@
  * and marks the inquiry sent. Nothing sends without this explicit call.
  * Each reply is also copied to the team address (see EMAIL_COPY_TO below).
  */
+const { isAdminRequest } = require('../_shared/adminAuth')
 const { respond, sendHtmlEmail } = require('../_shared/mailer')
 const { getInquiry, listInquiries, updateInquiry } = require('../_shared/inquiries')
 const { volunteerCompleteness, DRAFT_RULES } = require('../_shared/volunteerCompleteness')
@@ -31,8 +32,7 @@ function replyHtml(name, bodyText, teamAddress) {
 
 module.exports = async function (context, req) {
   if (req.method === 'OPTIONS') return respond(context, 200, {})
-  const key = process.env.NEWSLETTER_ADMIN_KEY
-  if (!key || req.headers['x-admin-key'] !== key)
+  if (!isAdminRequest(req))
     return respond(context, 401, { error: 'Unauthorized' })
 
   try {

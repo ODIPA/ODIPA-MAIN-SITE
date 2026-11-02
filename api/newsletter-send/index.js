@@ -10,6 +10,7 @@
  * fine for small lists. Beyond roughly 100 subscribers, move sending to a
  * queue or timer based worker.
  */
+const { isAdminRequest } = require('../_shared/adminAuth')
 const { sendHtmlEmail, respond, clean } = require('../_shared/mailer')
 const { listByStatus, unsubscribeLink, saveIssue } = require('../_shared/subscribers')
 
@@ -51,8 +52,7 @@ module.exports = async function handler(context, req) {
   if (req.method === 'OPTIONS') return respond(context, 200, {})
   if (req.method !== 'POST') return respond(context, 405, { error: 'Method not allowed' })
   try {
-    const key = process.env.NEWSLETTER_ADMIN_KEY
-    if (!key || req.headers['x-admin-key'] !== key) {
+    if (!isAdminRequest(req)) {
       return respond(context, 401, { error: 'Unauthorized' })
     }
 
