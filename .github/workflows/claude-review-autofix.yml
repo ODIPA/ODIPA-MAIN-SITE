@@ -20,7 +20,11 @@ env:
 jobs:
   review:
     # Same-repo branches only, so fork PRs never get access to secrets.
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    # Skip pushes made by bots, including this workflow's own fix commits.
+    # The action refuses bot-triggered runs, and this keeps fixes from looping.
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     permissions:
       contents: write
