@@ -59,8 +59,9 @@ module.exports = async function (context, req) {
     if (action === 'dismiss') {
       // Dismissed means handled outside the system, so the resume file is no
       // longer needed. Remove it rather than keep a document nobody will open.
-      if (inq.resumeBlob) await deleteResume(inq.resumeBlob)
-      await updateInquiry(id, { status: 'dismissed', resumeBlob: '' })
+      // Keep the reference if the delete failed, so the file is not orphaned.
+      const fileGone = inq.resumeBlob ? await deleteResume(inq.resumeBlob) : true
+      await updateInquiry(id, fileGone ? { status: 'dismissed', resumeBlob: '' } : { status: 'dismissed' })
       return respond(context, 200, { ok: true, status: 'dismissed' })
     }
 

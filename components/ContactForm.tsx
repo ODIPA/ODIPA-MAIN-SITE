@@ -417,7 +417,7 @@ export default function ContactForm() {
                 <FieldLabel required htmlFor="vol-profileLink">Link to your resume, LinkedIn or personal site</FieldLabel>
                 <p id="vol-resume-either" className="text-[12px] text-slate-500 mb-1.5">Add a link, attach your resume below, or both. One of the two is needed.</p>
                 <input id="vol-profileLink" type="text" inputMode="url" value={vol.profileLink} maxLength={300}
-                  aria-describedby="vol-resume-either" 
+                  aria-describedby="vol-resume-either"
                   onChange={e => setVolField('profileLink', e.target.value)}
                   placeholder="https://www.linkedin.com/in/your-name"
                   className={INPUT_CLASS} />
@@ -429,7 +429,7 @@ export default function ContactForm() {
                 <div className="mt-4">
                   <FieldLabel htmlFor="vol-resume">Attach your resume <span className="font-normal text-slate-400">(optional)</span></FieldLabel>
                   <input id="vol-resume" type="file" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                    onChange={pickResume} aria-describedby="vol-resume-help"
+                    onChange={pickResume} aria-describedby="vol-resume-either vol-resume-help"
                     className="block w-full text-[13px] text-navy file:mr-3 file:rounded-lg file:border file:border-slate-200 file:bg-white file:px-4 file:py-2 file:text-[13px] file:font-medium file:text-navy hover:file:border-blue-brand" />
                   <p id="vol-resume-help" className="text-[12px] text-slate-400 mt-1">
                     PDF or Word, up to 2 MB. Your file is stored privately by ODIPA and used only to review your application.
@@ -527,7 +527,7 @@ export default function ContactForm() {
             {errors.consent && <p className="text-red-500 text-[12px] mb-4">{errors.consent}</p>}
 
             {state === 'error' && (
-              <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-[13px] text-red-700">
+              <div role="alert" className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-[13px] text-red-700">
                 {serverMessage || 'Something went wrong submitting the form.'} Please try again, or email us directly at{' '}
                 <a href="mailto:info@odipa.org" className="underline font-semibold">info@odipa.org</a>.
               </div>

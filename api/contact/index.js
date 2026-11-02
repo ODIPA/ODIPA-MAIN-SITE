@@ -152,6 +152,9 @@ module.exports = async function handler(context, req) {
       }
     }
 
+    // If the team email fails the applicant sees an error and will resend, so
+    // do not keep a file that no inquiry will ever point at.
+    try {
     await sendFormEmail({
       to:      toAddress,
       subject: `Contact Form: ${topicLabel} — from ${name}`,
@@ -183,6 +186,10 @@ module.exports = async function handler(context, req) {
         'Consented':    consent,
       },
     })
+    } catch (mailErr) {
+      if (resumeBlob) await deleteResume(resumeBlob)
+      throw mailErr
+    }
 
     // Instant canned acknowledgment to the submitter. Awaited so it cannot be
     // dropped, but a failure only logs, the inquiry itself succeeded.
