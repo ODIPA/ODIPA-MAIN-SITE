@@ -40,7 +40,7 @@ jobs:
               broke=1; break
             fi
             # A reply that is not the expected JSON stops the loop like a failed request.
-            if ! nums=$(jq -re '[(.drafted|numbers), (.flagged|numbers), (.failed|arrays|length), (.remaining|numbers)] | @tsv' <<<"$resp" 2>/dev/null); then
+            if ! nums=$(jq -re '[(.drafted|numbers), (.flagged|numbers), (.failed|arrays|length), (.remaining|numbers)] | select(length == 4) | @tsv' <<<"$resp" 2>/dev/null); then
               echo "::warning::Batch $run returned an unexpected reply, stopping the drafting pass."
               broke=1; break
             fi

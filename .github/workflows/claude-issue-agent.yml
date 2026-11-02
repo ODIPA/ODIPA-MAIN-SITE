@@ -99,7 +99,7 @@ jobs:
           } > agent-out/issue.md
 
       # The agent can write files anywhere, including inside .git. Remember every
-      # git setting in the repo and global config except the user name and branch
+      # git setting in the repo and global config except the user name and email
       # entries (credential helpers, gpg programs, merge drivers, remote and url
       # rewrites and so on are all covered), the hook and info files including
       # symlinks, and the files that redirect where git reads its config from, so
@@ -109,8 +109,9 @@ jobs:
         if: steps.key.outputs.present == 'true'
         run: |
           echo "value=$({
-            git config --local --list 2>/dev/null | grep -viE '^(user|branch)\.' | sort
-            git config --global --list 2>/dev/null | grep -viE '^(user|branch)\.' | sort
+            git config --local --list 2>/dev/null | grep -viE '^user\.(name|email)=' | sort
+            git config --global --list 2>/dev/null | grep -viE '^user\.(name|email)=' | sort
+            git config --system --list 2>/dev/null | grep -viE '^user\.(name|email)=' | sort
             for f in commondir config.worktree; do [ -e ".git/$f" ] && echo "present:$f"; done
             { find .git/hooks .git/info ! -type d -printf '%p %l %m\n'; find .git/hooks .git/info -type f -exec sha256sum {} +; } 2>/dev/null | sort
           } | sha256sum | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
@@ -153,8 +154,9 @@ jobs:
           BEFORE: ${{ steps.fp.outputs.value }}
         run: |
           now=$({
-            git config --local --list 2>/dev/null | grep -viE '^(user|branch)\.' | sort
-            git config --global --list 2>/dev/null | grep -viE '^(user|branch)\.' | sort
+            git config --local --list 2>/dev/null | grep -viE '^user\.(name|email)=' | sort
+            git config --global --list 2>/dev/null | grep -viE '^user\.(name|email)=' | sort
+            git config --system --list 2>/dev/null | grep -viE '^user\.(name|email)=' | sort
             for f in commondir config.worktree; do [ -e ".git/$f" ] && echo "present:$f"; done
             { find .git/hooks .git/info ! -type d -printf '%p %l %m\n'; find .git/hooks .git/info -type f -exec sha256sum {} +; } 2>/dev/null | sort
           } | sha256sum | cut -d' ' -f1)
