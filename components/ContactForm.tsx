@@ -57,6 +57,18 @@ const VOLUNTEER_INITIAL: VolunteerData = {
   hours: '', location: '', heardFrom: '', extra: '',
 }
 
+const RESUME_MAX_BYTES = 2 * 1024 * 1024
+const RESUME_EXTENSIONS = ['pdf', 'doc', 'docx']
+
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result).split(',')[1] || '')
+    reader.onerror = () => reject(reader.error)
+    reader.readAsDataURL(file)
+  })
+}
+
 const INPUT_CLASS = 'w-full px-4 py-3 rounded-lg border border-slate-200 bg-white text-[14px] text-navy placeholder-slate-400 focus:outline-none focus:border-blue-brand focus:ring-2 focus:ring-blue-brand/10 transition-all'
 
 interface AppFormData {
@@ -93,6 +105,9 @@ export default function ContactForm() {
   const [honeypot, setHoneypot] = useState('')
   const [vol, setVol] = useState<VolunteerData>(VOLUNTEER_INITIAL)
   const [volErrors, setVolErrors] = useState<Partial<Record<keyof VolunteerData, string>>>({})
+  const [resumeFile, setResumeFile] = useState<File | null>(null)
+  const [resumeError, setResumeError] = useState('')
+  const [serverMessage, setServerMessage] = useState('')
   const [submittedTopic, setSubmittedTopic] = useState('')
   const isVolunteer = form.topic === 'volunteer'
  
@@ -111,6 +126,16 @@ export default function ContactForm() {
       setForm(prev => ({ ...prev, [field]: value }))
       setErrors(prev => ({ ...prev, [field]: undefined }))
     }
+  }
+
+  function pickResume(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files && e.target.files[0]
+    setResumeError('')
+    if (!file) { setResumeFile(null); return }
+    const ext = (file.name.split('.').pop() || '').toLowerCase()
+    if (!RESUME_EXTENSIONS.includes(ext)) { setResumeFile(null); setResumeError('Please choose a PDF or Word file (.pdf, .doc or .docx), or add a link instead.'); e.target.value = ''; return }
+    if (file.size > RESUME_MAX_BYTES) { setResumeFile(null); setResumeError('That file is larger than 2 MB. Please choose a smaller file, or add a link instead.'); e.target.value = ''; return }
+    setResumeFile(file)
   }
 
   function setVolField<K extends keyof VolunteerData>(field: K, value: VolunteerData[K]) {
@@ -138,8 +163,8 @@ export default function ContactForm() {
       if (vol.why.trim().length < 40) ve.why = 'Please tell us in a few sentences why you want to volunteer with ODIPA'
       if (!vol.roles.length) ve.roles = 'Choose at least one role, or "Not sure yet"'
       if (vol.experience.trim().length < 30) ve.experience = 'Please describe your relevant experience or skills'
-      if (!vol.profileLink.trim()) ve.profileLink = 'Please add a link to your resume, LinkedIn profile or personal site'
-      else if (!/^(https?:\/\/)?[^\s/:]+\.[^\s/]+/i.test(vol.profileLink.trim())) ve.profileLink = 'That does not look like a web link'
+      if (!vol.profileLink.trim() && !resumeFile) ve.profileLink = 'Please add a link to your resume, LinkedIn profile or personal site, or attach your resume'
+      else if (vol.profileLink.trim() && !/^(https?:\/\/)?[^\s/:]+\.[^\s/]+/i.test(vol.profileLink.trim())) ve.profileLink = 'That does not look like a web link'
       if (!vol.hours) ve.hours = 'Please choose how much time you can give'
     }
     setErrors(e)
@@ -152,7 +177,18 @@ export default function ContactForm() {
     if (honeypot) return
     if (!validate()) return
     setState('submitting')
+    setServerMessage('')
     try {
+      let volunteerPayload: object = vol
+      if (isVolunteer && resumeFile) {
+        try {
+          volunteerPayload = { ...vol, resume: { name: resumeFile.name, data: await fileToBase64(resumeFile) } }
+        } catch {
+          setResumeError('We could not read that file. Please choose it again, or add a link instead.')
+          setState('idle')
+          return
+        }
+      }
       const res = await fetch(API_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
@@ -163,15 +199,20 @@ export default function ContactForm() {
           'Email':        form.email,
           'Organization': form.organization || '—',
           'Message':      isVolunteer ? vol.why : form.message,
-          ...(isVolunteer ? { volunteer: vol } : {}),
+          ...(isVolunteer ? { volunteer: volunteerPayload } : {}),
           _hp: honeypot,
           '_replyto':     form.email,
           '_subject':     `ODIPA Contact: ${selectedTopic?.label ?? form.topic}`,
           'Consented':    form.consent ? 'Yes' : 'No',
         }),
       })
-      if (res.ok) { setSubmittedTopic(form.topic); setState('success'); setForm(INITIAL); setVol(VOLUNTEER_INITIAL) }
-      else setState('error')
+      if (res.ok) { setSubmittedTopic(form.topic); setState('success'); setForm(INITIAL); setVol(VOLUNTEER_INITIAL); setResumeFile(null); setResumeError('') }
+      else {
+        // The server words resume problems clearly (too large, wrong type, could not save).
+        const data = await res.json().catch(() => null)
+        if (isVolunteer && data && typeof data.error === 'string' && /resume/i.test(data.error)) setServerMessage(data.error)
+        setState('error')
+      }
     } catch { setState('error') }
   }
 
@@ -374,14 +415,28 @@ export default function ContactForm() {
 
               <div>
                 <FieldLabel required htmlFor="vol-profileLink">Link to your resume, LinkedIn or personal site</FieldLabel>
+                <p id="vol-resume-either" className="text-[12px] text-slate-500 mb-1.5">Add a link, attach your resume below, or both. One of the two is needed.</p>
                 <input id="vol-profileLink" type="text" inputMode="url" value={vol.profileLink} maxLength={300}
+                  aria-describedby="vol-resume-either" 
                   onChange={e => setVolField('profileLink', e.target.value)}
                   placeholder="https://www.linkedin.com/in/your-name"
                   className={INPUT_CLASS} />
                 <p className="text-[12px] text-slate-400 mt-1">
-                  Please share a link rather than attaching a file. A shared resume link from Google Drive, Dropbox or OneDrive works too.
+                  A shared resume link from Google Drive, Dropbox or OneDrive works too.
                 </p>
                 {volErrors.profileLink && <p className="text-red-500 text-[12px] mt-1">{volErrors.profileLink}</p>}
+
+                <div className="mt-4">
+                  <FieldLabel htmlFor="vol-resume">Attach your resume <span className="font-normal text-slate-400">(optional)</span></FieldLabel>
+                  <input id="vol-resume" type="file" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                    onChange={pickResume} aria-describedby="vol-resume-help"
+                    className="block w-full text-[13px] text-navy file:mr-3 file:rounded-lg file:border file:border-slate-200 file:bg-white file:px-4 file:py-2 file:text-[13px] file:font-medium file:text-navy hover:file:border-blue-brand" />
+                  <p id="vol-resume-help" className="text-[12px] text-slate-400 mt-1">
+                    PDF or Word, up to 2 MB. Your file is stored privately by ODIPA and used only to review your application.
+                  </p>
+                  {resumeFile && <p className="text-[12px] text-navy mt-1">Selected: {resumeFile.name}</p>}
+                  {resumeError && <p role="alert" className="text-red-500 text-[12px] mt-1">{resumeError}</p>}
+                </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -473,7 +528,7 @@ export default function ContactForm() {
 
             {state === 'error' && (
               <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-[13px] text-red-700">
-                Something went wrong submitting the form. Please try again, or email us directly at{' '}
+                {serverMessage || 'Something went wrong submitting the form.'} Please try again, or email us directly at{' '}
                 <a href="mailto:info@odipa.org" className="underline font-semibold">info@odipa.org</a>.
               </div>
             )}

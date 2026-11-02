@@ -2,13 +2,16 @@
  * ODIPA Contact Form — Azure Function
  * POST /api/contact
  * Validates, sanitizes, and emails to info@odipa.org (or topic-routed alias).
- * No data is stored anywhere. Reply-to is set to the submitter's address.
+ * Reply-to is set to the submitter's address. The inquiry is kept in ODIPA's
+ * own Azure storage for the admin inbox. A volunteer's resume file, if they
+ * attach one, goes to a private container in the same storage.
  */
 
 const { sendFormEmail, sendHtmlEmail, respond, clean } = require('../_shared/mailer')
 const { saveInquiry } = require('../_shared/inquiries')
 const { checkRateLimit, getClientIp } = require('../_shared/rateLimiter')
 const { parseVolunteerApplication } = require('../_shared/volunteerApplication')
+const { validateResume, saveResume, deleteResume } = require('../_shared/resumeStore')
 
 // ── Auto-acknowledgment templates per topic ──────────────────────────────────
 // Instant canned response to the submitter. Templates only, no AI, every word
@@ -119,8 +122,15 @@ module.exports = async function handler(context, req) {
     // Volunteer applications carry their own questions. They are checked here
     // and written into the message, so everything downstream reads them.
     let volunteerFields = null
+    let resumeFile = null
     if (topic === 'volunteer') {
-      const parsed = parseVolunteerApplication(body.volunteer)
+      const rawResume = body.volunteer && body.volunteer.resume
+      if (rawResume) {
+        const checked = validateResume(rawResume)
+        if (checked.error) return respond(context, 400, { error: checked.error })
+        resumeFile = checked.file
+      }
+      const parsed = parseVolunteerApplication(body.volunteer, resumeFile)
       if (parsed.error) return respond(context, 400, { error: parsed.error })
       volunteerFields = parsed.fields
       message = parsed.message
@@ -131,6 +141,16 @@ module.exports = async function handler(context, req) {
     const toAddress = TOPIC_ROUTING[topic] || TOPIC_ROUTING.general
     const topicLabel = clean(body['Topic'] || topic || 'General Inquiry', 100)
     const consent = clean(body['Consented'] || body.consent, 10) || 'No'
+
+    // Store the file before anything is emailed, so the applicant is never told
+    // it arrived when it did not.
+    let resumeBlob = ''
+    if (resumeFile) {
+      try { resumeBlob = await saveResume(resumeFile) } catch (fileErr) {
+        context.log.error('Resume store failed:', fileErr.message)
+        return respond(context, 503, { error: 'We could not save your resume file. Please try again, or add a link to your resume instead.' })
+      }
+    }
 
     await sendFormEmail({
       to:      toAddress,
@@ -144,7 +164,8 @@ module.exports = async function handler(context, req) {
         'Why ODIPA':          volunteerFields.why,
         'Roles of interest':  volunteerFields.roles.join(', '),
         'Experience':         volunteerFields.experience,
-        'Resume or profile':  volunteerFields.link,
+        'Resume or profile':  volunteerFields.link || 'None',
+        'Resume file':        resumeFile ? `${resumeFile.name} (${resumeFile.label}), open it from the admin inquiry board` : 'None',
         'Credentials':        volunteerFields.credentials || '—',
         'Time available':     volunteerFields.hours,
         'Based in':           volunteerFields.location || '—',
@@ -181,9 +202,11 @@ module.exports = async function handler(context, req) {
     // Persist for the admin review inbox. Failure only logs, the inquiry
     // was already delivered by email either way.
     try {
-      await saveInquiry({ topic, name, email, organization, message, routedTo: toAddress })
+      await saveInquiry({ topic, name, email, organization, message, routedTo: toAddress, resumeBlob, resumeName: resumeFile ? resumeFile.name : '' })
     } catch (storeErr) {
       context.log.error('Inquiry store failed:', storeErr.message)
+      // Nothing points at the file now, so do not leave it behind.
+      if (resumeBlob) await deleteResume(resumeBlob)
     }
 
     respond(context, 200, { ok: true })

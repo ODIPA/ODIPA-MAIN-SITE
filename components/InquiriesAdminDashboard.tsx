@@ -31,6 +31,7 @@ type Inquiry = {
   draftReason: string
   draftedAt: number
   prepSheetAt: number
+  resume?: { name: string } | null
   sentAt: number
   handledAt: number
 }
@@ -198,6 +199,24 @@ export default function InquiriesAdminDashboard() {
     finally { setBusy(null) }
   }
 
+  // The resume file is private. It is fetched with the admin key and saved from
+  // the browser, so no public link to it ever exists.
+  const downloadResume = async (id: string) => {
+    setBusy(`resume-${id}`); setNotice('')
+    try {
+      const res = await fetch(`/api/inquiries-resume?id=${encodeURIComponent(id)}`, { headers: hdrs() })
+      const data = await res.json().catch(() => null)
+      if (!res.ok || !data) { setNotice((data && data.error) || 'Could not download the resume'); return }
+      const bytes = Uint8Array.from(atob(data.data), ch => ch.charCodeAt(0))
+      const url = URL.createObjectURL(new Blob([bytes], { type: data.contentType }))
+      const a = document.createElement('a')
+      a.href = url; a.download = data.name
+      document.body.appendChild(a); a.click(); a.remove()
+      setTimeout(() => URL.revokeObjectURL(url), 10000)
+    } catch { setNotice('Could not download the resume') }
+    finally { setBusy(null) }
+  }
+
   const viewPrep = async (id: string) => {
     setBusy(`prep-${id}`); setNotice('')
     try {
@@ -360,6 +379,12 @@ export default function InquiriesAdminDashboard() {
                   <span className="font-normal text-slate-500"> · {open.email}</span></p>
                 {open.organization && <p className="text-xs text-slate-500">{open.organization}</p>}
                 <p className="text-sm text-slate-700 leading-relaxed mt-2 whitespace-pre-wrap break-words">{open.message}</p>
+                {open.resume && (
+                  <button onClick={() => downloadResume(open.id)} disabled={busy === `resume-${open.id}`}
+                    className="mt-3 border border-slate-300 text-navy rounded-lg px-3 py-1.5 text-sm font-medium hover:border-navy disabled:opacity-50">
+                    {busy === `resume-${open.id}` ? 'Preparing…' : `Download resume (${open.resume.name})`}
+                  </button>
+                )}
               </div>
 
               <div className="min-w-0">

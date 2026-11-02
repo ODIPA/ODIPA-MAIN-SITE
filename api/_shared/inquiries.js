@@ -34,7 +34,7 @@ function newId() {
   return `${ts}-${crypto.randomBytes(4).toString('hex')}`
 }
 
-async function saveInquiry({ topic, name, email, organization, message, routedTo }) {
+async function saveInquiry({ topic, name, email, organization, message, routedTo, resumeBlob, resumeName }) {
   const client = getTable()
   await ensureTable(client)
   const id = newId()
@@ -47,6 +47,8 @@ async function saveInquiry({ topic, name, email, organization, message, routedTo
     organization: organization || '',
     message: (message || '').slice(0, 8000),
     routedTo: routedTo || '',
+    resumeBlob: resumeBlob || '',
+    resumeName: resumeName || '',
     status: 'acked',
     receivedAt: Date.now(),
     draftSubject: '',
