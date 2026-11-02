@@ -14,6 +14,7 @@
 const { respond, sendHtmlEmail } = require('../_shared/mailer')
 const { getInquiry, listInquiries, updateInquiry } = require('../_shared/inquiries')
 const { volunteerCompleteness, DRAFT_RULES } = require('../_shared/volunteerCompleteness')
+const { deleteResume } = require('../_shared/resumeStore')
 
 function replyHtml(name, bodyText, teamAddress) {
   const paragraphs = bodyText.split('\n').filter(p => p.trim()).map(p =>
@@ -56,7 +57,11 @@ module.exports = async function (context, req) {
     if (!inq) return respond(context, 404, { error: 'Inquiry not found' })
 
     if (action === 'dismiss') {
-      await updateInquiry(id, { status: 'dismissed' })
+      // Dismissed means handled outside the system, so the resume file is no
+      // longer needed. Remove it rather than keep a document nobody will open.
+      // Keep the reference if the delete failed, so the file is not orphaned.
+      const fileGone = inq.resumeBlob ? await deleteResume(inq.resumeBlob) : true
+      await updateInquiry(id, fileGone ? { status: 'dismissed', resumeBlob: '' } : { status: 'dismissed' })
       return respond(context, 200, { ok: true, status: 'dismissed' })
     }
 

@@ -7,9 +7,9 @@
  * drafter and the intro call sheet all read the full application without
  * any other change.
  *
- * Resumes are collected as a link, not a file upload. Uploads would need
- * file storage, malware scanning and a retention policy, and a link keeps
- * the applicant in control of their own document.
+ * A resume can be a link or an attached file. An attached file is checked and
+ * stored by resumeStore.js, and only its display name and size are written
+ * here. The stored file name is never put in the message.
  */
 
 const { ROLE_TITLES } = require('./volunteerRoles')
@@ -52,9 +52,10 @@ function cleanLink(v) {
 
 /**
  * @param {object} raw  the volunteer answers sent by the form
+ * @param {{name: string, label: string, size: number}} [resume]  a resume file that already passed validation
  * @returns {{error?: string, fields?: object, message?: string}}
  */
-function parseVolunteerApplication(raw) {
+function parseVolunteerApplication(raw, resume) {
   const v = raw && typeof raw === 'object' ? raw : {}
 
   const why = stripKeepBreaks(v.why, 1000)
@@ -74,7 +75,7 @@ function parseVolunteerApplication(raw) {
   if (why.length < 40) return { error: 'Please tell us in a few sentences why you want to volunteer with ODIPA.' }
   if (!roles.length) return { error: 'Please choose at least one role, or choose "Not sure yet".' }
   if (experience.length < 30) return { error: 'Please describe your relevant experience or skills.' }
-  if (!link) return { error: 'Please add a link to your resume, LinkedIn profile or personal site.' }
+  if (!link && !resume) return { error: 'Please add a link to your resume, LinkedIn profile or personal site, or attach your resume.' }
   if (!hours) return { error: 'Please choose how much time you can give.' }
 
   const lines = [
@@ -82,7 +83,8 @@ function parseVolunteerApplication(raw) {
     `Why ODIPA: ${why}`,
     `Roles of interest: ${roles.join(', ')}`,
     `Relevant experience and skills: ${experience}`,
-    `Resume or profile link: ${link}`,
+    link && `Resume or profile link: ${link}`,
+    resume && `Resume file: ${resume.name} (${resume.label}, ${Math.max(1, Math.round(resume.size / 1024))} KB), open it from the admin inquiry board`,
     credentials && `Credentials: ${credentials}`,
     `Time available: ${hours}`,
     location && `Based in: ${location}`,
@@ -91,7 +93,7 @@ function parseVolunteerApplication(raw) {
   ].filter(Boolean)
 
   return {
-    fields: { why, roles, experience, link, credentials, hours, location, heardFrom, extra },
+    fields: { why, roles, experience, link, resume: resume || null, credentials, hours, location, heardFrom, extra },
     message: lines.join('\n'),
   }
 }
