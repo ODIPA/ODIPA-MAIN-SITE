@@ -28,6 +28,7 @@ export default function ArticlesAdminDashboard() {
   const [testTo, setTestTo] = useState('')
   const [msg, setMsg] = useState('')
   const [busy, setBusy] = useState(false)
+  const [sendingAll, setSendingAll] = useState(false)
   const [posts, setPosts] = useState<{ linkedin: string; short: string; published: boolean } | null>(null)
   const [copied, setCopied] = useState('')
 
@@ -104,10 +105,13 @@ export default function ArticlesAdminDashboard() {
   const sendAll = () => run(async () => {
     const again = !!current?.emailedAt
     if (!window.confirm(`${again ? 'This article was already emailed. Send it AGAIN' : 'Email'} "${form.title}" to every confirmed subscriber? This cannot be undone.`)) return
-    const d = await call('/api/articles-send', { method: 'POST', body: { slug: form.slug, resend: again } })
-    const list = await call('/api/articles?all=1')
-    setRows(list.articles)
-    setMsg(`Sent to ${d.sent} of ${d.total} confirmed subscribers${d.failed ? `, ${d.failed} failed` : ''}.`)
+    setSendingAll(true)
+    try {
+      const d = await call('/api/articles-send', { method: 'POST', body: { slug: form.slug, resend: again } })
+      const list = await call('/api/articles?all=1')
+      setRows(list.articles)
+      setMsg(`Sent to ${d.sent} of ${d.total} confirmed subscribers${d.failed ? `, ${d.failed} failed` : ''}.`)
+    } finally { setSendingAll(false) }
   })
 
   const field = 'w-full border border-slate-300 rounded-lg px-3 py-2 text-[14px] focus:outline-none focus:ring-2 focus:ring-gold'
@@ -138,9 +142,11 @@ export default function ArticlesAdminDashboard() {
           <p className="w-full text-[11px] text-slate-500">The key stays in this browser tab's memory only and is sent solely to ODIPA's own API.</p>
         </div>
 
-        {/* The live region stays mounted so screen readers announce each new message. */}
-        <div role="status" aria-live="polite">
-          {msg && <p className="text-[13px] bg-white border border-slate-200 rounded-lg px-4 py-3 text-navy">{msg}</p>}
+        {/* The message sits in a fixed bar so it is visible wherever the button that caused it is on the page. */}
+        {/* The live region stays mounted and holds only the message, so the Dismiss button is not read out with it. */}
+        <div className={msg ? 'fixed bottom-4 left-4 right-4 md:left-auto md:max-w-md z-50 text-[13px] bg-navy text-white border border-gold rounded-lg shadow-lg px-4 py-3 flex items-start gap-3' : 'sr-only'}>
+          <p role="status" aria-live="polite" className="flex-1">{msg}</p>
+          {msg && <button type="button" onClick={() => setMsg('')} aria-label="Dismiss message" className="font-mono text-[11px] underline flex-shrink-0 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-gold">Dismiss</button>}
         </div>
 
         {rows && (
@@ -229,7 +235,7 @@ export default function ArticlesAdminDashboard() {
                     <input id="a-test" type="email" value={testTo} onChange={e => setTestTo(e.target.value)} placeholder="you@example.com" className={field} />
                   </div>
                   <button onClick={sendTest} disabled={busy || !testTo.trim()} className={`${btn} border border-navy text-navy`}>Send test</button>
-                  <button onClick={sendAll} disabled={busy} className={`${btn} bg-navy text-white`}>Email all confirmed subscribers</button>
+                  <button onClick={sendAll} disabled={busy} className={`${btn} bg-navy text-white`}>{sendingAll ? 'Sending…' : 'Email all confirmed subscribers'}</button>
                 </div>
               </div>
             )}
