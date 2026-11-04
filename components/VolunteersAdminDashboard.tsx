@@ -72,7 +72,7 @@ export default function VolunteersAdminDashboard() {
 
   const importEarlier = () => run(async () => {
     const dry = await call({ body: { action: 'import', dryRun: true } })
-    if (!dry.toAdd) { setMsg(`Nothing to import. ${dry.alreadyOnRoster} earlier applicant${dry.alreadyOnRoster === 1 ? ' is' : 's are'} already on the roster${dry.skippedDismissed ? `, and ${dry.skippedDismissed} dismissed card${dry.skippedDismissed === 1 ? ' was' : 's were'} skipped` : ''}.`); return }
+    if (!dry.toAdd) { setMsg(`Nothing to import. ${dry.alreadyOnRoster} earlier applicant${dry.alreadyOnRoster === 1 ? ' is' : 's are'} already on the roster${dry.skippedDismissed ? `, and ${dry.skippedDismissed} dismissed card${dry.skippedDismissed === 1 ? ' was' : 's were'} skipped` : ''}${dry.skippedRemoved ? `, and ${dry.skippedRemoved} previously removed ${dry.skippedRemoved === 1 ? 'person was' : 'people were'} skipped` : ''}.`); return }
     if (!window.confirm(`Add ${dry.toAdd} earlier volunteer applicant${dry.toAdd === 1 ? '' : 's'} from the inquiry board to the roster? People already listed are not changed.`)) return
     const done = await call({ body: { action: 'import' } })
     const d = await call()

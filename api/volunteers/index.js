@@ -54,6 +54,7 @@ module.exports = async function handler(context, req) {
       const deletedRefs = new Set((await listDeletions(100000)).map(d => d.reference))
       let toAdd = 0, existing = 0, dismissed = 0, removedBefore = 0
       const seen = new Set()
+      const onRoster = b.dryRun ? new Set((await V.listVolunteers()).map(v => v.id)) : null
       for (const c of cards) {
         const key = V.idFor(c.email)
         if (seen.has(key)) continue
@@ -62,8 +63,7 @@ module.exports = async function handler(context, req) {
         seen.add(key)
         const row = { email: c.email, name: c.name, roles: fromLine(c.message, 'Roles of interest'), hours: fromLine(c.message, 'Time available'), appliedAt: new Date(Number(c.receivedAt) || Date.now()).toISOString(), status: c.status === 'meeting' ? 'intro-call' : 'applied', inquiryId: c.rowKey }
         if (b.dryRun) {
-          const here = (await V.listVolunteers()).some(v => v.id === key)
-          if (here) existing++; else toAdd++
+          if (onRoster.has(key)) existing++; else toAdd++
         } else if (await V.addIfMissing(row)) toAdd++
         else existing++
       }
