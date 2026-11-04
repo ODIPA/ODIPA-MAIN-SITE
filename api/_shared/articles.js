@@ -186,6 +186,15 @@ async function patchArticle(slug, patch) {
   await client.upsertEntity(Object.assign({ partitionKey: PARTITION, rowKey: slug, updatedAt: new Date().toISOString() }, patch), 'Merge')
 }
 
+/**
+ * Mark the article as emailed, only if nobody changed the row since it was read.
+ * Throws an error with statusCode 412 when someone else got there first.
+ */
+async function claimEmailing(slug, etag) {
+  const client = getTable()
+  await client.updateEntity({ partitionKey: PARTITION, rowKey: slug, emailedAt: new Date().toISOString(), emailedCount: 0 }, 'Merge', etag ? { etag } : undefined)
+}
+
 async function deleteArticle(slug) {
   const client = getTable()
   await client.deleteEntity(PARTITION, slug)
@@ -193,5 +202,5 @@ async function deleteArticle(slug) {
 
 module.exports = {
   LIMITS, safeUrl, slugify, validSlug, parseBody, parseSources, blocksToHtml, validateFields, publishProblems,
-  toPublic, toFull, toAdmin, getArticle, listArticles, saveArticle, patchArticle, deleteArticle, esc,
+  toPublic, toFull, toAdmin, getArticle, listArticles, saveArticle, patchArticle, claimEmailing, deleteArticle, esc,
 }

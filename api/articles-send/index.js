@@ -53,6 +53,14 @@ module.exports = async function handler(context, req) {
     const subs = await listByStatus('confirmed')
     if (subs.length === 0) return respond(context, 200, { sent: 0, failed: 0, mode: 'full', note: 'No confirmed subscribers.' })
 
+    // Claim the send before any email goes out, using the row's version tag, so two
+    // sends at once (two tabs, a retry) cannot both pass, and a request cut off by
+    // the 45 second limit still leaves the article marked as emailed.
+    try { await A.claimEmailing(ent.rowKey, ent.etag) } catch (e) {
+      if (e && e.statusCode === 412) return respond(context, 409, { error: 'Another send of this article is already under way or just finished.' })
+      throw e
+    }
+
     let sent = 0
     let failed = 0
     const CHUNK = 5
@@ -65,7 +73,7 @@ module.exports = async function handler(context, req) {
       results.forEach(r => { if (r.status === 'fulfilled') sent++; else failed++ })
     }
     // Only the counts are kept, never who failed.
-    try { await A.patchArticle(ent.rowKey, { emailedAt: new Date().toISOString(), emailedCount: sent }) } catch (e) { context.log.error('emailedAt not saved:', e.message) }
+    try { await A.patchArticle(ent.rowKey, { emailedCount: sent }) } catch (e) { context.log.error('emailed count not saved:', e.message) }
     return respond(context, 200, { sent, failed, mode: 'full', total: subs.length })
   } catch (err) {
     context.log.error('articles-send error:', err.message)

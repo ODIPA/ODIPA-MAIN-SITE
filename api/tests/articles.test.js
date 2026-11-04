@@ -16,14 +16,15 @@ const oL = Module._load
 Module._load = function (req, parent, ...rest) {
   if (req === '@azure/data-tables') return { TableClient: { fromConnectionString: () => ({
     createTable: async () => {},
-    getEntity: async (p, r) => { const e = tables.get(`${p}|${r}`); if (!e) throw new Error('404'); return Object.assign({}, e) },
+    getEntity: async (p, r) => { const e = tables.get(`${p}|${r}`); if (!e) throw new Error('404'); return Object.assign({}, e, { etag: String(e.v || 0) }) },
+    updateEntity: async (e, mode, opts) => { const k = `${e.partitionKey}|${e.rowKey}`; const cur = tables.get(k) || {}; if (opts && opts.etag !== String(cur.v || 0)) { const err = new Error('412'); err.statusCode = 412; throw err } tables.set(k, Object.assign({}, cur, e, { v: (cur.v || 0) + 1 })) },
     listEntities: ({ queryOptions }) => {
       const part = /PartitionKey eq '([^']+)'/.exec(queryOptions.filter)[1]
       const status = /status eq '([^']+)'/.exec(queryOptions.filter)
       const rows = [...tables.values()].filter(e => e.partitionKey === part && (!status || e.status === status[1]))
       return (async function* () { for (const r of rows) yield Object.assign({}, r) })()
     },
-    upsertEntity: async (e, mode) => { const k = `${e.partitionKey}|${e.rowKey}`; tables.set(k, mode === 'Merge' ? Object.assign({}, tables.get(k) || {}, e) : Object.assign({}, e)) },
+    upsertEntity: async (e, mode) => { const k = `${e.partitionKey}|${e.rowKey}`; const cur = tables.get(k) || {}; tables.set(k, Object.assign({}, mode === 'Merge' ? cur : {}, e, { v: (cur.v || 0) + 1 })) },
     deleteEntity: async (p, r) => { tables.delete(`${p}|${r}`) },
   }) } }
   if (/_shared\/mailer$/.test(req)) {
@@ -141,6 +142,14 @@ const call = async (fn, method, { query, body, key } = {}) => {
   failTo = ''
   r = await call(send, 'POST', { key: 'k', body: { slug } })
   assert.strictEqual(r.status, 409, 'a second full send is refused')
+  // Two sends at once: only one gets through, the other is refused before any email goes out.
+  sent.length = 0
+  const [x, y] = await Promise.all([
+    call(send, 'POST', { key: 'k', body: { slug, resend: true } }),
+    call(send, 'POST', { key: 'k', body: { slug, resend: true } }),
+  ])
+  assert.deepStrictEqual([x.status, y.status].sort(), [200, 409], 'two simultaneous sends: one goes, one is refused')
+  assert.strictEqual(sent.length, 3, 'subscribers get the email once, not twice')
   sent.length = 0
   r = await call(send, 'POST', { key: 'k', body: { slug, resend: true } })
   assert.strictEqual(r.body.sent, 3, 'resend works when asked')

@@ -15,7 +15,7 @@ function Parts({ parts }: { parts: Part[] }) {
       {parts.map((p, i) =>
         p.href ? (
           <a key={i} href={p.href} target="_blank" rel="noopener noreferrer" className="text-navy underline decoration-gold underline-offset-2 hover:text-gold">
-            {p.text}
+            {p.text}<span className="sr-only"> (opens in a new tab)</span>
           </a>
         ) : (
           <span key={i}>{p.text}</span>

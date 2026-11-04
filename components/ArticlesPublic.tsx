@@ -73,7 +73,7 @@ export default function ArticlesPublic() {
                 <h2 className="font-display text-xl font-bold text-navy mb-3">Sources</h2>
                 <ul className="list-disc pl-6 space-y-2 text-[15px] text-slate-700">
                   {article.sources.map((s, i) => (
-                    <li key={i}><a href={s.href} target="_blank" rel="noopener noreferrer" className="text-navy underline decoration-gold underline-offset-2 hover:text-gold">{s.label}</a></li>
+                    <li key={i}><a href={s.href} target="_blank" rel="noopener noreferrer" className="text-navy underline decoration-gold underline-offset-2 hover:text-gold">{s.label}<span className="sr-only"> (opens in a new tab)</span></a></li>
                   ))}
                 </ul>
               </div>
@@ -92,9 +92,11 @@ export default function ArticlesPublic() {
     <div className="bg-cream min-h-screen">
       {header('Articles', 'Short, plain-language pieces on current privacy topics, written for people who are not privacy experts.')}
       <div className="max-w-3xl mx-auto px-6 py-12 space-y-8">
-        {state === 'loading' && <p className="text-[14px] text-slate-500">Loading…</p>}
-        {state === 'error' && <p className="text-[14px] text-slate-500">Articles could not be loaded right now. Please try again shortly.</p>}
-        {state === 'missing' && <p className="text-[14px] text-slate-500">That article could not be found. It may have been moved or taken down. <a href="/articles" className="underline">See all articles</a>.</p>}
+        <div role="status" aria-live="polite">
+          {state === 'loading' && <p className="text-[14px] text-slate-500">Loading…</p>}
+          {state === 'error' && <p className="text-[14px] text-slate-500">Articles could not be loaded right now. Please try again shortly.</p>}
+          {state === 'missing' && <p className="text-[14px] text-slate-500">That article could not be found. It may have been moved or taken down. <a href="/articles" className="underline">See all articles</a>.</p>}
+        </div>
         {state === 'ok' && !slug && list && list.length === 0 && (
           <p className="text-[14px] text-slate-500">The first article is on its way. Subscribe below and it will land in your inbox.</p>
         )}
