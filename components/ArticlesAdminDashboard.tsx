@@ -57,7 +57,7 @@ export default function ArticlesAdminDashboard() {
 
   const open = (r: Row) => { setForm({ slug: r.slug, title: r.title, summary: r.summary, author: r.author, body: r.body, sources: r.sources }); setPreview(null); setMsg('') }
   const startNew = () => { setForm(blank); setPreview(null); setMsg('') }
-  const startVoter = () => { setForm({ ...blank, ...STARTER_ARTICLE }); setPreview(null); setMsg('Loaded the voter privacy article. Add the author, check every claim against the sources, then save a draft.') }
+  const startVoter = () => { setForm({ ...blank, ...STARTER_ARTICLE }); setPreview(null); setMsg('Loaded the voter privacy article. Confirm the author, check every claim against the sources, then save a draft.') }
 
   const save = () => run(async () => {
     const d = await call('/api/articles', { method: 'POST', body: { action: 'save', ...form } })
@@ -125,7 +125,10 @@ export default function ArticlesAdminDashboard() {
           <p className="w-full text-[11px] text-slate-500">The key stays in this browser tab's memory only and is sent solely to ODIPA's own API.</p>
         </div>
 
-        {msg && <p role="status" className="text-[13px] bg-white border border-slate-200 rounded-lg px-4 py-3 text-navy">{msg}</p>}
+        {/* The live region stays mounted so screen readers announce each new message. */}
+        <div role="status" aria-live="polite">
+          {msg && <p className="text-[13px] bg-white border border-slate-200 rounded-lg px-4 py-3 text-navy">{msg}</p>}
+        </div>
 
         {rows && (
           <div className="bg-white rounded-xl border border-slate-200 p-5">
@@ -201,7 +204,7 @@ export default function ArticlesAdminDashboard() {
             <ArticleBody blocks={preview.blocks} />
             {preview.sources.length > 0 && (
               <ul className="list-disc pl-6 mt-8 space-y-1 text-[14px]">
-                {preview.sources.map(s => <li key={s.href}>{s.label}</li>)}
+                {preview.sources.map((s, i) => <li key={i}>{s.label}</li>)}
               </ul>
             )}
           </div>
