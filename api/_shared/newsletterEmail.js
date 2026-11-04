@@ -34,7 +34,7 @@ function removeAll(text, re) {
 
 /** The plain text copy of an email. Text only, so nothing here is ever run as HTML. */
 function toPlainText(html) {
-  const text = removeAll(removeAll(String(html), /<style[\s\S]*?<\/style>/gi), /<script[\s\S]*?<\/script>/gi)
+  const text = removeAll(removeAll(String(html), /<style[\s\S]*?<\/style\s*>/gi), /<script[\s\S]*?<\/script\s*>/gi)
     .replace(/<br\s*\/?>(\n)?/gi, '\n')
     .replace(/<\/(p|div|h[1-6]|li)>/gi, '\n')
   return removeAll(text, /<[^>]*>/g)
