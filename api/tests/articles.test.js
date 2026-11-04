@@ -107,6 +107,19 @@ const call = async (fn, method, { query, body, key } = {}) => {
   assert(r.body.article.blocks.length === 2 && r.body.article.sources.length === 1)
   assert(!('body' in r.body.article), 'the public gets parsed blocks, not the draft source')
 
+  // A live article cannot be edited into one that breaks the publishing rules.
+  r = await call(articles, 'POST', { key: 'k', body: Object.assign({ action: 'save', slug }, good, { author: '' }) })
+  assert.strictEqual(r.status, 400, 'editing a published article still checks the rules')
+  r = await call(articles, 'GET', { query: { slug } })
+  assert.strictEqual(r.body.article.author, good.author, 'the live article is unchanged')
+
+  // A long title whose cut point lands on a hyphen still gets a valid suffixed address.
+  const longTitle = 'a'.repeat(54) + ' bcdefghij'
+  r = await call(articles, 'POST', { key: 'k', body: Object.assign({ action: 'save' }, good, { title: longTitle }) })
+  r = await call(articles, 'POST', { key: 'k', body: Object.assign({ action: 'save' }, good, { title: longTitle }) })
+  assert(A.validSlug(r.body.slug), 'the suffixed address is valid: ' + r.body.slug)
+  await call(articles, 'POST', { key: 'k', body: { action: 'delete', slug: r.body.slug } })
+
   // Email: test, full, no double send, counts only.
   const sub = e => tables.set(`sub|${e}`, { partitionKey: 'sub', rowKey: e, email: e, status: 'confirmed' })
   sub('a@example.com'); sub('b@example.com'); sub('c@example.com')

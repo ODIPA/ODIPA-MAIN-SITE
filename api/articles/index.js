@@ -63,7 +63,15 @@ module.exports = async function handler(context, req) {
       } else {
         const base = A.slugify(v.value.title) || 'article'
         slug = base
-        for (let n = 2; await A.getArticle(slug); n++) slug = `${base.slice(0, 55)}-${n}`
+        // Trim a trailing hyphen so the suffixed slug stays valid (no "--").
+        const stem = base.slice(0, 55).replace(/-+$/, '') || 'article'
+        for (let n = 2; await A.getArticle(slug); n++) slug = `${stem}-${n}`
+      }
+      // A published article stays live after a save, so it must still meet the publishing rules.
+      const existing = b.slug ? await A.getArticle(slug) : null
+      if (existing && existing.status === 'published') {
+        const problems = A.publishProblems(v.value)
+        if (problems.length) return reply(context, 400, { error: 'This article is live, so the edit must still meet the publishing rules.', problems })
       }
       await A.saveArticle(slug, v.value)
       return reply(context, 200, { ok: true, slug })

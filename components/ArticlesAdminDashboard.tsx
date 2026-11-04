@@ -64,7 +64,7 @@ export default function ArticlesAdminDashboard() {
     const list = await call('/api/articles?all=1')
     setRows(list.articles)
     setForm(f => ({ ...f, slug: d.slug }))
-    setMsg('Saved as a draft. It is not public yet.')
+    setMsg(current?.status === 'published' ? 'Saved. The changes are live now.' : 'Saved as a draft. It is not public yet.')
   })
 
   const doPreview = () => run(async () => {
@@ -155,7 +155,7 @@ export default function ArticlesAdminDashboard() {
             <div><label htmlFor="a-title" className={label}>Title</label><input id="a-title" value={form.title} onChange={set('title')} maxLength={160} className={field} /></div>
             <div className="grid md:grid-cols-2 gap-4">
               <div><label htmlFor="a-author" className={label}>Author (required to publish)</label><input id="a-author" value={form.author} onChange={set('author')} maxLength={120} className={field} /></div>
-              <div><label className={label}>Web address</label><p className="text-[14px] text-slate-600 py-2">/articles?a={form.slug || '(set when you first save)'}</p></div>
+              <div><span className={label}>Web address</span><p className="text-[14px] text-slate-600 py-2">/articles?a={form.slug || '(set when you first save)'}</p></div>
             </div>
             <div><label htmlFor="a-summary" className={label}>Summary (shown in the list and the email, 1 to 2 sentences)</label><textarea id="a-summary" value={form.summary} onChange={set('summary')} rows={2} maxLength={400} className={field} /></div>
             <div>
