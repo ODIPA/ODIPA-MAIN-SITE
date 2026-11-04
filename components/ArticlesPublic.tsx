@@ -72,8 +72,8 @@ export default function ArticlesPublic() {
               <div className="mt-10 pt-6 border-t border-slate-200">
                 <h2 className="font-display text-xl font-bold text-navy mb-3">Sources</h2>
                 <ul className="list-disc pl-6 space-y-2 text-[15px] text-slate-700">
-                  {article.sources.map(s => (
-                    <li key={s.href}><a href={s.href} target="_blank" rel="noopener noreferrer" className="text-navy underline decoration-gold underline-offset-2 hover:text-gold">{s.label}</a></li>
+                  {article.sources.map((s, i) => (
+                    <li key={i}><a href={s.href} target="_blank" rel="noopener noreferrer" className="text-navy underline decoration-gold underline-offset-2 hover:text-gold">{s.label}</a></li>
                   ))}
                 </ul>
               </div>

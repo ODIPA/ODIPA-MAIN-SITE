@@ -113,10 +113,12 @@ function blocksToHtml(blocks) {
 /** Check the fields. Returns {error} or {value}. */
 function validateFields(input) {
   const f = input || {}
-  const title = String(f.title || '').replace(/<[^>]*>/g, '').trim().slice(0, LIMITS.title)
+  // One line fields: line breaks become spaces, so the title is safe as an email subject.
+  const line = (v, max) => String(v || '').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().slice(0, max)
+  const title = line(f.title, LIMITS.title)
   if (!title) return { error: 'A title is required.' }
-  const summary = String(f.summary || '').replace(/<[^>]*>/g, '').trim().slice(0, LIMITS.summary)
-  const author = String(f.author || '').replace(/<[^>]*>/g, '').trim().slice(0, LIMITS.author)
+  const summary = line(f.summary, LIMITS.summary)
+  const author = line(f.author, LIMITS.author)
   const body = String(f.body || '').slice(0, LIMITS.body)
   const sources = String(f.sources || '').slice(0, LIMITS.sources)
   return { value: { title, summary, author, body, sources } }
@@ -129,7 +131,7 @@ function publishProblems(a) {
   if (!a.summary) problems.push('Add a one or two sentence summary.')
   if (parseBody(a.body).filter(b => b.t === 'p').length < 2) problems.push('The article needs at least two paragraphs.')
   if (parseSources(a.sources).length < 1) problems.push('Add at least one source as "Label | https://link".')
-  if (/—/.test([a.title, a.summary, a.body].join(' '))) problems.push('Replace the em dashes with commas or full stops.')
+  if (/—/.test([a.title, a.summary, a.author, a.body, a.sources].join(' '))) problems.push('Replace the em dashes with commas or full stops.')
   return problems
 }
 
