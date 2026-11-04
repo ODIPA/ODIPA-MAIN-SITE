@@ -11,7 +11,7 @@ type Variant = 'footer' | 'banner' | 'inline'
 type State   = 'idle' | 'submitting' | 'success' | 'error'
 
 interface Props {
-  /** Visual variant — footer (dark), banner (gold accent), inline (light card) */
+  /** Visual variant: footer (dark), banner (gold accent), inline (light card) */
   variant?: Variant
   /** Source label sent to API for attribution */
   source?: string

@@ -202,17 +202,17 @@ export default function ArticlesAdminDashboard() {
                     <div>
                       <div className="flex items-center justify-between mb-1.5">
                         <label htmlFor="p-li" className={label}>LinkedIn</label>
-                        <button onClick={() => copy('li', posts.linkedin)} className="font-mono text-[11px] text-navy underline">{copied === 'li' ? 'Copied' : 'Copy'}</button>
+                        <button onClick={() => copy('li', posts.linkedin)} aria-label="Copy the LinkedIn post" className="font-mono text-[11px] text-navy underline">{copied === 'li' ? 'Copied' : 'Copy'}</button>
                       </div>
                       <textarea id="p-li" value={posts.linkedin} onChange={e => setPosts({ ...posts, linkedin: e.target.value })} rows={10} className={field} />
                     </div>
                     <div>
                       <div className="flex items-center justify-between mb-1.5">
                         <label htmlFor="p-sh" className={label}>X, Bluesky, Mastodon</label>
-                        <button onClick={() => copy('sh', posts.short)} className="font-mono text-[11px] text-navy underline">{copied === 'sh' ? 'Copied' : 'Copy'}</button>
+                        <button onClick={() => copy('sh', posts.short)} aria-label="Copy the short post" className="font-mono text-[11px] text-navy underline">{copied === 'sh' ? 'Copied' : 'Copy'}</button>
                       </div>
-                      <textarea id="p-sh" value={posts.short} onChange={e => setPosts({ ...posts, short: e.target.value })} rows={10} className={field} />
-                      <p className={`text-[11px] mt-1 ${posts.short.length > 280 ? 'text-red-600' : 'text-slate-500'}`}>{posts.short.length} characters{posts.short.length > 280 ? ', too long for X' : ''}</p>
+                      <textarea id="p-sh" aria-describedby="p-sh-count" value={posts.short} onChange={e => setPosts({ ...posts, short: e.target.value })} rows={10} className={field} />
+                      <p id="p-sh-count" className={`text-[11px] mt-1 ${posts.short.length > 280 ? 'text-red-600' : 'text-slate-500'}`}>{posts.short.length} characters{posts.short.length > 280 ? ', too long for X' : ''}</p>
                     </div>
                   </div>
                 )}
