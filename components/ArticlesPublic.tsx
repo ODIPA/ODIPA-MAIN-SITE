@@ -80,7 +80,7 @@ export default function ArticlesPublic() {
             )}
           </article>
           <div className="bg-white rounded-xl border border-slate-200 p-6">
-            <NewsletterSignup variant="inline" source="Article" />
+            <NewsletterSignup variant="inline" source="Article" label="Get new articles" blurb="New ODIPA articles and the Privacy Monthly Digest, by email. Free, no spam." />
           </div>
           <a href="/articles" className="inline-block text-[14px] text-navy underline decoration-gold underline-offset-2">All articles</a>
         </div>
@@ -109,7 +109,7 @@ export default function ArticlesPublic() {
         ))}
         {!slug && (
           <div className="bg-white rounded-xl border border-slate-200 p-6">
-            <NewsletterSignup variant="inline" source="Articles" />
+            <NewsletterSignup variant="inline" source="Articles" label="Get new articles" blurb="New ODIPA articles and the Privacy Monthly Digest, by email. Free, no spam." />
           </div>
         )}
       </div>

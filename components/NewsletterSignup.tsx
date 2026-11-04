@@ -15,10 +15,13 @@ interface Props {
   variant?: Variant
   /** Source label sent to API for attribution */
   source?: string
+  /** Inline variant only: the small heading and the line under it. Defaults describe the newsletter. */
+  label?: string
+  blurb?: string
 }
 
 /** Newsletter sign-up. Collects an email address and nothing else. */
-export default function NewsletterSignup({ variant = 'footer', source = 'Website' }: Props) {
+export default function NewsletterSignup({ variant = 'footer', source = 'Website', label = 'Newsletter', blurb = 'Get privacy news, research releases, and breach alerts. Free, no spam.' }: Props) {
   const [email, setEmail]     = useState('')
   const [state, setState]     = useState<State>('idle')
   const [error, setError]     = useState('')
@@ -201,7 +204,7 @@ export default function NewsletterSignup({ variant = 'footer', source = 'Website
     <div className="bg-white rounded-2xl border border-slate-200 p-6">
       <div className="flex items-center gap-2.5 font-mono text-[10px] text-blue-brand uppercase tracking-[2px] mb-3">
         <Mail className="w-3.5 h-3.5" />
-        Newsletter
+        {label}
       </div>
       {state === 'success' ? (
         <div className="flex items-start gap-3 py-2">
@@ -218,7 +221,7 @@ export default function NewsletterSignup({ variant = 'footer', source = 'Website
       ) : (
         <form onSubmit={handleSubmit} onFocus={startChallenge} noValidate className="space-y-2.5">
           <p className="text-[13px] text-slate-500 leading-relaxed mb-3">
-            Get privacy news, research releases, and breach alerts. Free, no spam.
+            {blurb}
           </p>
           <div className="flex gap-2">
             <input

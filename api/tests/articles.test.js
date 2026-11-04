@@ -37,6 +37,7 @@ Module._load = function (req, parent, ...rest) {
 const A = require(path.join(api, '_shared/articles.js'))
 const articles = require(path.join(api, 'articles/index.js'))
 const send = require(path.join(api, 'articles-send/index.js'))
+const social = require(path.join(api, 'articles-social/index.js'))
 const call = async (fn, method, { query, body, key } = {}) => {
   const c = { log: { error() {}, warn() {} } }
   await fn(c, { method, query: query || {}, body, headers: key === undefined ? {} : { 'x-admin-key': key } })
@@ -153,6 +154,20 @@ const call = async (fn, method, { query, body, key } = {}) => {
   sent.length = 0
   r = await call(send, 'POST', { key: 'k', body: { slug, resend: true } })
   assert.strictEqual(r.body.sent, 3, 'resend works when asked')
+
+  // Social posts: admin only, built from the article, no em dashes, nothing posted anywhere.
+  process.env.ANTHROPIC_API_KEY = 'x'
+  let seen = null
+  global.fetch = async (url, opts) => { seen = JSON.parse(opts.body); return { ok: true, json: async () => ({ content: [{ type: 'text', text: '{"linkedin":"Big news \u2014 read it https://www.odipa.org/articles?a=your-vote-is-private","short":"Short post https://www.odipa.org/articles?a=your-vote-is-private"}' }] }) } }
+  r = await call(social, 'POST', { body: { slug } })
+  assert.strictEqual(r.status, 401); assert.strictEqual(seen, null, 'no model call without the key')
+  r = await call(social, 'POST', { key: 'k', body: { slug: 'missing' } })
+  assert.strictEqual(r.status, 404)
+  r = await call(social, 'POST', { key: 'k', body: { slug } })
+  assert.strictEqual(r.status, 200)
+  assert(!/\u2014/.test(r.body.linkedin), 'em dashes are removed from the result')
+  assert(r.body.short.includes('?a=your-vote-is-private') && r.body.published === true)
+  assert(seen.system.includes('?a=your-vote-is-private') && seen.messages[0].content.includes('One.'), 'the model gets the link and the article text')
 
   // Unpublish hides it again; delete removes it.
   await call(articles, 'POST', { key: 'k', body: { action: 'unpublish', slug } })

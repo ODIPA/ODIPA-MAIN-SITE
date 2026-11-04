@@ -28,6 +28,8 @@ export default function ArticlesAdminDashboard() {
   const [testTo, setTestTo] = useState('')
   const [msg, setMsg] = useState('')
   const [busy, setBusy] = useState(false)
+  const [posts, setPosts] = useState<{ linkedin: string; short: string; published: boolean } | null>(null)
+  const [copied, setCopied] = useState('')
 
   const current = rows?.find(r => r.slug === form.slug) || null
   const set = (k: keyof typeof blank) => (e: { target: { value: string } }) => setForm(f => ({ ...f, [k]: e.target.value }))
@@ -55,8 +57,8 @@ export default function ArticlesAdminDashboard() {
     return d.articles as Row[]
   })
 
-  const open = (r: Row) => { setForm({ slug: r.slug, title: r.title, summary: r.summary, author: r.author, body: r.body, sources: r.sources }); setPreview(null); setMsg('') }
-  const startNew = () => { setForm(blank); setPreview(null); setMsg('') }
+  const open = (r: Row) => { setPosts(null); setForm({ slug: r.slug, title: r.title, summary: r.summary, author: r.author, body: r.body, sources: r.sources }); setPreview(null); setMsg('') }
+  const startNew = () => { setForm(blank); setPreview(null); setPosts(null); setMsg('') }
   const startVoter = () => { setForm({ ...blank, ...STARTER_ARTICLE }); setPreview(null); setMsg('Loaded the voter privacy article. Confirm the author, check every claim against the sources, then save a draft.') }
 
   const save = () => run(async () => {
@@ -82,6 +84,17 @@ export default function ArticlesAdminDashboard() {
     if (action === 'delete') setForm(blank)
     setMsg(action === 'publish' ? 'Published. It is now live at /articles.' : action === 'unpublish' ? 'Unpublished. It is a draft again.' : 'Deleted.')
   })
+
+  const genPosts = () => run(async () => {
+    setMsg('Drafting the posts from the saved article. This takes about 15 seconds.')
+    const d = await call('/api/articles-social', { method: 'POST', body: { slug: form.slug } })
+    setPosts({ linkedin: d.linkedin, short: d.short, published: d.published })
+    setMsg(d.published ? 'Posts drafted. Read them, edit if needed, copy and post them yourself.' : 'Posts drafted, but the article is not published yet, so the link will not work until you publish it.')
+  })
+
+  const copy = async (which: string, text: string) => {
+    try { await navigator.clipboard.writeText(text); setCopied(which); setTimeout(() => setCopied(''), 1500) } catch { setMsg('Could not copy. Select the text and copy it by hand.') }
+  }
 
   const sendTest = () => run(async () => {
     await call('/api/articles-send', { method: 'POST', body: { slug: form.slug, testTo } })
@@ -178,6 +191,33 @@ export default function ArticlesAdminDashboard() {
               {form.slug && current?.status === 'published' && <button onClick={() => act('unpublish')} disabled={busy} className={`${btn} border border-navy text-navy`}>Unpublish</button>}
               {form.slug && <button onClick={() => act('delete')} disabled={busy} className={`${btn} border border-red-300 text-red-700`}>Delete</button>}
             </div>
+
+            {form.slug && (
+              <div className="border-t border-slate-200 pt-4 space-y-3">
+                <h3 className="font-semibold text-navy text-[15px]">Social media posts</h3>
+                <p className="text-[13px] text-slate-600">Drafts a LinkedIn post and a short post for X, Bluesky and Mastodon from the saved article. Nothing is posted for you. Save your edits first.</p>
+                <button onClick={genPosts} disabled={busy} className={`${btn} border border-navy text-navy`}>{posts ? 'Regenerate posts' : 'Generate social posts'}</button>
+                {posts && (
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label htmlFor="p-li" className={label}>LinkedIn</label>
+                        <button onClick={() => copy('li', posts.linkedin)} className="font-mono text-[11px] text-navy underline">{copied === 'li' ? 'Copied' : 'Copy'}</button>
+                      </div>
+                      <textarea id="p-li" value={posts.linkedin} onChange={e => setPosts({ ...posts, linkedin: e.target.value })} rows={10} className={field} />
+                    </div>
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label htmlFor="p-sh" className={label}>X, Bluesky, Mastodon</label>
+                        <button onClick={() => copy('sh', posts.short)} className="font-mono text-[11px] text-navy underline">{copied === 'sh' ? 'Copied' : 'Copy'}</button>
+                      </div>
+                      <textarea id="p-sh" value={posts.short} onChange={e => setPosts({ ...posts, short: e.target.value })} rows={10} className={field} />
+                      <p className={`text-[11px] mt-1 ${posts.short.length > 280 ? 'text-red-600' : 'text-slate-500'}`}>{posts.short.length} characters{posts.short.length > 280 ? ', too long for X' : ''}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {form.slug && current?.status === 'published' && (
               <div className="border-t border-slate-200 pt-4 space-y-3">
