@@ -226,6 +226,7 @@ export default function NewsletterSignup({ variant = 'footer', source = 'Website
           <div className="flex gap-2">
             <input
               type="email"
+              aria-label="Email address"
               placeholder="your@email.com"
               value={email}
               onChange={e => { setEmail(fmtEmail(e.target.value)); setError('') }} onBlur={e => setEmail(fmtEmail(e.target.value).trim())}
@@ -235,6 +236,7 @@ export default function NewsletterSignup({ variant = 'footer', source = 'Website
             />
             <button
               type="submit"
+              aria-label="Subscribe"
               disabled={state === 'submitting'}
               className="flex-shrink-0 flex items-center gap-1.5 bg-navy hover:bg-navy-mid disabled:opacity-50
                 text-white font-semibold text-[12px] px-4 py-2.5 rounded-lg transition-colors"
