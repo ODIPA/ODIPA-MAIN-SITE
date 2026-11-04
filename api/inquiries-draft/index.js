@@ -64,8 +64,8 @@ Hard rules:
 - Sign off as "The ODIPA Team".
 - The recipient already received an automatic acknowledgment days ago. Do not re-acknowledge receipt. Get to substance.`
 
-// A reply that invites a call or asks for times.
-const offersCall = body => /\b(call|meeting|meet|schedul\w*|availab\w*|chat)\b/i.test(String(body || ''))
+// A reply that invites a call or asks for times, in the subject or the body.
+const offersCall = r => /\b(call|meeting|meet|schedul\w*|availab\w*|chat)\b/i.test(`${(r && r.subject) || ''}\n${(r && r.body) || ''}`)
 
 module.exports = async function (context, req) {
   if (req.method === 'OPTIONS') return respond(context, 200, {})
@@ -137,9 +137,9 @@ module.exports = async function (context, req) {
         result = await ask(user)
         // The model sometimes offers a call to a thin application despite the
         // rule. Check in code, ask once more, and flag it if it still does.
-        if (thin && result && result.action === 'draft' && offersCall(result.body)) {
+        if (thin && result && result.action === 'draft' && offersCall(result)) {
           result = await ask(user + '\n\nYour last draft mentioned a call, a meeting, scheduling or availability. This application is THIN, so none of that is allowed. Rewrite it to ask for the missing details only.')
-          if (result && result.action === 'draft' && offersCall(result.body))
+          if (result && result.action === 'draft' && offersCall(result))
             result = { action: 'flag', reason: 'Thin volunteer application: the draft kept offering a call. Write the reply by hand and ask for their details first.' }
         }
       } catch (modelErr) {

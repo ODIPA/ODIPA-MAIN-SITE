@@ -90,6 +90,12 @@ const run = async body => {
   assert.deepStrictEqual([r.body.drafted, r.body.flagged], [0, 1], 'a draft that keeps offering a call is flagged')
   assert.strictEqual(rows[0].status, 'needs-attention')
 
+  reset(1)
+  replyFor = () => ({ action: 'draft', subject: 'Intro call', body: 'Thanks. Please send a resume link.' })
+  r = await run({ limit: 1 })
+  assert.strictEqual(modelCalls, 2, 'a call offered in the subject also triggers the second ask')
+  assert.strictEqual(r.body.flagged, 1)
+
   reset(1); rows[0].message = 'VOLUNTEER APPLICATION\nWhy ODIPA: privacy'
   replyFor = () => ({ action: 'draft', subject: 'Hi', body: 'Could you do a short intro call?' })
   r = await run({ limit: 1 })
