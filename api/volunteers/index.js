@@ -4,11 +4,15 @@
  *   GET                                   every volunteer, newest application first
  *   POST { id, status?, notes? }          change a status or the note
  *   POST { id, action: 'delete' }         remove a volunteer from the roster
+ *   POST { action: 'add', name, email, roles?, hours?, status?, notes? }  add one volunteer by hand
+ *   POST { action: 'import', dryRun? }    add earlier volunteer applicants from the inquiry board
  * Statuses: applied, intro-call, active, paused, alumni. Responses are never
  * cached and nothing here is logged.
  */
 const { isAdminRequest } = require('../_shared/adminAuth')
 const V = require('../_shared/volunteers')
+const { listInquiries } = require('../_shared/inquiries')
+const { listDeletions } = require('../_shared/subscriberAdmin')
 
 function reply(context, status, body) {
   context.res = { status, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }, body: JSON.stringify(body) }
@@ -22,6 +26,50 @@ module.exports = async function handler(context, req) {
     if (req.method !== 'POST') return reply(context, 405, { error: 'Method not allowed' })
 
     const b = req.body || {}
+
+    // Add one volunteer by hand, for people who did not apply through the form.
+    // Someone already on the roster is never changed, the answer says so.
+    if (b.action === 'add') {
+      const line = (v, max) => String(v == null ? '' : v).replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().slice(0, max)
+      const email = line(b.email, 254).toLowerCase()
+      const name = line(b.name, 100)
+      if (!name) return reply(context, 400, { error: 'A name is required.' })
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return reply(context, 400, { error: 'A valid email address is required.' })
+      const status = b.status === undefined ? 'active' : String(b.status)
+      if (!V.STATUSES.includes(status)) return reply(context, 400, { error: 'Invalid status' })
+      const made = await V.addIfMissing({ email, name, roles: line(b.roles, 300), hours: line(b.hours, 60), status, notes: line(b.notes, 1000) })
+      if (!made) return reply(context, 409, { error: 'That email address is already on the roster.' })
+      return reply(context, 200, { ok: true })
+    }
+
+    // Earlier applicants are on the inquiry board but not on the roster. Add them
+    // once. People already on the roster are left alone, and cards the team
+    // dismissed are skipped. A card in "meeting" starts at Intro call scheduled.
+    if (b.action === 'import') {
+      const fromLine = (msg, label) => { const m = new RegExp(`^${label}: (.+)$`, 'mi').exec(String(msg || '')); return m ? m[1].trim() : '' }
+      const cards = (await listInquiries()).filter(c => c.topic === 'volunteer' && c.email)
+      // Someone removed through the Subscribers tool must not come back from their old
+      // inquiry card. The deletion log keeps the first 10 characters of a hash of the
+      // address and nothing else, which is enough to recognise them here.
+      const deletedRefs = new Set((await listDeletions(100000)).map(d => d.reference))
+      let toAdd = 0, existing = 0, dismissed = 0, removedBefore = 0
+      const seen = new Set()
+      for (const c of cards) {
+        const key = V.idFor(c.email)
+        if (seen.has(key)) continue
+        if (c.status === 'dismissed') { dismissed++; continue }
+        if (deletedRefs.has(key.slice(0, 10))) { removedBefore++; continue }
+        seen.add(key)
+        const row = { email: c.email, name: c.name, roles: fromLine(c.message, 'Roles of interest'), hours: fromLine(c.message, 'Time available'), appliedAt: new Date(Number(c.receivedAt) || Date.now()).toISOString(), status: c.status === 'meeting' ? 'intro-call' : 'applied', inquiryId: c.rowKey }
+        if (b.dryRun) {
+          const here = (await V.listVolunteers()).some(v => v.id === key)
+          if (here) existing++; else toAdd++
+        } else if (await V.addIfMissing(row)) toAdd++
+        else existing++
+      }
+      return reply(context, 200, { ok: true, dryRun: !!b.dryRun, toAdd, alreadyOnRoster: existing, skippedDismissed: dismissed, skippedRemoved: removedBefore })
+    }
+
     const id = String(b.id || '')
     if (!/^[a-f0-9]{64}$/.test(id)) return reply(context, 400, { error: 'A valid id is required' })
     if (b.action === 'delete') {

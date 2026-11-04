@@ -45,6 +45,27 @@ async function recordApplication({ email, name, roles, hours, inquiryId, memberR
   return id
 }
 
+/**
+ * Add a roster row for an earlier applicant, only if the person is not already on
+ * the roster. Never changes an existing row. Returns true when a row was created.
+ */
+async function addIfMissing({ email, name, roles, hours, appliedAt, status, inquiryId, notes }) {
+  const client = getTable()
+  await ensureTable(client)
+  const id = idFor(email)
+  try { await client.getEntity(PARTITION, id); return false } catch (e) { if (!(e && e.statusCode === 404)) throw e }
+  const when = appliedAt || new Date().toISOString()
+  await client.upsertEntity({
+    partitionKey: PARTITION, rowKey: id,
+    email: String(email).toLowerCase(), name: name || '',
+    roles: String(roles || '').slice(0, 300), hours: String(hours || '').slice(0, 60),
+    status: STATUSES.includes(status) ? status : 'applied',
+    appliedAt: when, statusUpdatedAt: when, notes: String(notes || '').slice(0, 1000), inquiryId: inquiryId || '',
+    memberRequested: false, applications: 1,
+  }, 'Replace')
+  return true
+}
+
 async function listVolunteers() {
   const client = getTable()
   await ensureTable(client)
@@ -118,4 +139,4 @@ async function deleteVolunteer(id) {
   await getTable().deleteEntity(PARTITION, id)
 }
 
-module.exports = { STATUSES, LABELS, idFor, recordApplication, listVolunteers, updateVolunteer, advanceFromApplied, deleteVolunteerByEmail, deleteVolunteersMatching, deleteVolunteer }
+module.exports = { STATUSES, LABELS, idFor, recordApplication, addIfMissing, listVolunteers, updateVolunteer, advanceFromApplied, deleteVolunteerByEmail, deleteVolunteersMatching, deleteVolunteer }

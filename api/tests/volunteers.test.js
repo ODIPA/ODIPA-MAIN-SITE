@@ -130,6 +130,48 @@ const rows = () => [...store.entries()].filter(([k]) => k.startsWith('volunteers
   a = await call(roster, 'POST', { key: 'k', body: { id: 'f'.repeat(64), status: 'active' } })
   assert.strictEqual(a.status, 404, 'an unknown volunteer is a 404, not a server error')
 
+  // 7c. Import earlier applicants from the inquiry board: once, never overwriting, skipping dismissed.
+  for (const k of [...store.keys()]) if (k.startsWith('inquiries|')) store.delete(k) // start from an empty inquiry board
+  const tables_sub = e => store.set(`subscribers|sub|${require('crypto').createHash('sha256').update(e).digest('hex')}`, { partitionKey: 'sub', rowKey: require('crypto').createHash('sha256').update(e).digest('hex'), email: e, status: 'confirmed' })
+  const card = (id, over) => store.set(`inquiries|inquiry|${id}`, Object.assign({ partitionKey: 'inquiry', rowKey: id, topic: 'volunteer', status: 'acked', receivedAt: 1700000000000 }, over))
+  card('o1', { email: 'old1@example.com', name: 'Old One', message: 'VOLUNTEER APPLICATION\nRoles of interest: Privacy Researcher\nTime available: 2 to 4 hours a month' })
+  card('o2', { email: 'old2@example.com', name: 'Old Two', message: 'Interested in volunteering', status: 'meeting' })
+  card('o3', { email: 'old3@example.com', name: 'Old Three', message: 'spam', status: 'dismissed' })
+  card('o4', { email: 'old1@example.com', name: 'Old One again', message: 'again' })
+  card('o5', { email: 'p@example.com', name: 'Not a volunteer', topic: 'press', message: 'press question' })
+  tables_sub('gone@example.com')
+  assert.strictEqual((await SA.deletePerson({ email: 'gone@example.com', reason: 'requested' })).deleted, true)
+  card('o6', { email: 'gone@example.com', name: 'Gone Person', message: 'I want to volunteer' })
+  a = await call(roster, 'POST', { body: { action: 'import' } }); assert.strictEqual(a.status, 401)
+  const before = rows().length
+  a = await call(roster, 'POST', { key: 'k', body: { action: 'import', dryRun: true } })
+  assert.deepStrictEqual([a.body.toAdd, a.body.skippedDismissed, a.body.skippedRemoved], [2, 1, 1]); assert.strictEqual(rows().length, before, 'a dry run adds nothing')
+  a = await call(roster, 'POST', { key: 'k', body: { action: 'import' } })
+  assert.strictEqual(a.body.toAdd, 2); assert.strictEqual(rows().length, before + 2)
+  const old1 = rows().find(x => x.email === 'old1@example.com'), old2 = rows().find(x => x.email === 'old2@example.com')
+  assert.deepStrictEqual([old1.roles, old1.hours, old1.status], ['Privacy Researcher', '2 to 4 hours a month', 'applied'])
+  assert.strictEqual(old2.status, 'intro-call', 'a card already in meeting starts at intro call')
+  assert(!rows().some(x => x.email === 'old3@example.com' || x.email === 'p@example.com' || x.email === 'gone@example.com'), 'dismissed, non-volunteer and previously deleted people are not imported')
+  await call(roster, 'POST', { key: 'k', body: { id: V.idFor('old1@example.com'), status: 'active' } })
+  a = await call(roster, 'POST', { key: 'k', body: { action: 'import' } })
+  assert.strictEqual(a.body.toAdd, 0, 'running it again adds nobody')
+  assert.strictEqual(rows().find(x => x.email === 'old1@example.com').status, 'active', 'and does not change anyone already listed')
+
+  // 7d. Add a volunteer by hand.
+  const add = body => call(roster, 'POST', { key: 'k', body: Object.assign({ action: 'add' }, body) })
+  a = await call(roster, 'POST', { body: { action: 'add', name: 'X', email: 'x@example.com' } }); assert.strictEqual(a.status, 401)
+  a = await add({ name: '', email: 'h1@example.com' }); assert.strictEqual(a.status, 400)
+  a = await add({ name: 'Hand One', email: 'not-an-email' }); assert.strictEqual(a.status, 400)
+  a = await add({ name: 'Hand One', email: 'h1@example.com', status: 'banished' }); assert.strictEqual(a.status, 400)
+  a = await add({ name: 'Hand One', email: ' H1@Example.com ', roles: 'Privacy Researcher', hours: '4 to 6 hours a month', notes: 'Joined at the 2026 launch.' })
+  assert.strictEqual(a.status, 200)
+  const h1 = rows().find(x => x.email === 'h1@example.com')
+  assert.deepStrictEqual([h1.status, h1.roles, h1.notes], ['active', 'Privacy Researcher', 'Joined at the 2026 launch.'], 'added as Active by default, address cleaned')
+  a = await add({ name: 'Hand Again', email: 'h1@example.com', status: 'alumni' })
+  assert.strictEqual(a.status, 409, 'an address already on the roster is refused')
+  assert.strictEqual(rows().find(x => x.email === 'h1@example.com').status, 'active', 'and the existing row is unchanged')
+  assert(!subRow('h1@example.com'), 'adding by hand does not make anyone a member or subscriber')
+
   // 8. Roster delete from the admin.
   a = await call(roster, 'POST', { key: 'k', body: { id: V.idFor('cy@example.com'), action: 'delete' } })
   assert(!rows().some(x => x.email === 'cy@example.com'))

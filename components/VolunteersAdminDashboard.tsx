@@ -59,6 +59,27 @@ export default function VolunteersAdminDashboard() {
     setRows(d.volunteers); setMsg(done)
   })
 
+  const [adding, setAdding] = useState(false)
+  const blankNew = { name: '', email: '', roles: '', hours: '', status: 'active', notes: '' }
+  const [fresh, setFresh] = useState(blankNew)
+  const setNew = (k: keyof typeof blankNew) => (e: { target: { value: string } }) => setFresh(f => ({ ...f, [k]: e.target.value }))
+
+  const addVolunteer = () => run(async () => {
+    await call({ body: { action: 'add', ...fresh } })
+    const d = await call()
+    setRows(d.volunteers); setFresh(blankNew); setAdding(false); setMsg(`${fresh.name} was added to the roster.`)
+  })
+
+  const importEarlier = () => run(async () => {
+    const dry = await call({ body: { action: 'import', dryRun: true } })
+    if (!dry.toAdd) { setMsg(`Nothing to import. ${dry.alreadyOnRoster} earlier applicant${dry.alreadyOnRoster === 1 ? ' is' : 's are'} already on the roster${dry.skippedDismissed ? `, and ${dry.skippedDismissed} dismissed card${dry.skippedDismissed === 1 ? ' was' : 's were'} skipped` : ''}.`); return }
+    if (!window.confirm(`Add ${dry.toAdd} earlier volunteer applicant${dry.toAdd === 1 ? '' : 's'} from the inquiry board to the roster? People already listed are not changed.`)) return
+    const done = await call({ body: { action: 'import' } })
+    const d = await call()
+    setRows(d.volunteers)
+    setMsg(`Added ${done.toAdd} earlier applicant${done.toAdd === 1 ? '' : 's'} to the roster.`)
+  })
+
   const remove = (v: Volunteer) => {
     if (!window.confirm(`Remove ${v.name || v.email} from the volunteer roster? Their original inquiry is not deleted.`)) return
     run(async () => { await call({ body: { id: v.id, action: 'delete' } }); const d = await call(); setRows(d.volunteers); setMsg('Removed from the roster.') })
@@ -95,10 +116,17 @@ export default function VolunteersAdminDashboard() {
           <p className="w-full text-[11px] text-slate-500">The key stays in this browser tab&apos;s memory only and is sent solely to ODIPA&apos;s own API.</p>
         </div>
 
-        {msg && <p role="status" className="text-[13px] bg-white border border-slate-200 rounded-lg px-4 py-3 text-navy">{msg}</p>}
+        <p role="status" aria-live="polite" className={msg ? 'fixed bottom-4 left-4 right-4 md:left-auto md:max-w-md z-50 text-[13px] bg-navy text-white border border-gold rounded-lg shadow-lg px-4 py-3' : 'sr-only'}>{msg}</p>
 
         {rows && (
           <>
+            <div className="flex flex-wrap items-center gap-3">
+              <button onClick={() => setAdding(a => !a)} aria-expanded={adding}
+                className="font-mono text-[12px] font-semibold bg-gold text-navy px-4 py-2 rounded-lg">{adding ? 'Close' : 'Add volunteer'}</button>
+              <button onClick={importEarlier} disabled={busy}
+                className="font-mono text-[12px] font-semibold border border-navy text-navy px-4 py-2 rounded-lg disabled:opacity-40">Import earlier applicants</button>
+              <span className="text-[12px] text-slate-500">Adds people who applied before the roster existed, from the inquiry board.</span>
+            </div>
             <div className="flex flex-wrap gap-2" role="group" aria-label="Filter by status">
               <button onClick={() => setFilter('all')} aria-pressed={filter === 'all'}
                 className={`font-mono text-[12px] px-3 py-1.5 rounded-full border ${filter === 'all' ? 'bg-navy text-white border-navy' : 'bg-white text-navy border-slate-300'}`}>All ({rows.length})</button>
@@ -107,6 +135,24 @@ export default function VolunteersAdminDashboard() {
                   className={`font-mono text-[12px] px-3 py-1.5 rounded-full border ${filter === c.value ? 'bg-navy text-white border-navy' : 'bg-white text-navy border-slate-300'}`}>{c.label} ({c.n})</button>
               ))}
             </div>
+
+            {adding && (
+              <form onSubmit={e => { e.preventDefault(); addVolunteer() }} className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
+                <h2 className="font-display text-lg font-bold text-navy">Add a volunteer</h2>
+                <p className="text-[13px] text-slate-600">For someone who did not apply through the form. This only adds them to the roster. It does not subscribe them or make them a member, and sends no email.</p>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div><label htmlFor="n-name" className="font-mono text-[10px] uppercase tracking-[2px] text-slate-500 block mb-1.5">Name (required)</label><input id="n-name" required value={fresh.name} onChange={setNew('name')} maxLength={100} className={field} /></div>
+                  <div><label htmlFor="n-email" className="font-mono text-[10px] uppercase tracking-[2px] text-slate-500 block mb-1.5">Email (required)</label><input id="n-email" type="email" required value={fresh.email} onChange={setNew('email')} maxLength={254} className={field} /></div>
+                  <div><label htmlFor="n-roles" className="font-mono text-[10px] uppercase tracking-[2px] text-slate-500 block mb-1.5">Roles</label><input id="n-roles" value={fresh.roles} onChange={setNew('roles')} maxLength={300} placeholder="Privacy Researcher, Event Support" className={field} /></div>
+                  <div><label htmlFor="n-hours" className="font-mono text-[10px] uppercase tracking-[2px] text-slate-500 block mb-1.5">Time</label><input id="n-hours" value={fresh.hours} onChange={setNew('hours')} maxLength={60} placeholder="4 to 6 hours a month" className={field} /></div>
+                  <div><label htmlFor="n-status" className="font-mono text-[10px] uppercase tracking-[2px] text-slate-500 block mb-1.5">Status</label>
+                    <select id="n-status" value={fresh.status} onChange={setNew('status')} className={field}>{statuses.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}</select></div>
+                  <div><label htmlFor="n-notes" className="font-mono text-[10px] uppercase tracking-[2px] text-slate-500 block mb-1.5">Notes</label><input id="n-notes" value={fresh.notes} onChange={setNew('notes')} maxLength={1000} className={field} /></div>
+                </div>
+                <button type="submit" disabled={busy || !fresh.name.trim() || !fresh.email.trim()}
+                  className="font-mono text-[12px] font-semibold bg-navy text-white px-5 py-2.5 rounded-lg disabled:opacity-40">Add to roster</button>
+              </form>
+            )}
 
             {shown.length === 0 && <p className="text-[14px] text-slate-500">No volunteers in this view.</p>}
 
