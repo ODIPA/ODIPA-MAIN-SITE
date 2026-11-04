@@ -18,7 +18,8 @@ const plain = blocks => blocks.map(b => {
 }).join('\n\n')
 
 // No em dashes in anything ODIPA publishes, whatever the model returns.
-const noDash = s => String(s || '').replace(/\s*—\s*/g, ', ')
+const EM_DASH = new RegExp('\\s*' + String.fromCharCode(0x2014) + '\\s*', 'g')
+const noDash = s => String(s || '').replace(EM_DASH, ', ')
 
 module.exports = async function handler(context, req) {
   if (req.method === 'OPTIONS') return respond(context, 200, {})

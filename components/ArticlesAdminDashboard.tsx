@@ -59,7 +59,7 @@ export default function ArticlesAdminDashboard() {
 
   const open = (r: Row) => { setPosts(null); setForm({ slug: r.slug, title: r.title, summary: r.summary, author: r.author, body: r.body, sources: r.sources }); setPreview(null); setMsg('') }
   const startNew = () => { setForm(blank); setPreview(null); setPosts(null); setMsg('') }
-  const startVoter = () => { setForm({ ...blank, ...STARTER_ARTICLE }); setPreview(null); setMsg('Loaded the voter privacy article. Confirm the author, check every claim against the sources, then save a draft.') }
+  const startVoter = () => { setForm({ ...blank, ...STARTER_ARTICLE }); setPreview(null); setPosts(null); setMsg('Loaded the voter privacy article. Confirm the author, check every claim against the sources, then save a draft.') }
 
   const save = () => run(async () => {
     const d = await call('/api/articles', { method: 'POST', body: { action: 'save', ...form } })
@@ -81,7 +81,7 @@ export default function ArticlesAdminDashboard() {
     await call('/api/articles', { method: 'POST', body: { action, slug: form.slug } })
     const list = await call('/api/articles?all=1')
     setRows(list.articles)
-    if (action === 'delete') setForm(blank)
+    if (action === 'delete') { setForm(blank); setPosts(null) }
     setMsg(action === 'publish' ? 'Published. It is now live at /articles.' : action === 'unpublish' ? 'Unpublished. It is a draft again.' : 'Deleted.')
   })
 
@@ -93,7 +93,7 @@ export default function ArticlesAdminDashboard() {
   })
 
   const copy = async (which: string, text: string) => {
-    try { await navigator.clipboard.writeText(text); setCopied(which); setTimeout(() => setCopied(''), 1500) } catch { setMsg('Could not copy. Select the text and copy it by hand.') }
+    try { await navigator.clipboard.writeText(text); setCopied(which); setMsg(which === 'li' ? 'Copied the LinkedIn post.' : 'Copied the short post.'); setTimeout(() => setCopied(''), 1500) } catch { setMsg('Could not copy. Select the text and copy it by hand.') }
   }
 
   const sendTest = () => run(async () => {
