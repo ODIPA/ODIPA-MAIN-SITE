@@ -14,6 +14,7 @@
 const { isAdminRequest } = require('../_shared/adminAuth')
 const { respond, sendHtmlEmail } = require('../_shared/mailer')
 const { getInquiry, listInquiries, updateInquiry } = require('../_shared/inquiries')
+const { advanceFromApplied } = require('../_shared/volunteers')
 const { volunteerCompleteness, DRAFT_RULES } = require('../_shared/volunteerCompleteness')
 const { deleteResume } = require('../_shared/resumeStore')
 
@@ -75,6 +76,11 @@ module.exports = async function (context, req) {
       if (target === 'sent' && !inq.sentAt) patch.handledAt = Date.now()
       if (target === 'acked' || target === 'needs-attention') patch.handledAt = 0
       await updateInquiry(id, patch)
+      // Booking the intro call moves the volunteer on the roster too, unless
+      // the team already moved them further. Roster trouble never fails the move.
+      if (target === 'meeting' && inq.topic === 'volunteer' && inq.email) {
+        try { await advanceFromApplied(inq.email, 'intro-call') } catch (e) { context.log.warn('Roster not updated: ' + e.message) }
+      }
       return respond(context, 200, { ok: true, status: target })
     }
 

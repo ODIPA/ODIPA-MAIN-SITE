@@ -9,6 +9,8 @@
 
 const { sendFormEmail, sendHtmlEmail, respond, clean } = require('../_shared/mailer')
 const { saveInquiry } = require('../_shared/inquiries')
+const { recordApplication } = require('../_shared/volunteers')
+const { joinAsMember } = require('../_shared/memberJoin')
 const { checkRateLimit, getClientIp } = require('../_shared/rateLimiter')
 const { parseVolunteerApplication } = require('../_shared/volunteerApplication')
 const { validateResume, saveResume, deleteResume } = require('../_shared/resumeStore')
@@ -208,15 +210,31 @@ module.exports = async function handler(context, req) {
 
     // Persist for the admin review inbox. Failure only logs, the inquiry
     // was already delivered by email either way.
+    let inquiryId = ''
     try {
-      await saveInquiry({ topic, name, email, organization, message, routedTo: toAddress, resumeBlob, resumeName: resumeFile ? resumeFile.name : '' })
+      inquiryId = await saveInquiry({ topic, name, email, organization, message, routedTo: toAddress, resumeBlob, resumeName: resumeFile ? resumeFile.name : '' })
     } catch (storeErr) {
       context.log.error('Inquiry store failed:', storeErr.message)
       // Nothing points at the file now, so do not leave it behind.
       if (resumeBlob) await deleteResume(resumeBlob)
     }
 
-    respond(context, 200, { ok: true })
+    // A volunteer is added to the roster, and joins the community as a free
+    // member when they left the box ticked. Neither can fail the application.
+    let member = ''
+    if (topic === 'volunteer' && volunteerFields) {
+      const joinRequested = body.joinAsMember === true
+      try {
+        await recordApplication({ email, name, roles: volunteerFields.roles.join(', '), hours: volunteerFields.hours, inquiryId, memberRequested: joinRequested })
+      } catch (rosterErr) {
+        context.log.error('Volunteer roster failed:', rosterErr.message)
+      }
+      if (joinRequested) {
+        member = (await joinAsMember(context, { email, name, accepted: body.joinAsMember, termsVersion: body.termsVersion, source: 'Volunteer application' })).status
+      }
+    }
+
+    respond(context, 200, { ok: true, ...(member ? { member } : {}) })
   } catch (err) {
     context.log.error('Contact form error:', err.message)
     respond(context, 500, { error: 'Failed to send. Please try again.' })
