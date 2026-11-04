@@ -151,7 +151,7 @@ export default function NewsletterSignup({ variant = 'footer', source = 'Website
                   Stay ahead of privacy threats.
                 </h2>
                 <p className="text-[14px] text-white/55 leading-relaxed max-w-[480px]">
-                  Privacy digest: breach alerts, new privacy laws, ODIPA research releases, and practical tips to protect your data. Free, always.
+                  Privacy digest: breach alerts, new privacy laws, ODIPA research releases, and practical tips to protect your data, plus an occasional ODIPA article. Free, always.
                 </p>
               </div>
               <form onSubmit={handleSubmit} onFocus={startChallenge} noValidate className="w-full lg:w-auto lg:min-w-[360px] space-y-2.5">
