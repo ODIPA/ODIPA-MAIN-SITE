@@ -28,6 +28,9 @@ module.exports = async function handler(context, req) {
   if (req.method === 'OPTIONS') return respond(context, 200, {})
   try {
     const admin = isAdminRequest(req)
+    // Any request carrying a key, or asking for everything, is never cached, so a cached public copy can't be served to the editor.
+    const privateRequest = Object.keys(req.headers || {}).some(h => h.toLowerCase() === 'x-admin-key') || !!(req.query && req.query.all)
+    const publicCache = privateRequest ? 'no-store' : 'public, max-age=60'
 
     if (req.method === 'GET') {
       const q = req.query || {}
@@ -36,12 +39,12 @@ module.exports = async function handler(context, req) {
         if (!ent) return reply(context, 404, { error: 'Not found' })
         if (admin) return reply(context, 200, { article: A.toAdmin(ent) })
         if (ent.status !== 'published') return reply(context, 404, { error: 'Not found' })
-        return reply(context, 200, { article: A.toFull(ent) }, 'public, max-age=60')
+        return reply(context, 200, { article: A.toFull(ent) }, publicCache)
       }
       const all = await A.listArticles()
       if (admin && q.all) return reply(context, 200, { articles: all.map(A.toAdmin) })
       const published = all.filter(e => e.status === 'published').sort((a, b) => String(b.publishedAt).localeCompare(String(a.publishedAt)))
-      return reply(context, 200, { articles: published.map(A.toPublic) }, 'public, max-age=60')
+      return reply(context, 200, { articles: published.map(A.toPublic) }, publicCache)
     }
 
     if (req.method !== 'POST') return reply(context, 405, { error: 'Method not allowed' })
