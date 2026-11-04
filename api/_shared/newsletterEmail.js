@@ -25,13 +25,21 @@ function wrapEmail(bodyHtml, unsubLink, label = 'PRIVACY MONTHLY DIGEST') {
   </div>`
 }
 
+/** Apply a removal until nothing more changes, so nested pieces cannot survive. */
+function removeAll(text, re) {
+  let prev
+  do { prev = text; text = text.replace(re, '') } while (text !== prev)
+  return text
+}
+
+/** The plain text copy of an email. Text only, so nothing here is ever run as HTML. */
 function toPlainText(html) {
-  return String(html)
-    .replace(/<style[\s\S]*?<\/style>/gi, '')
+  const text = removeAll(removeAll(String(html), /<style[\s\S]*?<\/style>/gi), /<script[\s\S]*?<\/script>/gi)
     .replace(/<br\s*\/?>(\n)?/gi, '\n')
     .replace(/<\/(p|div|h[1-6]|li)>/gi, '\n')
-    .replace(/<[^>]+>/g, '')
-    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'")
+  return removeAll(text, /<[^>]*>/g)
+    // &amp; last, so "&amp;lt;" becomes "&lt;" and not "<".
+    .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'").replace(/&amp;/g, '&')
     .replace(/\n{3,}/g, '\n\n')
     .trim()
 }

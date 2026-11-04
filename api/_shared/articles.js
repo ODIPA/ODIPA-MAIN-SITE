@@ -110,13 +110,16 @@ function blocksToHtml(blocks) {
   }).join('\n')
 }
 
-/** Check the fields. Returns {error} or {value}. */
+/**
+ * Check the fields. Returns {error} or {value}. Text is kept as typed and is
+ * escaped wherever it is shown, so tags typed into a field appear as text.
+ */
 function validateFields(input) {
   const f = input || {}
-  const title = String(f.title || '').replace(/<[^>]*>/g, '').trim().slice(0, LIMITS.title)
+  const title = String(f.title || '').trim().slice(0, LIMITS.title)
   if (!title) return { error: 'A title is required.' }
-  const summary = String(f.summary || '').replace(/<[^>]*>/g, '').trim().slice(0, LIMITS.summary)
-  const author = String(f.author || '').replace(/<[^>]*>/g, '').trim().slice(0, LIMITS.author)
+  const summary = String(f.summary || '').trim().slice(0, LIMITS.summary)
+  const author = String(f.author || '').trim().slice(0, LIMITS.author)
   const body = String(f.body || '').slice(0, LIMITS.body)
   const sources = String(f.sources || '').slice(0, LIMITS.sources)
   return { value: { title, summary, author, body, sources } }
