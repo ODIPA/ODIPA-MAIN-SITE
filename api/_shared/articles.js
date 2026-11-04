@@ -169,15 +169,15 @@ async function saveArticle(slug, fields) {
   await ensureTable(client)
   const now = new Date().toISOString()
   const existing = await getArticle(slug)
-  const entity = Object.assign({}, existing || {}, fields, {
+  // Merge only what an edit changes, so a save can never write back stale
+  // email tracking fields (emailedAt, emailedCount) or the publish state.
+  const entity = Object.assign({}, fields, {
     partitionKey: PARTITION, rowKey: slug,
     blocks: JSON.stringify(parseBody(fields.body)),
-    status: (existing && existing.status) || 'draft',
-    createdAt: (existing && existing.createdAt) || now,
     updatedAt: now,
   })
-  delete entity.etag; delete entity.timestamp
-  await client.upsertEntity(entity, 'Replace')
+  if (!existing) Object.assign(entity, { status: 'draft', createdAt: now })
+  await client.upsertEntity(entity, 'Merge')
   return entity
 }
 

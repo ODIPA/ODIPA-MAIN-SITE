@@ -51,7 +51,7 @@ module.exports = async function handler(context, req) {
     }
 
     const subs = await listByStatus('confirmed')
-    if (subs.length === 0) return respond(context, 200, { sent: 0, failed: 0, mode: 'full', note: 'No confirmed subscribers.' })
+    if (subs.length === 0) return respond(context, 200, { sent: 0, failed: 0, total: 0, mode: 'full', note: 'No confirmed subscribers.' })
 
     // Claim the send before any email goes out, using the row's version tag, so two
     // sends at once (two tabs, a retry) cannot both pass, and a request cut off by
