@@ -8,7 +8,7 @@ export const STARTER_ARTICLE = {
   title: 'Your Vote Is Private. Is Your Voter Data?',
   summary:
     'Your ballot is secret, but your voter registration details can legally reach political campaigns. Here is what they can see, what you cannot opt out of, and three ways to limit the rest.',
-  author: '',
+  author: 'Nicholas',
   sources: [
     'California Secretary of State, Voter Registration Information File Request | https://www.sos.ca.gov/elections/voter-registration/voter-registration-information-file-request',
     'California Secretary of State, Access to Voter Registration Information (regulations) | https://www.sos.ca.gov/administration/regulations/current-regulations/elections/access-voter-registration-information',
