@@ -8,7 +8,7 @@
  * Bump it when the rules change enough that older drafts should be redone, so
  * the bulk redraft action can find them.
  */
-const DRAFT_RULES = 'v2'
+const DRAFT_RULES = 'v3'
 
 /**
  * Decide in code, not in the model, whether a volunteer message has enough

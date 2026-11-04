@@ -8,7 +8,7 @@ process.env.NEWSLETTER_ADMIN_KEY = 'k'
 
 const rows = [
   { rowKey: 'old-thin', status: 'drafted', topic: 'volunteer', message: 'I want to volunteer', draftBody: 'old' },
-  { rowKey: 'new-thin', status: 'drafted', topic: 'volunteer', message: 'I want to volunteer', draftRules: 'v2' },
+  { rowKey: 'new-thin', status: 'drafted', topic: 'volunteer', message: 'I want to volunteer', draftRules: 'v3' },
   { rowKey: 'has-link', status: 'drafted', topic: 'volunteer', message: 'My profile is https://linkedin.com/in/x' },
   { rowKey: 'form', status: 'drafted', topic: 'volunteer', message: 'VOLUNTEER APPLICATION\nWhy ODIPA: privacy' },
   { rowKey: 'press', status: 'drafted', topic: 'press', message: 'Question for a story' },
