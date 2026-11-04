@@ -136,7 +136,10 @@ async function deletePerson({ email, reason }) {
   // The roster is keyed by the address as typed on the form, so the Gmail dot and plus
   // variant that collapses to the same address is removed too.
   const canon = e => abuse.canonicalEmail(String(e || '').trim().toLowerCase())
-  const hadVolunteerRow = (await deleteVolunteerByEmail(email)) || (await deleteVolunteersMatching(email, (a, b) => canon(a) === canon(b))) > 0
+  // Run both deletes, so an exact match does not leave a variant spelling behind.
+  const exactRow = await deleteVolunteerByEmail(email)
+  const variantRows = await deleteVolunteersMatching(email, (a, b) => canon(a) === canon(b))
+  const hadVolunteerRow = exactRow || variantRows > 0
   let ent
   try { ent = await client.getEntity('sub', rowKey) } catch (e) {
     if (!(e && e.statusCode === 404)) throw e

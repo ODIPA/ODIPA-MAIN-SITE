@@ -110,8 +110,8 @@ export default function ContactForm() {
   const [resumeError, setResumeError] = useState('')
   const [serverMessage, setServerMessage] = useState('')
   const [submittedTopic, setSubmittedTopic] = useState('')
-  // Volunteers are offered free community membership. The box starts unticked so
-  // accepting the terms is an explicit choice, the same as on the join page.
+  // Volunteers are offered free community membership. The box starts ticked, as
+  // the team decided. The person can untick it before sending.
   const [joinMember, setJoinMember] = useState(true)
   const [memberResult, setMemberResult] = useState('')
   const isVolunteer = form.topic === 'volunteer'
