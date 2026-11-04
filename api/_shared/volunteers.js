@@ -83,13 +83,16 @@ async function advanceFromApplied(email, status) {
 
 /** Remove the row if there is one. True only when a row existed and is now gone. */
 async function deleteVolunteerByEmail(email) {
-  try {
-    const client = getTable()
-    const id = idFor(email)
-    await client.getEntity(PARTITION, id)
-    await client.deleteEntity(PARTITION, id)
-    return true
-  } catch (e) { return false }
+  const client = getTable()
+  const id = idFor(email)
+  // Only "no such row" means there is nothing to delete. Any other storage error is
+  // thrown, so a deletion request is never reported done while the row remains.
+  try { await client.getEntity(PARTITION, id) } catch (e) {
+    if (e && e.statusCode === 404) return false
+    throw e
+  }
+  await client.deleteEntity(PARTITION, id)
+  return true
 }
 async function deleteVolunteer(id) {
   await getTable().deleteEntity(PARTITION, id)

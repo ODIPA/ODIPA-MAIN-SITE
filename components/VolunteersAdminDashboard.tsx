@@ -92,7 +92,7 @@ export default function VolunteersAdminDashboard() {
             className="font-mono text-[12px] font-semibold bg-gold text-navy px-5 py-2.5 rounded-lg disabled:opacity-40 hover:opacity-90 transition-opacity">
             {rows ? 'Refresh' : 'Load volunteers'}
           </button>
-          <p className="w-full text-[11px] text-slate-500">The key stays in this browser tab's memory only and is sent solely to ODIPA's own API.</p>
+          <p className="w-full text-[11px] text-slate-500">The key stays in this browser tab&apos;s memory only and is sent solely to ODIPA&apos;s own API.</p>
         </div>
 
         {msg && <p role="status" className="text-[13px] bg-white border border-slate-200 rounded-lg px-4 py-3 text-navy">{msg}</p>}
