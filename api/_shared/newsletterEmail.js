@@ -25,19 +25,38 @@ function wrapEmail(bodyHtml, unsubLink, label = 'PRIVACY MONTHLY DIGEST') {
   </div>`
 }
 
-/** Apply a removal until nothing more changes, so nested pieces cannot survive. */
-function removeAll(text, re) {
-  let prev
-  do { prev = text; text = text.replace(re, '') } while (text !== prev)
-  return text
+/**
+ * Drop every <tag ...> by scanning characters, and drop the whole content of
+ * <style> and <script> elements. A scanner has no pattern to get around, unlike
+ * a regular expression, so odd closing tags such as "</script foo>" are handled.
+ * Line breaks are kept for <br> and for the end of paragraphs, headings and list items.
+ */
+function stripMarkup(input) {
+  const text = String(input)
+  const lower = text.toLowerCase()
+  let out = ''
+  let i = 0
+  while (i < text.length) {
+    if (text[i] !== '<') { out += text[i++]; continue }
+    const m = /^<(\/?)([a-z][a-z0-9]*)/.exec(lower.slice(i, i + 20))
+    const closing = !!(m && m[1]), tag = m ? m[2] : ''
+    const close = text.indexOf('>', i)
+    if (close === -1) break // an unfinished tag at the end is dropped
+    i = close + 1
+    if ((tag === 'style' || tag === 'script') && !closing) {
+      const end = lower.indexOf('</' + tag, i)
+      if (end === -1) break
+      const endClose = text.indexOf('>', end)
+      i = endClose === -1 ? text.length : endClose + 1
+    }
+    if (tag === 'br' || (closing && /^(p|div|h[1-6]|li)$/.test(tag))) out += '\n'
+  }
+  return out
 }
 
 /** The plain text copy of an email. Text only, so nothing here is ever run as HTML. */
 function toPlainText(html) {
-  const text = removeAll(removeAll(String(html), /<style[\s\S]*?<\/style\s*>/gi), /<script[\s\S]*?<\/script\s*>/gi)
-    .replace(/<br\s*\/?>(\n)?/gi, '\n')
-    .replace(/<\/(p|div|h[1-6]|li)>/gi, '\n')
-  return removeAll(text, /<[^>]*>/g)
+  return stripMarkup(html)
     // &amp; last, so "&amp;lt;" becomes "&lt;" and not "<".
     .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'").replace(/&amp;/g, '&')
     .replace(/\n{3,}/g, '\n\n')
