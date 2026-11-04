@@ -10,6 +10,7 @@
  * so ODIPA can show it honored a request without keeping the personal data it deleted.
  */
 
+const { deleteVolunteerByEmail } = require('./volunteers')
 const crypto = require('crypto')
 const { TableClient } = require('@azure/data-tables')
 
@@ -130,9 +131,11 @@ async function deletePerson({ email, reason }) {
   const client = table(SUBSCRIBERS)
   await ensure(client)
   const rowKey = emailKey(email)
+  // A volunteer roster row goes with the person, even if they were never a subscriber.
+  const hadVolunteerRow = await deleteVolunteerByEmail(email)
   let ent
   try { ent = await client.getEntity('sub', rowKey) } catch (e) {
-    if (e && e.statusCode === 404) return { deleted: false }
+    if (e && e.statusCode === 404) return hadVolunteerRow ? { deleted: true, wasMember: false, status: 'volunteer-only', logged: false } : { deleted: false }
     throw e
   }
   await client.deleteEntity('sub', rowKey)

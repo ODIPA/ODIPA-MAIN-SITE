@@ -33,6 +33,12 @@ const TOOLS = [
     desc: 'Compose, schedule, and send the newsletter. Subscriber stats, archive, and the monthly generator live here.',
     tag: 'Monthly',
   },
+  {
+    href: '/admin/volunteers',
+    name: 'Volunteers Dashboard',
+    desc: 'Everyone who has applied to volunteer, with a status from Applied through Alumni and private notes. People are added automatically when they apply.',
+    tag: 'Weekly',
+  },
 ]
 
 export default function AdminLandingPage() {

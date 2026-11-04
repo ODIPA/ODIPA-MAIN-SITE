@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
+import { TERMS_VERSION, TERMS_PATH } from '@/data/membership'
 import {
   MessageCircle, GraduationCap, Heart, Building2,
   ClipboardCheck, Newspaper, Microscope, Code2, Lock, CircleDollarSign
@@ -109,6 +110,9 @@ export default function ContactForm() {
   const [resumeError, setResumeError] = useState('')
   const [serverMessage, setServerMessage] = useState('')
   const [submittedTopic, setSubmittedTopic] = useState('')
+  // Volunteers are offered free community membership, ticked by default.
+  const [joinMember, setJoinMember] = useState(true)
+  const [memberResult, setMemberResult] = useState('')
   const isVolunteer = form.topic === 'volunteer'
  
   // Pre-select topic from ?topic= query param (e.g. /contact?topic=certification)
@@ -199,15 +203,18 @@ export default function ContactForm() {
           'Email':        form.email,
           'Organization': form.organization || '—',
           'Message':      isVolunteer ? vol.why : form.message,
-          ...(isVolunteer ? { volunteer: volunteerPayload } : {}),
+          ...(isVolunteer ? { volunteer: volunteerPayload, joinAsMember: joinMember, termsVersion: TERMS_VERSION } : {}),
           _hp: honeypot,
           '_replyto':     form.email,
           '_subject':     `ODIPA Contact: ${selectedTopic?.label ?? form.topic}`,
           'Consented':    form.consent ? 'Yes' : 'No',
         }),
       })
-      if (res.ok) { setSubmittedTopic(form.topic); setState('success'); setForm(INITIAL); setVol(VOLUNTEER_INITIAL); setResumeFile(null); setResumeError('') }
-      else {
+      if (res.ok) {
+        const done = await res.json().catch(() => null)
+        setMemberResult(done && typeof done.member === 'string' ? done.member : '')
+        setSubmittedTopic(form.topic); setState('success'); setForm(INITIAL); setVol(VOLUNTEER_INITIAL); setResumeFile(null); setResumeError('')
+      } else {
         // The server words resume problems clearly (too large, wrong type, could not save).
         const data = await res.json().catch(() => null)
         if (isVolunteer && data && typeof data.error === 'string' && /resume/i.test(data.error)) setServerMessage(data.error)
@@ -231,6 +238,18 @@ export default function ContactForm() {
               ? <>Thank you for offering your time. We review volunteer applications within <strong className="text-navy">5 business days</strong> and will invite you to a short intro call.</>
               : <>Thank you for reaching out. We&apos;ve received your message and will respond within <strong className="text-navy">2 business days</strong>.</>}
           </p>
+          {submittedTopic === 'volunteer' && (memberResult === 'pending' || memberResult === 'confirmed') && (
+            <p className="text-[14px] text-slate-600 leading-[1.7] mb-2">
+              {memberResult === 'pending'
+                ? <>We also sent you an email to confirm your free community membership. Open the link in it to finish joining.</>
+                : <>You are already on our list, and your free community membership is now active.</>}
+            </p>
+          )}
+          {submittedTopic === 'volunteer' && memberResult === 'skipped' && (
+            <p className="text-[14px] text-slate-600 leading-[1.7] mb-2">
+              We could not set up your community membership from this form, for example because we need both a first and a last name. Your application is not affected. You can join any time at <Link href="/join" className="text-blue-brand underline">odipa.org/join</Link>.
+            </p>
+          )}
           {selectedTopic && (
             <p className="font-mono text-[12px] text-slate-500 mb-8">
               Routed to: {selectedTopic.email}
@@ -525,6 +544,18 @@ export default function ContactForm() {
               </span>
             </label>
             {errors.consent && <p className="text-red-500 text-[12px] mb-4">{errors.consent}</p>}
+
+            {isVolunteer && (
+              <label className="flex items-start gap-3 cursor-pointer mb-6">
+                <input type="checkbox" checked={joinMember} onChange={e => setJoinMember(e.target.checked)}
+                  className="accent-gold w-4 h-4 mt-0.5 flex-shrink-0" />
+                <span className="text-[13px] text-slate-600 leading-relaxed">
+                  Also join ODIPA as a free community member. I accept the{' '}
+                  <Link href={TERMS_PATH} className="text-blue-brand underline hover:text-navy transition-colors">Community Member Terms</Link>.
+                  Members are supporters of ODIPA&apos;s mission with no voting or governance rights, and receive the Privacy Monthly Digest and occasional ODIPA articles. We will email you a link to confirm, and you can leave at any time. This does not affect your volunteer application.
+                </span>
+              </label>
+            )}
 
             {state === 'error' && (
               <div role="alert" className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-[13px] text-red-700">
