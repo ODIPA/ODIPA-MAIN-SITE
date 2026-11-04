@@ -138,9 +138,14 @@ export default function ArticlesAdminDashboard() {
           <p className="w-full text-[11px] text-slate-500">The key stays in this browser tab's memory only and is sent solely to ODIPA's own API.</p>
         </div>
 
-        {/* The live region stays mounted so screen readers announce each new message. */}
+        {/* The message sits in a fixed bar so it is visible wherever the button that caused it is on the page. */}
         <div role="status" aria-live="polite">
-          {msg && <p className="text-[13px] bg-white border border-slate-200 rounded-lg px-4 py-3 text-navy">{msg}</p>}
+          {msg && (
+            <div className="fixed bottom-4 left-4 right-4 md:left-auto md:max-w-md z-50 text-[13px] bg-navy text-white border border-gold rounded-lg shadow-lg px-4 py-3 flex items-start gap-3">
+              <span className="flex-1">{msg}</span>
+              <button onClick={() => setMsg('')} className="font-mono text-[11px] underline flex-shrink-0">Dismiss</button>
+            </div>
+          )}
         </div>
 
         {rows && (
@@ -229,7 +234,7 @@ export default function ArticlesAdminDashboard() {
                     <input id="a-test" type="email" value={testTo} onChange={e => setTestTo(e.target.value)} placeholder="you@example.com" className={field} />
                   </div>
                   <button onClick={sendTest} disabled={busy || !testTo.trim()} className={`${btn} border border-navy text-navy`}>Send test</button>
-                  <button onClick={sendAll} disabled={busy} className={`${btn} bg-navy text-white`}>Email all confirmed subscribers</button>
+                  <button onClick={sendAll} disabled={busy} className={`${btn} bg-navy text-white`}>{busy ? 'Working…' : 'Email all confirmed subscribers'}</button>
                 </div>
               </div>
             )}
