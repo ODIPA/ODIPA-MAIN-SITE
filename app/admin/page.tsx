@@ -39,6 +39,12 @@ const TOOLS = [
     desc: 'Everyone who has applied to volunteer, with a status from Applied through Alumni and private notes. People are added automatically when they apply.',
     tag: 'Weekly',
   },
+  {
+    href: '/admin/articles',
+    name: 'Articles Dashboard',
+    desc: 'Draft, preview, publish and email ad hoc articles. Separate from the Monthly Digest and the Research Releases. Nothing goes public or out by email until you press the button.',
+    tag: 'As needed',
+  },
 ]
 
 export default function AdminLandingPage() {

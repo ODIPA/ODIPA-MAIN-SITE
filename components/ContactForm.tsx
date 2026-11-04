@@ -112,7 +112,7 @@ export default function ContactForm() {
   const [submittedTopic, setSubmittedTopic] = useState('')
   // Volunteers are offered free community membership. The box starts unticked so
   // accepting the terms is an explicit choice, the same as on the join page.
-  const [joinMember, setJoinMember] = useState(false)
+  const [joinMember, setJoinMember] = useState(true)
   const [memberResult, setMemberResult] = useState('')
   const isVolunteer = form.topic === 'volunteer'
  

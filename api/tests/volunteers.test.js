@@ -18,7 +18,7 @@ Module._load = function (req, parent, ...rest) {
     getEntity: async (p, r) => { const e = store.get(`${name}|${p}|${r}`); if (!e) { const err = new Error('404'); err.statusCode = 404; throw err } return Object.assign({}, e) },
     createEntity: async e => { store.set(`${name}|${e.partitionKey}|${e.rowKey}`, Object.assign({}, e)) },
     upsertEntity: async (e, mode) => { const k = `${name}|${e.partitionKey}|${e.rowKey}`; store.set(k, mode === 'Merge' ? Object.assign({}, store.get(k) || {}, e) : Object.assign({}, e)) },
-    updateEntity: async (e, mode) => { const k = `${name}|${e.partitionKey}|${e.rowKey}`; store.set(k, Object.assign({}, store.get(k) || {}, e)) },
+    updateEntity: async (e, mode) => { const k = `${name}|${e.partitionKey}|${e.rowKey}`; if (!store.has(k)) { const err = new Error('404'); err.statusCode = 404; throw err } store.set(k, Object.assign({}, store.get(k) || {}, e)) },
     deleteEntity: async (p, r) => { store.delete(`${name}|${p}|${r}`) },
     listEntities: ({ queryOptions }) => {
       const part = /PartitionKey eq '([^']+)'/.exec(queryOptions.filter)[1]
@@ -119,6 +119,16 @@ const rows = () => [...store.entries()].filter(([k]) => k.startsWith('volunteers
   const del2 = await SA.deletePerson({ email: 'ada@example.com', reason: 'requested' })
   assert.strictEqual(del2.deleted, true); assert(!rows().some(x => x.email === 'ada@example.com') && !subRow('ada@example.com'))
   assert.strictEqual((await SA.deletePerson({ email: 'nobody@example.com', reason: 'requested' })).deleted, false)
+
+  // 7b. A roster row stored under a Gmail variant goes when the plain address is deleted, and a
+  // volunteer-only deletion is logged like any other.
+  await V.recordApplication({ email: 'jo.hn+vol@gmail.com', name: 'Jo Hn', roles: 'Privacy Researcher', hours: '2 to 4 hours a month' })
+  assert(rows().some(x => x.email === 'jo.hn+vol@gmail.com'))
+  const del3 = await SA.deletePerson({ email: 'john@gmail.com', reason: 'requested' })
+  assert.strictEqual(del3.deleted, true); assert.strictEqual(del3.logged, true, 'volunteer-only deletions are logged')
+  assert(!rows().some(x => x.email === 'jo.hn+vol@gmail.com'), 'the Gmail variant row is gone too')
+  a = await call(roster, 'POST', { key: 'k', body: { id: 'f'.repeat(64), status: 'active' } })
+  assert.strictEqual(a.status, 404, 'an unknown volunteer is a 404, not a server error')
 
   // 8. Roster delete from the admin.
   a = await call(roster, 'POST', { key: 'k', body: { id: V.idFor('cy@example.com'), action: 'delete' } })

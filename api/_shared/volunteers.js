@@ -67,7 +67,12 @@ async function updateVolunteer(id, { status, notes }) {
   }
   if (notes !== undefined) patch.notes = String(notes).slice(0, 1000)
   const client = getTable()
-  await client.updateEntity({ partitionKey: PARTITION, rowKey: id, ...patch }, 'Merge')
+  try {
+    await client.updateEntity({ partitionKey: PARTITION, rowKey: id, ...patch }, 'Merge')
+  } catch (e) {
+    if (e && e.statusCode === 404) { const err = new Error('Volunteer not found'); err.statusCode = 404; throw err }
+    throw e
+  }
 }
 
 /** Move an applicant to a status only if they are still at "applied", used by the board. */
@@ -94,8 +99,23 @@ async function deleteVolunteerByEmail(email) {
   await client.deleteEntity(PARTITION, id)
   return true
 }
+/**
+ * Remove every roster row whose address is the same person under another spelling,
+ * for example Gmail dot and plus variants. `same` decides whether two addresses match.
+ * Returns how many rows were removed. Storage errors are thrown.
+ */
+async function deleteVolunteersMatching(email, same) {
+  const client = getTable()
+  await ensureTable(client)
+  let n = 0
+  for await (const e of client.listEntities({ queryOptions: { filter: `PartitionKey eq '${PARTITION}'` } })) {
+    if (same(e.email, email)) { await client.deleteEntity(PARTITION, e.rowKey); n++ }
+  }
+  return n
+}
+
 async function deleteVolunteer(id) {
   await getTable().deleteEntity(PARTITION, id)
 }
 
-module.exports = { STATUSES, LABELS, idFor, recordApplication, listVolunteers, updateVolunteer, advanceFromApplied, deleteVolunteerByEmail, deleteVolunteer }
+module.exports = { STATUSES, LABELS, idFor, recordApplication, listVolunteers, updateVolunteer, advanceFromApplied, deleteVolunteerByEmail, deleteVolunteersMatching, deleteVolunteer }

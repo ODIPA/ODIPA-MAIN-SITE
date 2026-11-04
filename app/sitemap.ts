@@ -14,6 +14,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE}/transparency`,        lastModified: new Date(), changeFrequency: 'monthly',  priority: 0.8 },
     { url: `${BASE}/press`,               lastModified: new Date(), changeFrequency: 'monthly',  priority: 0.7 },
     { url: `${BASE}/annual-report`,       lastModified: new Date(), changeFrequency: 'yearly',   priority: 0.7 },
+    { url: `${BASE}/articles`,            lastModified: new Date(), changeFrequency: 'weekly',   priority: 0.7 },
     { url: `${BASE}/privacy-policy`,      lastModified: new Date(), changeFrequency: 'yearly',   priority: 0.4 },
     { url: `${BASE}/community-member-terms`, lastModified: new Date(), changeFrequency: 'yearly', priority: 0.3 },
 

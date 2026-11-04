@@ -33,6 +33,7 @@ module.exports = async function handler(context, req) {
     await V.updateVolunteer(id, { status: b.status, notes: b.notes === undefined ? undefined : String(b.notes) })
     return reply(context, 200, { ok: true })
   } catch (err) {
+    if (err && err.statusCode === 404) return reply(context, 404, { error: 'Volunteer not found' })
     context.log.error('volunteers error:', err.message)
     return reply(context, 500, { error: 'Roster unavailable' })
   }
