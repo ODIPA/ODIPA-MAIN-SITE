@@ -187,6 +187,10 @@ const rows = () => [...store.entries()].filter(([k]) => k.startsWith('volunteers
   a = await setStatus({ inquiryId: 's1', status: 'paused' })
   assert.deepStrictEqual([a.body.added, rows().find(x => x.email === 'iram@example.com').status], [false, 'paused'], 'an existing row is updated, not duplicated')
   assert.strictEqual(rows().filter(x => x.email === 'iram@example.com').length, 1)
+  card('s3', { email: 'gone@example.com', name: 'Gone Person', message: 'I want to volunteer' })
+  a = await setStatus({ inquiryId: 's3', status: 'active' })
+  assert.strictEqual(a.status, 409, 'a person removed through the Subscribers tool is not added back from a card')
+  assert(!rows().some(x => x.email === 'gone@example.com'))
 
   // 8. Roster delete from the admin.
   a = await call(roster, 'POST', { key: 'k', body: { id: V.idFor('cy@example.com'), action: 'delete' } })

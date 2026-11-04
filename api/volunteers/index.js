@@ -38,6 +38,13 @@ module.exports = async function handler(context, req) {
       let card = null
       try { card = await getInquiry(String(b.inquiryId || '')) } catch (e) { card = null }
       if (!card || card.topic !== 'volunteer' || !card.email) return reply(context, 404, { error: 'Volunteer card not found' })
+      // As with the import, someone removed through the Subscribers tool is not added
+      // back from their old card. Someone already on the roster can still be updated.
+      const cardId = V.idFor(card.email)
+      const listed = (await V.listVolunteers()).some(v => v.id === cardId)
+      if (!listed && (await listDeletions(100000)).some(d => d.reference === cardId.slice(0, 10))) {
+        return reply(context, 409, { error: 'This person was removed through the Subscribers tool, so they are not added back from an old card.' })
+      }
       const added = await V.addIfMissing({
         email: card.email, name: card.name, roles: fromLine(card.message, 'Roles of interest'), hours: fromLine(card.message, 'Time available'),
         appliedAt: new Date(Number(card.receivedAt) || Date.now()).toISOString(), status: String(b.status), inquiryId: card.rowKey,
@@ -66,7 +73,8 @@ module.exports = async function handler(context, req) {
     // once. People already on the roster are left alone, and cards the team
     // dismissed are skipped. A card in "meeting" starts at Intro call scheduled.
     if (b.action === 'import') {
-      const cards = (await listInquiries()).filter(c => c.topic === 'volunteer' && c.email)
+      // Read the whole board, not only the first 200 cards the board view stops at.
+      const cards = (await listInquiries(null, 20000)).filter(c => c.topic === 'volunteer' && c.email)
       // Someone removed through the Subscribers tool must not come back from their old
       // inquiry card. The deletion log keeps the first 10 characters of a hash of the
       // address and nothing else, which is enough to recognise them here.
