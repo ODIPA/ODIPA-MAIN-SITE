@@ -60,9 +60,12 @@ Hard rules:
 - Never promise timelines, money, partnerships, listings, or commitments of any kind.
 - Never give legal advice.
 - Never use em dashes.
-- Never turn away or talk down a volunteer applicant. If you are unsure whether they fit, invite them to the intro call, which exists to find the fit.
+- Never turn away or talk down a volunteer applicant. If the application is COMPLETE and you are unsure whether they fit, invite them to the intro call, which exists to find the fit. If it is THIN, never mention a call, a meeting, scheduling or availability: ask for the missing details instead.
 - Sign off as "The ODIPA Team".
 - The recipient already received an automatic acknowledgment days ago. Do not re-acknowledge receipt. Get to substance.`
+
+// A reply that invites a call or asks for times.
+const offersCall = body => /\b(call|meeting|meet|schedul\w*|availab\w*|chat)\b/i.test(String(body || ''))
 
 module.exports = async function (context, req) {
   if (req.method === 'OPTIONS') return respond(context, 200, {})
@@ -111,8 +114,8 @@ module.exports = async function (context, req) {
       const completeness = inq.topic === 'volunteer' ? `Application completeness: ${volunteerCompleteness(inq.message)}\n` : ''
       const user = `Topic: ${inq.topic}\nGuidance: ${guidance}\n${completeness}From: ${inq.name} <${inq.email}>${inq.organization ? ` (${inq.organization})` : ''}\nReceived: ${new Date(Number(inq.receivedAt)).toUTCString()}\n\nTheir message:\n${inq.message}`
 
-      let result = null
-      try {
+      const thin = inq.topic === 'volunteer' && volunteerCompleteness(inq.message) === 'THIN'
+      const ask = async prompt => {
         const res = await fetch('https://api.anthropic.com/v1/messages', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
@@ -120,13 +123,25 @@ module.exports = async function (context, req) {
             model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-5',
             max_tokens: 700,
             system: SYSTEM,
-            messages: [{ role: 'user', content: user }],
+            messages: [{ role: 'user', content: prompt }],
           }),
         })
         const data = await res.json()
         const text = (data.content || []).filter(c => c.type === 'text').map(c => c.text).join('')
         const cleaned = text.replace(/```json|```/g, '').replace(/<\/?cite[^>]*>/g, '').trim()
-        result = JSON.parse(cleaned)
+        return JSON.parse(cleaned)
+      }
+
+      let result = null
+      try {
+        result = await ask(user)
+        // The model sometimes offers a call to a thin application despite the
+        // rule. Check in code, ask once more, and flag it if it still does.
+        if (thin && result && result.action === 'draft' && offersCall(result.body)) {
+          result = await ask(user + '\n\nYour last draft mentioned a call, a meeting, scheduling or availability. This application is THIN, so none of that is allowed. Rewrite it to ask for the missing details only.')
+          if (result && result.action === 'draft' && offersCall(result.body))
+            result = { action: 'flag', reason: 'Thin volunteer application: the draft kept offering a call. Write the reply by hand and ask for their details first.' }
+        }
       } catch (modelErr) {
         context.log.warn(`Draft failed for ${inq.rowKey}: ${modelErr.message}`)
         failed.push(inq.rowKey)

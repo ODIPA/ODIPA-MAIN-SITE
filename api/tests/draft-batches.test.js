@@ -11,6 +11,7 @@ process.env.INQUIRY_NUDGE_EMAIL = 'team@example.com'
 const DAY = 24 * 60 * 60 * 1000
 let rows, updates, nudges, modelCalls
 let failFor = []
+let replyFor = null
 let listError = null
 const reset = n => {
   rows = Array.from({ length: n }, (_, i) => ({ rowKey: `r${i}`, status: 'acked', topic: 'volunteer', name: `P${i}`, email: `p${i}@example.com`, message: 'I want to volunteer', receivedAt: Date.now() - 10 * DAY }))
@@ -29,6 +30,7 @@ global.fetch = async (url, opts) => {
   modelCalls++
   const user = JSON.parse(opts.body).messages[0].content
   if (failFor.some(n => user.includes(`From: ${n} <`))) throw new Error('model down')
+  if (replyFor) return { json: async () => ({ content: [{ type: 'text', text: JSON.stringify(replyFor(user)) }] }) }
   return { json: async () => ({ content: [{ type: 'text', text: '{"action":"draft","subject":"Hello","body":"Thanks. Please send a resume link."}' }] }) }
 }
 const draft = require(path.join(api, 'inquiries-draft/index.js'))
@@ -46,7 +48,7 @@ const run = async body => {
   assert.strictEqual(r.body.drafted, 2)
   assert.strictEqual(r.body.remaining, 3, 'the response says how many are left')
   assert.strictEqual(nudges.length, 0, 'small batches do not send the nudge email')
-  assert.strictEqual(updates[0][1].draftRules, 'v2', 'drafts carry the rules version')
+  assert.strictEqual(updates[0][1].draftRules, 'v3', 'drafts carry the rules version')
 
   r = await run({ limit: 2 })
   assert.strictEqual(r.body.remaining, 1, 'the next batch picks up the next ones')
@@ -71,6 +73,29 @@ const run = async body => {
   assert.strictEqual(r.body.remaining, 0)
   assert.deepStrictEqual(r.body.failed, [])
   failFor = []
+
+  // A thin volunteer application never gets a draft that offers a call.
+  reset(1)
+  replyFor = user => user.includes('Your last draft')
+    ? { action: 'draft', subject: 'Hi', body: 'Thanks. Please send a resume link and your hours.' }
+    : { action: 'draft', subject: 'Hi', body: 'Thanks. Are you available for a brief intro call?' }
+  r = await run({ limit: 1 })
+  assert.strictEqual(r.body.drafted, 1)
+  assert.strictEqual(modelCalls, 2, 'the model is asked a second time')
+  assert(!/call/i.test(rows[0].draftBody), 'the saved draft does not offer a call')
+
+  reset(1)
+  replyFor = () => ({ action: 'draft', subject: 'Hi', body: 'Can we schedule a time?' })
+  r = await run({ limit: 1 })
+  assert.deepStrictEqual([r.body.drafted, r.body.flagged], [0, 1], 'a draft that keeps offering a call is flagged')
+  assert.strictEqual(rows[0].status, 'needs-attention')
+
+  reset(1); rows[0].message = 'VOLUNTEER APPLICATION\nWhy ODIPA: privacy'
+  replyFor = () => ({ action: 'draft', subject: 'Hi', body: 'Could you do a short intro call?' })
+  r = await run({ limit: 1 })
+  assert.strictEqual(modelCalls, 1, 'a complete application may offer a call, no second ask')
+  assert.strictEqual(r.body.drafted, 1)
+  replyFor = null
 
   for (const bad of [{ limit: 0 }, { limit: -3 }, { limit: 'abc' }, { limit: 1.5 }]) {
     reset(25)
