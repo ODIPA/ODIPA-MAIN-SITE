@@ -33,6 +33,12 @@ const TOOLS = [
     desc: 'Compose, schedule, and send the newsletter. Subscriber stats, archive, and the monthly generator live here.',
     tag: 'Monthly',
   },
+  {
+    href: '/admin/articles',
+    name: 'Articles Dashboard',
+    desc: 'Draft, preview, publish and email ad hoc articles. Separate from the Monthly Digest and the Research Releases. Nothing goes public or out by email until you press the button.',
+    tag: 'As needed',
+  },
 ]
 
 export default function AdminLandingPage() {
