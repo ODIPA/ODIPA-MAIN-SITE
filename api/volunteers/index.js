@@ -29,8 +29,9 @@ module.exports = async function handler(context, req) {
 
     // Add one volunteer by hand, for people who did not apply through the form.
     // Someone already on the roster is never changed, the answer says so.
+    // Text is kept as typed and escaped wherever it is shown.
     if (b.action === 'add') {
-      const line = (v, max) => String(v == null ? '' : v).replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().slice(0, max)
+      const line = (v, max) => String(v == null ? '' : v).replace(/\s+/g, ' ').trim().slice(0, max)
       const email = line(b.email, 254).toLowerCase()
       const name = line(b.name, 100)
       if (!name) return reply(context, 400, { error: 'A name is required.' })
