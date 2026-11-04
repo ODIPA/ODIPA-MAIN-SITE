@@ -70,6 +70,33 @@ export default function InquiriesAdminDashboard() {
 
   const hdrs = () => ({ 'x-admin-key': key.trim() })
 
+  // Volunteer roster statuses by email, so a volunteer card can show and change its status.
+  const [roster, setRoster] = useState<Record<string, string>>({})
+  const [rosterStatuses, setRosterStatuses] = useState<{ value: string; label: string }[]>([])
+  const loadRoster = async () => {
+    try {
+      const res = await fetch('/api/volunteers', { headers: hdrs() })
+      if (!res.ok) return
+      const d = await res.json()
+      setRosterStatuses(d.statuses || [])
+      setRoster(Object.fromEntries((d.volunteers || []).map((v: { email: string; status: string }) => [v.email.toLowerCase(), v.status])))
+    } catch { /* the board works without it */ }
+  }
+  const setVolunteerStatus = async (inq: Inquiry, status: string) => {
+    setBusy(`vol-${inq.id}`); setNotice('')
+    try {
+      const res = await fetch('/api/volunteers', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', ...hdrs() },
+        body: JSON.stringify({ action: 'set-status', inquiryId: inq.id, status }),
+      })
+      const d = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(d.error || `Request failed (${res.status})`)
+      setRoster(r => ({ ...r, [inq.email.toLowerCase()]: status }))
+      setNotice(`${inq.name} is now ${rosterStatuses.find(x => x.value === status)?.label || status}${d.added ? ' and was added to the volunteer roster' : ''}.`)
+    } catch (e) { setNotice((e as Error).message || 'Could not change the status.') }
+    finally { setBusy(null) }
+  }
+
   const load = async () => {
     setLoading(true); setError('')
     try {
@@ -78,6 +105,7 @@ export default function InquiriesAdminDashboard() {
       const data = await res.json()
       setItems(data.inquiries || [])
       setUnlocked(true)
+      loadRoster()
     } catch { setError('Failed to load inquiries') }
     finally { setLoading(false) }
   }
@@ -431,6 +459,17 @@ export default function InquiriesAdminDashboard() {
                   className="border border-navy/30 text-navy rounded-lg px-4 py-2 text-sm disabled:opacity-50">
                   {busy === `prep-${open.id}` ? 'Working…' : open.prepSheetAt ? 'View prep sheet' : 'Generate prep sheet'}
                 </button>
+              )}
+              {open.topic === 'volunteer' && (
+                <span className="inline-flex items-center gap-2">
+                  <label htmlFor={`vs-${open.id}`} className="text-xs text-slate-500">Volunteer status</label>
+                  <select id={`vs-${open.id}`} value={roster[open.email.toLowerCase()] || ''} disabled={busy === `vol-${open.id}` || !rosterStatuses.length}
+                    onChange={e => setVolunteerStatus(open, e.target.value)}
+                    className="border border-slate-300 rounded-lg px-2 py-2 text-sm text-navy bg-white">
+                    {!roster[open.email.toLowerCase()] && <option value="" disabled>Not on roster yet</option>}
+                    {rosterStatuses.map(st => <option key={st.value} value={st.value}>{st.label}</option>)}
+                  </select>
+                </span>
               )}
               {open.topic === 'volunteer' && !!open.prepSheetAt && (
                 <button onClick={() => generatePrep(open.id, true)} disabled={busy === `prep-${open.id}`}

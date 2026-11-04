@@ -5,14 +5,18 @@
  *   POST { id, status?, notes? }          change a status or the note
  *   POST { id, action: 'delete' }         remove a volunteer from the roster
  *   POST { action: 'add', name, email, roles?, hours?, status?, notes? }  add one volunteer by hand
+ *   POST { action: 'set-status', inquiryId, status }  set the status from a volunteer card on the inquiry board,
+ *                                         adding the person to the roster first if they are not on it
  *   POST { action: 'import', dryRun? }    add earlier volunteer applicants from the inquiry board
  * Statuses: applied, intro-call, active, paused, alumni. Responses are never
  * cached and nothing here is logged.
  */
 const { isAdminRequest } = require('../_shared/adminAuth')
 const V = require('../_shared/volunteers')
-const { listInquiries } = require('../_shared/inquiries')
+const { listInquiries, getInquiry } = require('../_shared/inquiries')
 const { listDeletions } = require('../_shared/subscriberAdmin')
+
+const fromLine = (msg, label) => { const m = new RegExp(`^${label}: (.+)$`, 'mi').exec(String(msg || '')); return m ? m[1].trim() : '' }
 
 function reply(context, status, body) {
   context.res = { status, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }, body: JSON.stringify(body) }
@@ -26,6 +30,21 @@ module.exports = async function handler(context, req) {
     if (req.method !== 'POST') return reply(context, 405, { error: 'Method not allowed' })
 
     const b = req.body || {}
+
+    // Set a volunteer's status from their card on the inquiry board. The name and
+    // address come from the stored card, never from the request.
+    if (b.action === 'set-status') {
+      if (!V.STATUSES.includes(String(b.status))) return reply(context, 400, { error: 'Invalid status' })
+      let card = null
+      try { card = await getInquiry(String(b.inquiryId || '')) } catch (e) { card = null }
+      if (!card || card.topic !== 'volunteer' || !card.email) return reply(context, 404, { error: 'Volunteer card not found' })
+      const added = await V.addIfMissing({
+        email: card.email, name: card.name, roles: fromLine(card.message, 'Roles of interest'), hours: fromLine(card.message, 'Time available'),
+        appliedAt: new Date(Number(card.receivedAt) || Date.now()).toISOString(), status: String(b.status), inquiryId: card.rowKey,
+      })
+      if (!added) await V.updateVolunteer(V.idFor(card.email), { status: String(b.status) })
+      return reply(context, 200, { ok: true, added })
+    }
 
     // Add one volunteer by hand, for people who did not apply through the form.
     // Someone already on the roster is never changed, the answer says so.
@@ -47,7 +66,6 @@ module.exports = async function handler(context, req) {
     // once. People already on the roster are left alone, and cards the team
     // dismissed are skipped. A card in "meeting" starts at Intro call scheduled.
     if (b.action === 'import') {
-      const fromLine = (msg, label) => { const m = new RegExp(`^${label}: (.+)$`, 'mi').exec(String(msg || '')); return m ? m[1].trim() : '' }
       const cards = (await listInquiries()).filter(c => c.topic === 'volunteer' && c.email)
       // Someone removed through the Subscribers tool must not come back from their old
       // inquiry card. The deletion log keeps the first 10 characters of a hash of the

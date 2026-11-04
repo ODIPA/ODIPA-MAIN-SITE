@@ -172,6 +172,22 @@ const rows = () => [...store.entries()].filter(([k]) => k.startsWith('volunteers
   assert.strictEqual(rows().find(x => x.email === 'h1@example.com').status, 'active', 'and the existing row is unchanged')
   assert(!subRow('h1@example.com'), 'adding by hand does not make anyone a member or subscriber')
 
+  // 7e. Set the status from a card on the board; adds the person if they are not listed yet.
+  card('s1', { email: 'iram@example.com', name: 'Iram J', status: 'meeting', message: 'VOLUNTEER APPLICATION\nRoles of interest: Privacy Researcher\nTime available: 4 to 6 hours a month' })
+  card('s2', { email: 'press@example.com', name: 'Press Person', topic: 'press', message: 'q' })
+  const setStatus = body => call(roster, 'POST', { key: 'k', body: Object.assign({ action: 'set-status' }, body) })
+  a = await call(roster, 'POST', { body: { action: 'set-status', inquiryId: 's1', status: 'active' } }); assert.strictEqual(a.status, 401)
+  a = await setStatus({ inquiryId: 's1', status: 'banished' }); assert.strictEqual(a.status, 400)
+  a = await setStatus({ inquiryId: 'nope', status: 'active' }); assert.strictEqual(a.status, 404)
+  a = await setStatus({ inquiryId: 's2', status: 'active' }); assert.strictEqual(a.status, 404, 'only volunteer cards')
+  a = await setStatus({ inquiryId: 's1', status: 'active' })
+  assert.deepStrictEqual([a.status, a.body.added], [200, true])
+  const iram = rows().find(x => x.email === 'iram@example.com')
+  assert.deepStrictEqual([iram.status, iram.roles, iram.name], ['active', 'Privacy Researcher', 'Iram J'], 'added from the card with its details')
+  a = await setStatus({ inquiryId: 's1', status: 'paused' })
+  assert.deepStrictEqual([a.body.added, rows().find(x => x.email === 'iram@example.com').status], [false, 'paused'], 'an existing row is updated, not duplicated')
+  assert.strictEqual(rows().filter(x => x.email === 'iram@example.com').length, 1)
+
   // 8. Roster delete from the admin.
   a = await call(roster, 'POST', { key: 'k', body: { id: V.idFor('cy@example.com'), action: 'delete' } })
   assert(!rows().some(x => x.email === 'cy@example.com'))
