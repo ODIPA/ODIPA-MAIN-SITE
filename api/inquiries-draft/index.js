@@ -14,10 +14,13 @@ const { respond, sendHtmlEmail } = require('../_shared/mailer')
 const { listInquiries, updateInquiry } = require('../_shared/inquiries')
 const { rolesForPrompt, GRC_RULE } = require('../_shared/volunteerRoles')
 
+// Self-serve booking page for volunteer intro calls.
+const INTRO_CALL_LINK = 'https://calendly.com/odipa-foundation/intro'
+
 const TOPIC_GUIDANCE = {
   volunteer: `Volunteering inquiry. DRAFT by default, volunteers are the most common inquiry. The line "Application completeness" below tells you which kind of reply to write.
 If it says THIN, the person has not yet said enough for ODIPA to match them to a role. Write a warm reply that thanks them, reflects one concrete detail from their message so it reads personal, and asks them to reply with a resume or a LinkedIn or portfolio link, why they want to volunteer with ODIPA, their relevant experience and any credentials, which roles interest them, and about how many hours a month they can give. Ask only for what their message does not already say. Do NOT invite a call, propose times or mention scheduling in a THIN reply. Say that once ODIPA has this, the team will follow up. Wanting global or practical experience is a normal reason to volunteer, so welcome it.
-If it says COMPLETE, a good draft thanks them, reflects one concrete detail from their message so it reads personal, and invites them to reply with availability for a short intro call. Strong and specific applicants deserve the fastest reply of all.
+If it says COMPLETE, a good draft thanks them, reflects one concrete detail from their message so it reads personal, and invites them to book a short intro call themselves at ${INTRO_CALL_LINK} (the booking page shows open times in their own time zone). Include that exact link once, as plain text. Do NOT ask them to reply with availability and do NOT propose specific times. Strong and specific applicants deserve the fastest reply of all.
 Never decline, redirect or discourage a volunteer because of their field or the kind of work they want. ${GRC_RULE} Flag ONLY if the message indicates a minor, explicitly demands pay, employment, sponsorship, or visa support as a condition, raises a legal or security matter, is hostile or incoherent, or is from a journalist. A wish for GRC or compliance experience is none of those.
 
 Volunteer roles that really exist, the only ones you may name:
@@ -57,7 +60,7 @@ Hard rules:
 - Never promise timelines, money, partnerships, listings, or commitments of any kind.
 - Never give legal advice.
 - Never use em dashes.
-- Never turn away or talk down a volunteer applicant. If you are unsure whether they fit, invite them to the intro call, which exists to find the fit.
+- Never turn away or talk down a volunteer applicant. If you are unsure whether they fit, invite them to book the intro call with the Calendly link in the guidance, which exists to find the fit.
 - Sign off as "The ODIPA Team".
 - The recipient already received an automatic acknowledgment days ago. Do not re-acknowledge receipt. Get to substance.`
 
