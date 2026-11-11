@@ -98,6 +98,9 @@ global.fetch = async (url, opts) => {
   calls.length = 0
   await draft(ctx, { method: 'POST', headers: { 'x-admin-key': 'k' } })
   assert(calls[0].messages[0].content.includes('Application completeness: COMPLETE'), 'form application is COMPLETE')
+  const sysComplete = calls[0].messages[0].content + calls[0].system
+  assert(/(^|\s)https:\/\/calendly\.com\/odipa-foundation\/intro(\s|\)|\.|$)/.test(sysComplete), 'a complete application is pointed to the booking link')
+  assert(/If it is THIN, never mention a call/.test(sysComplete), 'and a thin one is still never offered a call')
 
   assert.strictEqual(draft.volunteerCompleteness('Hi, my profile is https://linkedin.com/in/x and I want to help'), 'COMPLETE')
   assert.strictEqual(draft.volunteerCompleteness('please match me to a role'), 'THIN')
