@@ -3,13 +3,13 @@
  * Requires header x-admin-key matching NEWSLETTER_ADMIN_KEY.
  * ?status=drafted,needs-attention,acked (comma list, default all active)
  */
+const { isAdminRequest } = require('../_shared/adminAuth')
 const { respond } = require('../_shared/mailer')
 const { listInquiries } = require('../_shared/inquiries')
 
 module.exports = async function (context, req) {
   if (req.method === 'OPTIONS') return respond(context, 200, {})
-  const key = process.env.NEWSLETTER_ADMIN_KEY
-  if (!key || req.headers['x-admin-key'] !== key)
+  if (!isAdminRequest(req))
     return respond(context, 401, { error: 'Unauthorized' })
 
   try {
@@ -24,6 +24,8 @@ module.exports = async function (context, req) {
         draftSubject: r.draftSubject || '', draftBody: r.draftBody || '',
         draftReason: r.draftReason || '', draftedAt: Number(r.draftedAt) || 0,
         prepSheetAt: Number(r.prepSheetAt) || 0,
+        resume: r.resumeBlob ? { name: r.resumeName || 'resume' } : null, // the stored name is never sent
+        sentAt: Number(r.sentAt) || 0, handledAt: Number(r.handledAt) || 0,
       })),
     })
   } catch (err) {

@@ -4,13 +4,13 @@
  * Returns confirmed subscribers with their unsubscribe links, which is the
  * feed for any automated or AI-assisted newsletter send pipeline.
  */
+const { isAdminRequest } = require('../_shared/adminAuth')
 const { listByStatus, unsubscribeLink } = require('../_shared/subscribers')
 
 module.exports = async function handler(context, req) {
   const respond = (status, body) => { context.res = { status, headers: { 'Content-Type': 'application/json' }, body } }
   try {
-    const key = process.env.NEWSLETTER_ADMIN_KEY
-    if (!key || req.headers['x-admin-key'] !== key) {
+    if (!isAdminRequest(req)) {
       return respond(401, { error: 'Unauthorized' })
     }
     const subs = await listByStatus('confirmed')

@@ -66,7 +66,7 @@ process.env.NEWSLETTER_ADMIN_KEY = 'k'
 process.env.ANTHROPIC_API_KEY = 'x'
 global.fetch = async (url, opts) => {
   calls.push(JSON.parse(opts.body))
-  return { json: async () => ({ content: [{ type: 'text', text: '{"action":"draft","subject":"Hello","body":"Thanks. Can we set up a short call?"}' }] }) }
+  return { json: async () => ({ content: [{ type: 'text', text: '{"action":"draft","subject":"Hello","body":"Thanks. Please send a resume link."}' }] }) }
 }
 
 ;(async () => {
@@ -82,6 +82,7 @@ global.fetch = async (url, opts) => {
   assert(userMsg.includes('Never decline, redirect or discourage a volunteer'), 'draft prompt forbids turning applicants away')
   assert(sent.system.includes('Never turn away or talk down a volunteer applicant'), 'system prompt forbids turning applicants away')
   assert.strictEqual(store[0][1].status, 'drafted', 'result is stored as a draft, not flagged')
+  assert.strictEqual(store[0][1].draftRules, 'v3', 'the draft is stamped with the current rules version')
   assert(userMsg.includes('Application completeness: THIN'), 'a short message with no resume or link is marked THIN')
   assert(userMsg.includes('Do NOT invite a call'), 'draft prompt tells the model not to schedule a call for thin messages')
   assert(userMsg.includes('resume'), 'draft prompt asks for a resume')
@@ -97,6 +98,9 @@ global.fetch = async (url, opts) => {
   calls.length = 0
   await draft(ctx, { method: 'POST', headers: { 'x-admin-key': 'k' } })
   assert(calls[0].messages[0].content.includes('Application completeness: COMPLETE'), 'form application is COMPLETE')
+  const sysComplete = calls[0].system
+  assert(sysComplete.includes('https://calendly.com/odipa-foundation/intro'), 'a complete application is pointed to the booking link')
+  assert(/If it is THIN, never mention a call/.test(sysComplete), 'and a thin one is still never offered a call')
 
   assert.strictEqual(draft.volunteerCompleteness('Hi, my profile is https://linkedin.com/in/x and I want to help'), 'COMPLETE')
   assert.strictEqual(draft.volunteerCompleteness('please match me to a role'), 'THIN')

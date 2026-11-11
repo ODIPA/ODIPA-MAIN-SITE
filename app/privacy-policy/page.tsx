@@ -4,13 +4,13 @@ import Image from 'next/image'
 export const metadata: Metadata = {
   title: 'Privacy Policy',
   description:
-    'ODIPA is a privacy-first organization. Read how we collect, use, and protect your information — and why we chose cookieless analytics.',
+    'ODIPA is a privacy-first organization. Read how we collect, use, and protect your information, and why we chose cookieless analytics.',
   alternates: {
     canonical: 'https://www.odipa.org/privacy-policy',
   },
   openGraph: {
-    title: 'Privacy Policy — ODIPA',
-    description: 'How ODIPA collects, uses, and protects your data — including our cookieless, privacy-first analytics approach.',
+    title: 'Privacy Policy | ODIPA',
+    description: 'How ODIPA collects, uses, and protects your data, including our cookieless, privacy-first analytics approach.',
     url: 'https://www.odipa.org/privacy-policy',
     type: 'website',
   },
@@ -72,7 +72,7 @@ export default function PrivacyPolicy() {
           </h1>
           <p className="text-[16px] text-white/60 leading-[1.75] max-w-[580px] mb-8">
             We are a privacy nonprofit. We hold ourselves to the highest standard when it
-            comes to how we handle your data — which is to say, we collect as little as
+            comes to how we handle your data, which is to say, we collect as little as
             possible, and we are transparent about everything we do.
           </p>
           <div className="flex flex-wrap gap-4">
@@ -82,7 +82,7 @@ export default function PrivacyPolicy() {
             </div>
             <div className="bg-white/5 border border-white/10 rounded-lg px-4 py-3">
               <div className="font-mono text-[10px] text-gold-light uppercase tracking-[1px] mb-1">Organization</div>
-              <div className="text-[14px] text-white font-medium">ODIPA — 501(c)(3) Nonprofit</div>
+              <div className="text-[14px] text-white font-medium">ODIPA, 501(c)(3) Nonprofit</div>
             </div>
             <div className="bg-white/5 border border-white/10 rounded-lg px-4 py-3">
               <div className="font-mono text-[10px] text-gold-light uppercase tracking-[1px] mb-1">Analytics</div>
@@ -130,7 +130,7 @@ export default function PrivacyPolicy() {
 
           <Section id="overview" title="Overview">
             <p>
-              This Privacy Policy explains how ODIPA — Organization for Digital Information Privacy &amp;
+              This Privacy Policy explains how ODIPA, Organization for Digital Information Privacy &amp;
               Awareness (&quot;ODIPA,&quot; &quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) collects, uses, and protects information
               when you visit our website at odipa.org (the &quot;Site&quot;) or interact with our programs
               and services.
@@ -165,7 +165,7 @@ export default function PrivacyPolicy() {
             <div className="space-y-3 my-5">
               <InfoBox
                 label="Aggregate website analytics"
-                value="Page views, referrer source, device type, country — never linked to an individual"
+                value="Page views, referrer source, device type, country, never linked to an individual"
               />
               <InfoBox
                 label="Newsletter and community sign ups"
@@ -176,8 +176,12 @@ export default function PrivacyPolicy() {
                 value="Only when you contact us directly (e.g., volunteer@odipa.org). We retain only what is needed to respond."
               />
               <InfoBox
+                label="Volunteer applications"
+                value="The answers you give on the volunteer form, and a resume file if you choose to attach one. Resume files are stored privately in ODIPA's own Microsoft Azure storage, read only by ODIPA's team to review your application, deleted automatically 90 days after you submit your application, and never sold. You can ask us to delete your file sooner at any time."
+              />
+              <InfoBox
                 label="Cookie consent preference"
-                value="Stored locally in your browser's localStorage — never transmitted to our servers"
+                value="Stored locally in your browser's localStorage, never transmitted to our servers"
               />
             </div>
             <p>
@@ -188,7 +192,7 @@ export default function PrivacyPolicy() {
             </p>
           </Section>
 
-          <Section id="analytics" title="Analytics — Plausible">
+          <Section id="analytics" title="Analytics: Plausible">
             <p>
               We use{' '}
               <a
@@ -207,7 +211,7 @@ export default function PrivacyPolicy() {
                 ['No cookies', 'Plausible does not use cookies or any persistent identifiers.'],
                 ['No personal data', 'No IP addresses, device fingerprints, or user profiles are created.'],
                 ['No cross-site tracking', 'Plausible does not follow you across websites.'],
-                ['GDPR compliant', 'Fully compliant with GDPR, CCPA, PECR, and other privacy regulations — no consent required.'],
+                ['GDPR compliant', 'Fully compliant with GDPR, CCPA, PECR, and other privacy regulations. No consent required.'],
                 ['Data stays in EU', 'All data is processed and stored on servers in the European Union.'],
                 ['Open source', 'Plausible\'s code is publicly auditable on GitHub.'],
               ].map(([label, detail]) => (
@@ -221,8 +225,8 @@ export default function PrivacyPolicy() {
               ))}
             </div>
             <p>
-              The aggregate data Plausible provides — such as how many people visited the Site
-              today and which pages are most viewed — helps us understand how to better serve
+              The aggregate data Plausible provides, such as how many people visited the Site
+              today and which pages are most viewed, helps us understand how to better serve
               our community. No individual is ever identified.
             </p>
           </Section>
@@ -266,9 +270,9 @@ export default function PrivacyPolicy() {
                 </thead>
                 <tbody>
                   {[
-                    ['Plausible Analytics', 'Website analytics', 'Aggregate only — no personal data', '✓ Excellent'],
-                    ['Azure Static Web Apps', 'Website hosting', 'Standard HTTP request logs (IP, timestamp) — retained briefly per Microsoft policy', '~ Standard'],
-                    ['Microsoft Azure (Table Storage and Communication Services)', 'Storing newsletter and community sign ups and sending our email', 'Email address, and for community members their name, handled on ODIPA\'s behalf only', '✓ Service provider'],
+                    ['Plausible Analytics', 'Website analytics', 'Aggregate only, no personal data', '✓ Excellent'],
+                    ['Azure Static Web Apps', 'Website hosting', 'Standard HTTP request logs (IP, timestamp), retained briefly per Microsoft policy', '~ Standard'],
+                    ['Microsoft Azure (Table Storage, Blob Storage and Communication Services)', 'Storing newsletter and community sign ups and volunteer resume files, and sending our email', 'Email address, and for community members their name. Resume files only when a volunteer chooses to attach one. Handled on ODIPA\'s behalf only', '✓ Service provider'],
                     ['Google Fonts', 'Typography', 'Font file requests only', '~ Standard'],
                     ['Unsplash', 'Stock photography', 'Image requests only', '~ Standard'],
                   ].map(([service, purpose, data, privacy], i) => (
@@ -299,7 +303,7 @@ export default function PrivacyPolicy() {
                 ['Right to deletion', 'You can request that we delete any personal information we hold, including a newsletter or community sign up. We will act on it within 30 days. Email us at ' + CONTACT_EMAIL + '.'],
                 ['Right to opt out of analytics', 'Plausible respects the "Do Not Track" browser setting. You can also install a browser ad-blocker, which will prevent Plausible from counting your visit.'],
                 ['Right to withdraw consent', 'Clear "odipa-cookie-consent" from your browser\'s localStorage at any time to reset your consent preference.'],
-                ['California residents (CCPA)', 'We do not sell personal information. You have the right to know, delete, and opt out of sale — though we have nothing to opt out of.'],
+                ['California residents (CCPA)', 'We do not sell personal information. You have the right to know, delete, and opt out of sale, though we have nothing to opt out of.'],
                 ['EU/UK residents (GDPR)', 'Our legal basis for Plausible analytics is Legitimate Interest, given its cookieless and non-personal nature. You may lodge a complaint with your supervisory authority.'],
               ].map(([right, detail]) => (
                 <div key={right} className="flex items-start gap-3 p-4 bg-white rounded-lg border border-slate-200">

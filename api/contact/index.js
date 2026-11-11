@@ -2,12 +2,18 @@
  * ODIPA Contact Form — Azure Function
  * POST /api/contact
  * Validates, sanitizes, and emails to info@odipa.org (or topic-routed alias).
- * No data is stored anywhere. Reply-to is set to the submitter's address.
+ * Reply-to is set to the submitter's address. The inquiry is kept in ODIPA's
+ * own Azure storage for the admin inbox. A volunteer's resume file, if they
+ * attach one, goes to a private container in the same storage.
  */
 
 const { sendFormEmail, sendHtmlEmail, respond, clean } = require('../_shared/mailer')
 const { saveInquiry } = require('../_shared/inquiries')
+const { recordApplication } = require('../_shared/volunteers')
+const { joinAsMember } = require('../_shared/memberJoin')
 const { checkRateLimit, getClientIp } = require('../_shared/rateLimiter')
+const { parseVolunteerApplication } = require('../_shared/volunteerApplication')
+const { validateResume, saveResume, deleteResume } = require('../_shared/resumeStore')
 
 // ── Auto-acknowledgment templates per topic ──────────────────────────────────
 // Instant canned response to the submitter. Templates only, no AI, every word
@@ -109,23 +115,70 @@ module.exports = async function handler(context, req) {
     const name    = clean(body['Name'] || body.name, 100)
     const email   = clean(body['Email'] || body.email, 200)
     const organization = clean(body['Organization'] || body.organization, 200) || '—'
-    const message = clean(body['Message'] || body.message, 2000) || '—'
+    let message = clean(body['Message'] || body.message, 2000) || '—'
 
     if (!name)    return respond(context, 400, { error: 'Name is required' })
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
       return respond(context, 400, { error: 'Valid email is required' })
-    if (!message || message.length < 10)
+
+    // Volunteer applications carry their own questions. They are checked here
+    // and written into the message, so everything downstream reads them.
+    let volunteerFields = null
+    let resumeFile = null
+    if (topic === 'volunteer') {
+      const rawResume = body.volunteer && body.volunteer.resume
+      if (rawResume) {
+        const checked = validateResume(rawResume)
+        if (checked.error) return respond(context, 400, { error: checked.error })
+        resumeFile = checked.file
+      }
+      const parsed = parseVolunteerApplication(body.volunteer, resumeFile)
+      if (parsed.error) return respond(context, 400, { error: parsed.error })
+      volunteerFields = parsed.fields
+      message = parsed.message
+    } else if (!message || message.length < 10) {
       return respond(context, 400, { error: 'Message is required' })
+    }
 
     const toAddress = TOPIC_ROUTING[topic] || TOPIC_ROUTING.general
     const topicLabel = clean(body['Topic'] || topic || 'General Inquiry', 100)
     const consent = clean(body['Consented'] || body.consent, 10) || 'No'
 
+    // Store the file before anything is emailed, so the applicant is never told
+    // it arrived when it did not.
+    let resumeBlob = ''
+    if (resumeFile) {
+      try { resumeBlob = await saveResume(resumeFile) } catch (fileErr) {
+        context.log.error('Resume store failed:', fileErr.message)
+        return respond(context, 503, { error: 'We could not save your resume file. Please try again, or add a link to your resume instead.' })
+      }
+    }
+
+    // If the team email fails the applicant sees an error and will resend, so
+    // do not keep a file that no inquiry will ever point at.
+    try {
     await sendFormEmail({
       to:      toAddress,
       subject: `Contact Form: ${topicLabel} — from ${name}`,
       replyTo: email,
-      fields: {
+      fields: volunteerFields ? {
+        'Topic':              topicLabel,
+        'Name':               name,
+        'Email':              email,
+        'Organization':       organization,
+        'Why ODIPA':          volunteerFields.why,
+        'Roles of interest':  volunteerFields.roles.join(', '),
+        'Experience':         volunteerFields.experience,
+        'Resume or profile':  volunteerFields.link || 'None',
+        'Resume file':        resumeFile ? `${resumeFile.name} (${resumeFile.label}), open it from the admin inquiry board` : 'None',
+        'Credentials':        volunteerFields.credentials || '—',
+        'Time available':     volunteerFields.hours,
+        'Based in':           volunteerFields.location || '—',
+        'Heard from':         volunteerFields.heardFrom || '—',
+        'Anything else':      volunteerFields.extra || '—',
+        'Routed to':          toAddress,
+        'Consented':          consent,
+      } : {
         'Topic':        topicLabel,
         'Name':         name,
         'Email':        email,
@@ -135,6 +188,10 @@ module.exports = async function handler(context, req) {
         'Consented':    consent,
       },
     })
+    } catch (mailErr) {
+      if (resumeBlob) await deleteResume(resumeBlob)
+      throw mailErr
+    }
 
     // Instant canned acknowledgment to the submitter. Awaited so it cannot be
     // dropped, but a failure only logs, the inquiry itself succeeded.
@@ -153,13 +210,31 @@ module.exports = async function handler(context, req) {
 
     // Persist for the admin review inbox. Failure only logs, the inquiry
     // was already delivered by email either way.
+    let inquiryId = ''
     try {
-      await saveInquiry({ topic, name, email, organization, message, routedTo: toAddress })
+      inquiryId = await saveInquiry({ topic, name, email, organization, message, routedTo: toAddress, resumeBlob, resumeName: resumeFile ? resumeFile.name : '' })
     } catch (storeErr) {
       context.log.error('Inquiry store failed:', storeErr.message)
+      // Nothing points at the file now, so do not leave it behind.
+      if (resumeBlob) await deleteResume(resumeBlob)
     }
 
-    respond(context, 200, { ok: true })
+    // A volunteer is added to the roster, and joins the community as a free
+    // member when they left the box ticked. Neither can fail the application.
+    let member = ''
+    if (topic === 'volunteer' && volunteerFields) {
+      const joinRequested = body.joinAsMember === true
+      try {
+        await recordApplication({ email, name, roles: volunteerFields.roles.join(', '), hours: volunteerFields.hours, inquiryId, memberRequested: joinRequested })
+      } catch (rosterErr) {
+        context.log.error('Volunteer roster failed:', rosterErr.message)
+      }
+      if (joinRequested) {
+        member = (await joinAsMember(context, { email, name, accepted: body.joinAsMember, termsVersion: body.termsVersion, source: 'Volunteer application' })).status
+      }
+    }
+
+    respond(context, 200, { ok: true, ...(member ? { member } : {}) })
   } catch (err) {
     context.log.error('Contact form error:', err.message)
     respond(context, 500, { error: 'Failed to send. Please try again.' })

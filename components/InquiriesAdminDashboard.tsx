@@ -31,6 +31,9 @@ type Inquiry = {
   draftReason: string
   draftedAt: number
   prepSheetAt: number
+  resume?: { name: string } | null
+  sentAt: number
+  handledAt: number
 }
 
 const COLUMNS: { id: string; title: string; hint: string }[] = [
@@ -67,6 +70,33 @@ export default function InquiriesAdminDashboard() {
 
   const hdrs = () => ({ 'x-admin-key': key.trim() })
 
+  // Volunteer roster statuses by email, so a volunteer card can show and change its status.
+  const [roster, setRoster] = useState<Record<string, string>>({})
+  const [rosterStatuses, setRosterStatuses] = useState<{ value: string; label: string }[]>([])
+  const loadRoster = async () => {
+    try {
+      const res = await fetch('/api/volunteers', { headers: hdrs() })
+      if (!res.ok) return
+      const d = await res.json()
+      setRosterStatuses(d.statuses || [])
+      setRoster(Object.fromEntries((d.volunteers || []).map((v: { email: string; status: string }) => [v.email.toLowerCase(), v.status])))
+    } catch { /* the board works without it */ }
+  }
+  const setVolunteerStatus = async (inq: Inquiry, status: string) => {
+    setBusy(`vol-${inq.id}`); setNotice('')
+    try {
+      const res = await fetch('/api/volunteers', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', ...hdrs() },
+        body: JSON.stringify({ action: 'set-status', inquiryId: inq.id, status }),
+      })
+      const d = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(d.error || `Request failed (${res.status})`)
+      setRoster(r => ({ ...r, [inq.email.toLowerCase()]: status }))
+      setNotice(`${inq.name} is now ${rosterStatuses.find(x => x.value === status)?.label || status}${d.added ? ' and was added to the volunteer roster' : ''}.`)
+    } catch (e) { setNotice((e as Error).message || 'Could not change the status.') }
+    finally { setBusy(null) }
+  }
+
   const load = async () => {
     setLoading(true); setError('')
     try {
@@ -75,19 +105,81 @@ export default function InquiriesAdminDashboard() {
       const data = await res.json()
       setItems(data.inquiries || [])
       setUnlocked(true)
+      loadRoster()
     } catch { setError('Failed to load inquiries') }
     finally { setLoading(false) }
   }
 
+  // Drafts waiting inquiries in small batches. Azure cuts API requests off
+  // after 45 seconds, and a full run of 20 model calls can take longer, so ask
+  // for a few at a time and repeat. A failed request stops the loop but keeps
+  // everything drafted so far.
+  const draftInBatches = async (queued: number) => {
+    let drafted = 0, flagged = 0, remaining = 0, stopped = ''
+    const failed: string[] = []
+    for (let i = 0; i < 40; i++) {
+      setNotice(`Drafting. ${drafted + flagged} done${queued ? `, ${queued} were queued` : ''}.`)
+      let data: { drafted: number; flagged: number; failed: string[]; remaining: number; error?: string; detail?: string } | null = null
+      let ok = false
+      try {
+        const res = await fetch('/api/inquiries-draft', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...hdrs() },
+          body: JSON.stringify({ limit: 3, skip: failed }),
+        })
+        ok = res.ok
+        data = await res.json()
+      } catch { /* a timeout returns an error page, not JSON */ }
+      if (!ok || !data) {
+        stopped = data && data.error ? `${data.error}${data.detail ? ` (${data.detail})` : ''}`.replace(/([^.!?])$/, '$1.') :`A drafting request failed or timed out${data ? '' : ' (no JSON reply)'}.`
+        break
+      }
+      drafted += data.drafted; flagged += data.flagged; remaining = data.remaining
+      failed.push(...(data.failed || []))
+      // Stop when nothing is left or a whole batch made no progress.
+      if (!remaining || data.drafted + data.flagged + (data.failed || []).length === 0) break
+    }
+    return { drafted, flagged, remaining, stopped, failed: failed.length }
+  }
+
+  const draftSummary = (r: { drafted: number; flagged: number; remaining: number; stopped: string; failed: number }) =>
+    `${r.stopped ? `${r.stopped} Drafts finished so far are kept. ` : ''}${r.drafted} drafted, ${r.flagged} flagged for a personal reply.${r.failed ? ` ${r.failed} could not be drafted and stay in Received.` : ''}${r.remaining ? ` ${r.remaining} still waiting, run drafting again.` : r.stopped ? ' Some may still be waiting, run drafting again.' : ''}`
+
   const runDrafting = async () => {
     setBusy('draft-run'); setNotice('')
     try {
-      const res = await fetch('/api/inquiries-draft', { method: 'POST', headers: hdrs() })
-      const data = await res.json()
-      if (res.ok) setNotice(`Drafting run complete. ${data.drafted} drafted, ${data.flagged} flagged, ${data.examined} examined.`)
-      else setNotice(data.error || 'Drafting run failed')
+      const r = await draftInBatches(0)
+      setNotice(`Drafting ${r.stopped ? 'stopped' : 'finished'}. ${draftSummary(r)}`)
       await load()
     } catch { setNotice('Drafting run failed') }
+    finally { setBusy(null) }
+  }
+
+  // Regenerate thin volunteer drafts written under the old rules. Nothing is
+  // sent. Each new draft still waits for approval, like any other.
+  const redraftThin = async () => {
+    setBusy('redraft'); setNotice('')
+    const call = (payload: object) => fetch('/api/inquiries-act', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...hdrs() },
+      body: JSON.stringify(payload),
+    })
+    try {
+      const probe = await call({ action: 'redraft-thin', dryRun: true })
+      const found = await probe.json()
+      if (!probe.ok) { setNotice(found.error || 'Redraft failed'); return }
+      if (!found.count) { setNotice('No thin volunteer drafts need redoing.'); return }
+      if (!window.confirm(`Regenerate ${found.count} volunteer drafts written before the current reply rules? Nothing is sent, and you still approve every draft.`)) return
+      const queued = await call({ action: 'redraft-thin' })
+      if (!queued.ok) { setNotice('Could not queue the drafts'); return }
+      // The set can change between the dry run and the real call, so report
+      // progress against what was actually queued.
+      const total = Number((await queued.json()).count) || 0
+
+      const r = await draftInBatches(total)
+      setNotice(`Redraft ${r.stopped ? 'stopped' : 'finished'}. ${draftSummary(r)}`)
+      await load()
+    } catch { setNotice('Redraft failed') }
     finally { setBusy(null) }
   }
 
@@ -104,7 +196,7 @@ export default function InquiriesAdminDashboard() {
       const data = await res.json()
       if (res.ok) {
         if (action === 'send') {
-          setItems(prev => prev.map(i => i.id === id ? { ...i, status: 'sent' } : i))
+          setItems(prev => prev.map(i => i.id === id ? { ...i, status: 'sent', sentAt: Date.now() } : i))
           setNotice(`Reply sent to ${item?.email}`)
         } else {
           setItems(prev => prev.filter(i => i.id !== id))
@@ -120,6 +212,7 @@ export default function InquiriesAdminDashboard() {
     if (!MOVE_TARGETS.has(status)) return
     const item = items.find(i => i.id === id)
     if (!item || item.status === status) return
+    if (status === 'sent' && !window.confirm(`Mark ${item.name} as replied? This records that you answered from your own inbox. It does not send an email.`)) return
     setBusy(id); setNotice('')
     try {
       const res = await fetch('/api/inquiries-act', {
@@ -128,9 +221,27 @@ export default function InquiriesAdminDashboard() {
         body: JSON.stringify({ id, action: 'move', status }),
       })
       const data = await res.json()
-      if (res.ok) setItems(prev => prev.map(i => i.id === id ? { ...i, status } : i))
+      if (res.ok) setItems(prev => prev.map(i => i.id === id ? { ...i, status, handledAt: status === 'sent' && !i.sentAt ? Date.now() : (status === 'acked' || status === 'needs-attention') ? 0 : i.handledAt } : i))
       else setNotice(data.error || 'Move failed')
     } catch { setNotice('Move failed') }
+    finally { setBusy(null) }
+  }
+
+  // The resume file is private. It is fetched with the admin key and saved from
+  // the browser, so no public link to it ever exists.
+  const downloadResume = async (id: string) => {
+    setBusy(`resume-${id}`); setNotice('')
+    try {
+      const res = await fetch(`/api/inquiries-resume?id=${encodeURIComponent(id)}`, { headers: hdrs() })
+      const data = await res.json().catch(() => null)
+      if (!res.ok || !data) { setNotice((data && data.error) || 'Could not download the resume'); return }
+      const bytes = Uint8Array.from(atob(data.data), ch => ch.charCodeAt(0))
+      const url = URL.createObjectURL(new Blob([bytes], { type: data.contentType }))
+      const a = document.createElement('a')
+      a.href = url; a.download = data.name
+      document.body.appendChild(a); a.click(); a.remove()
+      setTimeout(() => URL.revokeObjectURL(url), 10000)
+    } catch { setNotice('Could not download the resume') }
     finally { setBusy(null) }
   }
 
@@ -200,9 +311,13 @@ export default function InquiriesAdminDashboard() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={runDrafting} disabled={busy === 'draft-run'}
+            <button onClick={runDrafting} disabled={busy === 'draft-run' || busy === 'redraft'}
               className="bg-gold text-navy rounded-lg px-4 py-2 text-sm font-semibold disabled:opacity-50">
               {busy === 'draft-run' ? 'Drafting…' : 'Run drafting now'}
+            </button>
+            <button onClick={redraftThin} disabled={busy === 'redraft' || busy === 'draft-run'}
+              className="border border-white/30 text-white rounded-lg px-4 py-2 text-sm disabled:opacity-50">
+              {busy === 'redraft' ? 'Redrafting…' : 'Redraft thin volunteer drafts'}
             </button>
             <button onClick={load} className="border border-white/30 text-white rounded-lg px-4 py-2 text-sm">Refresh</button>
           </div>
@@ -210,7 +325,9 @@ export default function InquiriesAdminDashboard() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-6">
-        {notice && <div className="mb-4 bg-white border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-navy">{notice}</div>}
+        <div role="status" aria-live="polite">
+          {notice && <div className="mb-4 bg-white border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-navy">{notice}</div>}
+        </div>
 
         {/* Board */}
         <div className="flex gap-3 overflow-x-auto pb-4 items-start">
@@ -227,7 +344,7 @@ export default function InquiriesAdminDashboard() {
                   if (id && MOVE_TARGETS.has(col.id)) move(id, col.id)
                   setDragId(null)
                 }}
-                className={`flex-shrink-0 w-64 bg-white/70 rounded-xl border border-slate-200 border-t-4 ${COLUMN_ACCENT[col.id]} ${dragOver === col.id ? 'ring-2 ring-gold' : ''}`}>
+                className={`flex-1 min-w-[14rem] bg-white/70 rounded-xl border border-slate-200 border-t-4 ${COLUMN_ACCENT[col.id]} ${dragOver === col.id ? 'ring-2 ring-gold' : ''}`}>
                 <div className="px-3 pt-3 pb-2">
                   <p className="text-sm font-bold text-navy">{col.title}
                     <span className="ml-2 text-xs font-normal text-slate-400">{cards.length}</span></p>
@@ -245,6 +362,11 @@ export default function InquiriesAdminDashboard() {
                         <span className="text-[10px] font-mono text-slate-400">{inq.topic}</span>
                         {inq.topic === 'volunteer' && !!inq.prepSheetAt && (
                           <span className="text-[10px] font-mono font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-1">prep ✓</span>
+                        )}
+                        {inq.status === 'sent' && (
+                          <span className={`text-[10px] font-mono rounded px-1 border ${inq.sentAt ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-amber-700 bg-amber-50 border-amber-200'}`}>
+                            {inq.sentAt ? 'emailed' : 'manual'}
+                          </span>
                         )}
                         <span className="text-[10px] text-slate-400 ml-auto">{ageDays(inq.receivedAt)}d</span>
                       </div>
@@ -285,6 +407,12 @@ export default function InquiriesAdminDashboard() {
                   <span className="font-normal text-slate-500"> · {open.email}</span></p>
                 {open.organization && <p className="text-xs text-slate-500">{open.organization}</p>}
                 <p className="text-sm text-slate-700 leading-relaxed mt-2 whitespace-pre-wrap break-words">{open.message}</p>
+                {open.resume && (
+                  <button onClick={() => downloadResume(open.id)} disabled={busy === `resume-${open.id}`}
+                    className="mt-3 border border-slate-300 text-navy rounded-lg px-3 py-1.5 text-sm font-medium hover:border-navy disabled:opacity-50">
+                    {busy === `resume-${open.id}` ? 'Preparing…' : `Download resume (${open.resume.name})`}
+                  </button>
+                )}
               </div>
 
               <div className="min-w-0">
@@ -307,7 +435,11 @@ export default function InquiriesAdminDashboard() {
                   <p className="text-sm text-slate-400 italic">In grace period. Run drafting to propose a reply now, or reply personally and drag to Replied.</p>
                 ) : (
                   <p className="text-sm text-slate-400 italic">
-                    {open.status === 'sent' ? 'Replied. Drag to Meeting scheduled once a call is booked.' : 'Meeting scheduled. Generate or review the prep sheet below before the call.'}
+                    {open.status === 'sent'
+                      ? (open.sentAt
+                        ? `Reply emailed by the system on ${fmtDate(open.sentAt)}. Drag to Meeting scheduled once a call is booked.`
+                        : `Marked as handled personally${open.handledAt ? ` on ${fmtDate(open.handledAt)}` : ''}. No email was sent by the system. If that was a mistake, drag the card back to Received.`)
+                      : 'Meeting scheduled. Generate or review the prep sheet below before the call.'}
                   </p>
                 )}
               </div>
@@ -327,6 +459,17 @@ export default function InquiriesAdminDashboard() {
                   className="border border-navy/30 text-navy rounded-lg px-4 py-2 text-sm disabled:opacity-50">
                   {busy === `prep-${open.id}` ? 'Working…' : open.prepSheetAt ? 'View prep sheet' : 'Generate prep sheet'}
                 </button>
+              )}
+              {open.topic === 'volunteer' && (
+                <span className="inline-flex items-center gap-2">
+                  <label htmlFor={`vs-${open.id}`} className="text-xs text-slate-500">Volunteer status</label>
+                  <select id={`vs-${open.id}`} value={roster[open.email.toLowerCase()] || ''} disabled={busy === `vol-${open.id}` || !rosterStatuses.length}
+                    onChange={e => setVolunteerStatus(open, e.target.value)}
+                    className="border border-slate-300 rounded-lg px-2 py-2 text-sm text-navy bg-white">
+                    {!roster[open.email.toLowerCase()] && <option value="" disabled>Not on roster yet</option>}
+                    {rosterStatuses.map(st => <option key={st.value} value={st.value}>{st.label}</option>)}
+                  </select>
+                </span>
               )}
               {open.topic === 'volunteer' && !!open.prepSheetAt && (
                 <button onClick={() => generatePrep(open.id, true)} disabled={busy === `prep-${open.id}`}

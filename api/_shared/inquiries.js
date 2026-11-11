@@ -34,7 +34,7 @@ function newId() {
   return `${ts}-${crypto.randomBytes(4).toString('hex')}`
 }
 
-async function saveInquiry({ topic, name, email, organization, message, routedTo }) {
+async function saveInquiry({ topic, name, email, organization, message, routedTo, resumeBlob, resumeName }) {
   const client = getTable()
   await ensureTable(client)
   const id = newId()
@@ -47,6 +47,8 @@ async function saveInquiry({ topic, name, email, organization, message, routedTo
     organization: organization || '',
     message: (message || '').slice(0, 8000),
     routedTo: routedTo || '',
+    resumeBlob: resumeBlob || '',
+    resumeName: resumeName || '',
     status: 'acked',
     receivedAt: Date.now(),
     draftSubject: '',
@@ -58,7 +60,7 @@ async function saveInquiry({ topic, name, email, organization, message, routedTo
   return id
 }
 
-async function listInquiries(statuses) {
+async function listInquiries(statuses, limit = 200) {
   const client = getTable()
   await ensureTable(client)
   const out = []
@@ -66,7 +68,7 @@ async function listInquiries(statuses) {
   for await (const e of client.listEntities({ queryOptions: { filter: `PartitionKey eq '${PARTITION}'` } })) {
     if (wanted && !wanted.has(e.status)) continue
     out.push(e)
-    if (out.length >= 200) break
+    if (out.length >= limit) break
   }
   return out
 }

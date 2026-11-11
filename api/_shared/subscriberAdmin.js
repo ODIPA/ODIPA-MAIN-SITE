@@ -10,6 +10,8 @@
  * so ODIPA can show it honored a request without keeping the personal data it deleted.
  */
 
+const { deleteVolunteerByEmail, deleteVolunteersMatching } = require('./volunteers')
+const abuse = require('./abuse')
 const crypto = require('crypto')
 const { TableClient } = require('@azure/data-tables')
 
@@ -18,6 +20,15 @@ const DELETIONS = 'subscriberdeletions'
 const REASONS = ['person-request', 'duplicate-or-test', 'other']
 const LOOKUP_LIMIT = 25
 const SCAN_CAP = 20000
+
+// A time that never repeats within this process, so two deletions in the same
+// millisecond still list newest first. The deletion log sorts by a key built from it.
+let lastStamp = 0
+function nextStamp() {
+  const now = Date.now()
+  lastStamp = now > lastStamp ? now : lastStamp + 1
+  return lastStamp
+}
 
 // ----------------------------------------------------------------- storage
 
@@ -36,15 +47,8 @@ function emailKey(email) {
 
 // ----------------------------------------------------------------- auth
 
-/** Constant time check of the x-admin-key header against NEWSLETTER_ADMIN_KEY. */
-function isAdminRequest(req) {
-  const key = process.env.NEWSLETTER_ADMIN_KEY
-  const given = req && req.headers ? req.headers['x-admin-key'] : ''
-  if (!key || !given) return false
-  const a = Buffer.from(String(key))
-  const b = Buffer.from(String(given))
-  return a.length === b.length && crypto.timingSafeEqual(a, b)
-}
+// isAdminRequest lives in ./adminAuth so every admin endpoint shares one check.
+const { isAdminRequest } = require('./adminAuth')
 
 // ----------------------------------------------------------------- helpers
 
@@ -128,21 +132,30 @@ async function deletePerson({ email, reason }) {
   const client = table(SUBSCRIBERS)
   await ensure(client)
   const rowKey = emailKey(email)
+  // A volunteer roster row goes with the person, even if they were never a subscriber.
+  // The roster is keyed by the address as typed on the form, so the Gmail dot and plus
+  // variant that collapses to the same address is removed too.
+  const canon = e => abuse.canonicalEmail(String(e || '').trim().toLowerCase())
+  // Run both deletes, so an exact match does not leave a variant spelling behind.
+  const exactRow = await deleteVolunteerByEmail(email)
+  const variantRows = await deleteVolunteersMatching(email, (a, b) => canon(a) === canon(b))
+  const hadVolunteerRow = exactRow || variantRows > 0
   let ent
   try { ent = await client.getEntity('sub', rowKey) } catch (e) {
-    if (e && e.statusCode === 404) return { deleted: false }
-    throw e
+    if (!(e && e.statusCode === 404)) throw e
+    if (!hadVolunteerRow) return { deleted: false }
   }
-  await client.deleteEntity('sub', rowKey)
+  if (ent) await client.deleteEntity('sub', rowKey)
 
-  const info = { deleted: true, wasMember: !!ent.member, status: ent.status || 'pending', logged: true }
+  const info = { deleted: true, wasMember: !!(ent && ent.member), status: ent ? (ent.status || 'pending') : 'volunteer-only', logged: true }
   try {
     const log = table(DELETIONS)
     await ensure(log)
+    const at = nextStamp()
     await log.createEntity({
       partitionKey: 'del',
-      rowKey: `${String(9999999999999 - Date.now()).padStart(13, '0')}-${crypto.randomBytes(2).toString('hex')}`,
-      deletedAt: new Date().toISOString(),
+      rowKey: `${String(9999999999999 - at).padStart(13, '0')}-${crypto.randomBytes(2).toString('hex')}`,
+      deletedAt: new Date(at).toISOString(),
       reason,
       wasMember: info.wasMember,
       statusAtDeletion: info.status,

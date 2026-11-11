@@ -10,9 +10,11 @@
  * reports, anything unusual). Drafts NEVER send themselves. Every draft
  * waits for human approval in /admin/inquiries.
  */
+const { isAdminRequest } = require('../_shared/adminAuth')
 const { respond, sendHtmlEmail } = require('../_shared/mailer')
 const { listInquiries, updateInquiry } = require('../_shared/inquiries')
 const { rolesForPrompt, GRC_RULE } = require('../_shared/volunteerRoles')
+const { volunteerCompleteness, DRAFT_RULES } = require('../_shared/volunteerCompleteness')
 
 // Self-serve booking page for volunteer intro calls.
 const INTRO_CALL_LINK = 'https://calendly.com/odipa-foundation/intro'
@@ -37,18 +39,19 @@ You may name at most one or two roles, only when their message clearly points to
   board: 'ALWAYS flag board applications as needs-attention. Board recruitment is a governance matter for the current directors, not something to draft a reply to. The acknowledgment already told the applicant to expect confirmation within 2 business days and that decisions follow seat availability.',
 }
 
-/**
- * Decide in code, not in the model, whether a volunteer message has enough
- * information to match the person to a role. Messages from the structured
- * volunteer form start with "VOLUNTEER APPLICATION" and always carry the
- * answers ODIPA needs. Anything else (older submissions, short free text)
- * counts as THIN unless it includes a link to a resume or profile.
- */
-function volunteerCompleteness(message) {
-  const text = String(message || '').trim()
-  if (/^VOLUNTEER APPLICATION/i.test(text)) return 'COMPLETE'
-  if (/https?:\/\/|www\.|linkedin\.com/i.test(text)) return 'COMPLETE'
-  return 'THIN'
+/** The reminder email to the team. A send failure only logs and never fails the request. */
+async function sendNudge(context, drafted, flagged) {
+  const nudgeTo = process.env.INQUIRY_NUDGE_EMAIL
+  if (!nudgeTo || (drafted + flagged) <= 0) return false
+  try {
+    await sendHtmlEmail({
+      to: nudgeTo,
+      subject: `ODIPA inbox: ${drafted} draft${drafted === 1 ? '' : 's'} awaiting approval, ${flagged} flagged`,
+      html: `<p style="font-family:sans-serif;font-size:14px">The inquiry inbox has ${drafted} AI draft${drafted === 1 ? '' : 's'} awaiting your approval and ${flagged} inquiry${flagged === 1 ? '' : 'ies'} flagged for a personal reply.</p><p style="font-family:sans-serif;font-size:14px">Review at https://www.odipa.org/admin/inquiries</p>`,
+      plainText: `${drafted} drafts awaiting approval, ${flagged} flagged. Review at https://www.odipa.org/admin/inquiries`,
+    })
+    return true
+  } catch (e) { context.log.warn('Nudge failed:', e.message); return false }
 }
 
 const SYSTEM = `You draft replies for ODIPA, a small California 501(c)(3) digital privacy nonprofit. You write on behalf of a volunteer-run team.
@@ -60,15 +63,32 @@ Hard rules:
 - Never promise timelines, money, partnerships, listings, or commitments of any kind.
 - Never give legal advice.
 - Never use em dashes.
-- Never turn away or talk down a volunteer applicant. If you are unsure whether they fit, invite them to book the intro call with the Calendly link in the guidance, which exists to find the fit.
+- Never turn away or talk down a volunteer applicant. If the application is COMPLETE and you are unsure whether they fit, invite them to book the intro call with the Calendly link in the guidance, which exists to find the fit. If it is THIN, never mention a call, a meeting, scheduling or availability: ask for the missing details instead.
 - Sign off as "The ODIPA Team".
 - The recipient already received an automatic acknowledgment days ago. Do not re-acknowledge receipt. Get to substance.`
 
+// A reply that invites a call or asks for times, in the subject or the body.
+const offersCall = r => /\b(call|meeting|meet|schedul\w*|availab\w*|chat)\b/i.test(`${(r && r.subject) || ''}\n${(r && r.body) || ''}`)
+
 module.exports = async function (context, req) {
   if (req.method === 'OPTIONS') return respond(context, 200, {})
-  const key = process.env.NEWSLETTER_ADMIN_KEY
-  if (!key || req.headers['x-admin-key'] !== key)
+  if (!isAdminRequest(req))
     return respond(context, 401, { error: 'Unauthorized' })
+
+  // Reminder only. The daily workflow drafts in small batches (each request has
+  // to finish inside Azure's 45 seconds), then asks once for one email that
+  // reports what is actually waiting. No drafting and no model call happen here.
+  if (req.body && req.body.nudge === true) {
+    try {
+      const awaiting = (await listInquiries(['drafted'])).length
+      const flaggedNow = (await listInquiries(['needs-attention'])).length
+      const sent = await sendNudge(context, awaiting, flaggedNow)
+      return respond(context, 200, { ok: true, awaiting, flagged: flaggedNow, sent })
+    } catch (err) {
+      context.log.error('Inquiry nudge error:', err.message)
+      return respond(context, 500, { error: 'Reminder failed', detail: String(err && err.message || err).slice(0, 200) })
+    }
+  }
 
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) return respond(context, 400, { error: 'ANTHROPIC_API_KEY is not configured.' })
@@ -76,16 +96,29 @@ module.exports = async function (context, req) {
   try {
     const graceDays = Number(process.env.INQUIRY_GRACE_DAYS || 2)
     const cutoff = Date.now() - graceDays * 24 * 60 * 60 * 1000
-    const acked = (await listInquiries(['acked'])).filter(r => Number(r.receivedAt) < cutoff)
+    // The board and the scheduled workflow pass back inquiries that already
+    // failed this session or run, so an inquiry whose model call keeps failing
+    // does not block the batches behind it.
+    const skip = new Set(Array.isArray(req.body && req.body.skip) ? req.body.skip.map(String) : [])
+    const acked = (await listInquiries(['acked'])).filter(r => Number(r.receivedAt) < cutoff && !skip.has(r.rowKey))
+
+    // Azure Static Web Apps cuts API requests off after 45 seconds, and each
+    // draft is a model call. The admin board and the scheduled workflow ask
+    // for small batches with { limit } and repeat until nothing remains. No
+    // limit means a single run of up to 20.
+    const asked = Number(req.body && req.body.limit)
+    const batched = Number.isInteger(asked) && asked >= 1
+    const limit = batched ? Math.min(asked, 20) : 20
 
     let drafted = 0, flagged = 0
-    for (const inq of acked.slice(0, 20)) {
+    const failed = []
+    for (const inq of acked.slice(0, limit)) {
       const guidance = TOPIC_GUIDANCE[inq.topic] || 'General inquiry.'
       const completeness = inq.topic === 'volunteer' ? `Application completeness: ${volunteerCompleteness(inq.message)}\n` : ''
       const user = `Topic: ${inq.topic}\nGuidance: ${guidance}\n${completeness}From: ${inq.name} <${inq.email}>${inq.organization ? ` (${inq.organization})` : ''}\nReceived: ${new Date(Number(inq.receivedAt)).toUTCString()}\n\nTheir message:\n${inq.message}`
 
-      let result = null
-      try {
+      const thin = inq.topic === 'volunteer' && volunteerCompleteness(inq.message) === 'THIN'
+      const ask = async prompt => {
         const res = await fetch('https://api.anthropic.com/v1/messages', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
@@ -93,15 +126,28 @@ module.exports = async function (context, req) {
             model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-5',
             max_tokens: 700,
             system: SYSTEM,
-            messages: [{ role: 'user', content: user }],
+            messages: [{ role: 'user', content: prompt }],
           }),
         })
         const data = await res.json()
         const text = (data.content || []).filter(c => c.type === 'text').map(c => c.text).join('')
         const cleaned = text.replace(/```json|```/g, '').replace(/<\/?cite[^>]*>/g, '').trim()
-        result = JSON.parse(cleaned)
+        return JSON.parse(cleaned)
+      }
+
+      let result = null
+      try {
+        result = await ask(user)
+        // The model sometimes offers a call to a thin application despite the
+        // rule. Check in code, ask once more, and flag it if it still does.
+        if (thin && result && result.action === 'draft' && offersCall(result)) {
+          result = await ask(user + '\n\nYour last draft mentioned a call, a meeting, scheduling or availability. This application is THIN, so none of that is allowed. Rewrite it to ask for the missing details only.')
+          if (result && result.action === 'draft' && offersCall(result))
+            result = { action: 'flag', reason: 'Thin volunteer application: the draft kept offering a call. Write the reply by hand and ask for their details first.' }
+        }
       } catch (modelErr) {
         context.log.warn(`Draft failed for ${inq.rowKey}: ${modelErr.message}`)
+        failed.push(inq.rowKey)
         continue
       }
 
@@ -112,6 +158,7 @@ module.exports = async function (context, req) {
           draftBody: String(result.body).slice(0, 4000),
           draftReason: '',
           draftedAt: Date.now(),
+          draftRules: DRAFT_RULES,
         })
         drafted++
       } else {
@@ -124,23 +171,16 @@ module.exports = async function (context, req) {
       }
     }
 
-    // Nudge email so the inbox never accumulates silently
-    const nudgeTo = process.env.INQUIRY_NUDGE_EMAIL
-    if (nudgeTo && (drafted + flagged) > 0) {
-      try {
-        await sendHtmlEmail({
-          to: nudgeTo,
-          subject: `ODIPA inbox: ${drafted} draft${drafted === 1 ? '' : 's'} awaiting approval, ${flagged} flagged`,
-          html: `<p style="font-family:sans-serif;font-size:14px">The inquiry inbox has ${drafted} AI draft${drafted === 1 ? '' : 's'} awaiting your approval and ${flagged} inquiry${flagged === 1 ? '' : 'ies'} flagged for a personal reply.</p><p style="font-family:sans-serif;font-size:14px">Review at https://www.odipa.org/admin/inquiries</p>`,
-          plainText: `${drafted} drafts awaiting approval, ${flagged} flagged. Review at https://www.odipa.org/admin/inquiries`,
-        })
-      } catch (e) { context.log.warn('Nudge failed:', e.message) }
-    }
+    // Nudge email so the inbox never accumulates silently. Skipped for the
+    // small batches from the board and the scheduled workflow, which would send
+    // one email per batch. The workflow asks for one reminder with { nudge: true }.
+    if (!batched) await sendNudge(context, drafted, flagged)
 
-    respond(context, 200, { ok: true, examined: acked.length, drafted, flagged })
+    respond(context, 200, { ok: true, examined: acked.length, drafted, flagged, failed, remaining: Math.max(acked.length - drafted - flagged - failed.length, 0) })
   } catch (err) {
     context.log.error('Inquiry drafting error:', err.message)
-    respond(context, 500, { error: 'Drafting run failed' })
+    // The admin key is required to reach this endpoint, so the reason is safe to show.
+    respond(context, 500, { error: 'Drafting run failed', detail: String(err && err.message || err).slice(0, 200) })
   }
 }
 
