@@ -12,7 +12,8 @@
  *   approved         → tools approved and live in the directory (closed issues)
  *
  * Every number here is read from the public issues in the pipeline repo, so a
- * visitor can click the link at the bottom and count the same issues. Approved
+ * visitor can count the same issues there. The link at the bottom opens the
+ * closed approved issues, and the open queues are one click away. Approved
  * is the closed ledger: each approved tool has one closed issue carrying the
  * approved label. If the API is unavailable the widget shows static values,
  * with the Approved and needs-help numbers taken from the directory itself.
