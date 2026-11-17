@@ -4,14 +4,18 @@
  * ToolReviewStatus
  *
  * Fetches live counts from the ODIPA GitHub repo using the public Issues API.
- * No auth token required — the repo is public.
+ * No auth token required, the repo is public.
  *
  * GitHub label conventions expected in github.com/odipa/odipa-privacy-tools:
  *   tool-review      → tools under initial review
  *   security-audit   → tools in the security audit stage
- *   approved         → tools approved and live in the directory
+ *   approved         → closed issue per approved tool (a record, no longer used for the count)
  *
- * Falls back to the last known static counts if the API is unavailable.
+ * The Approved count is not read from GitHub. It is the number of Approved
+ * tools in the directory itself, so the widget always agrees with the cards
+ * on the same page, including a tool that was approved before its issue in
+ * the pipeline repo was closed. The review queues come from GitHub and fall
+ * back to static values if the API is unavailable.
  */
 
 import { useEffect, useState } from 'react'
@@ -43,7 +47,7 @@ async function fetchLabelCount(label: string, state: 'open' | 'closed' = 'open')
   const url = `https://api.github.com/search/issues?q=repo:${GITHUB_OWNER}/${GITHUB_REPO}+label:"${encodeURIComponent(label)}"+is:issue+is:${state}&per_page=1`
   const res = await fetch(url, {
     headers: { Accept: 'application/vnd.github.v3+json' },
-    // Cache for 5 minutes — GitHub rate limit is 10 unauthenticated requests/minute
+    // Cache for 5 minutes, GitHub rate limit is 10 unauthenticated requests/minute
     next: { revalidate: 300 },
   })
   if (!res.ok) throw new Error(`GitHub API ${res.status}`)
@@ -62,21 +66,19 @@ export default function ToolReviewStatus() {
 
     async function load() {
       try {
-        // Open issues are the working queues. Approved is the closed ledger,
-        // every approved tool's issue is closed carrying the approved label.
-        const [review, audit, needsHelp, approved] = await Promise.all([
+        // Open issues are the working queues. Approved comes from the directory.
+        const [review, audit, needsHelp] = await Promise.all([
           fetchLabelCount('tool-review'),
           fetchLabelCount('security-audit'),
           fetchLabelCount('needs-help'),
-          fetchLabelCount('approved', 'closed'),
         ])
         if (cancelled) return
-        setCounts({ review, audit, needsHelp, approved })
+        setCounts({ review, audit, needsHelp, approved: APPROVED_TOOL_COUNT })
         setStatus('live')
         setUpdated(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
       } catch {
         if (cancelled) return
-        // API unavailable — show fallback counts with a notice
+        // API unavailable, show fallback counts with a notice
         setStatus('fallback')
       }
     }
