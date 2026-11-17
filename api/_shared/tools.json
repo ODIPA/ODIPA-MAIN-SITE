@@ -194,6 +194,38 @@
         "Rust"
       ],
       "reviewNotes": "Reviewed October 2026 at commit 429e8f8. Published package run in a clean environment with all outbound traffic blocked: local only, nothing written outside its own folder, cloud sync requires an explicit connect. Python dependency audit clean. Rust lockfile audited. Native runtime built from the repository Rust source. Not a line-by-line read, see reviewScope."
+    },
+    {
+      "id": "bittool-signer-ios",
+      "name": "BitTool Signer for iOS",
+      "tagline": "Keep cryptocurrency signing keys on a separate offline iPhone and approve payments by QR code.",
+      "desc": "An iPhone app made to run on a spare phone that stays offline. Your everyday phone prepares a payment, the offline iPhone decodes it, shows the recipient and amount, and returns the signature as a QR code. The app has no account, no cloud sync and no network calls in its code, and BitTool receives no record of what you sign. It keeps up to 100 activity records on the device, which you can erase at any time and which are left out of device backups. It has not had an independent security audit. It does not make blockchain transactions private or anonymous, and it relies on the security of the phone and its operating system. BitTool Wallet is a separate online app with its own privacy policy and is not part of this listing.",
+      "category": "Offline Key Signing",
+      "author": "BitTool",
+      "authorHandle": "@bitbill",
+      "lang": "Swift",
+      "platform": [
+        "iOS"
+      ],
+      "license": "MIT",
+      "github": "https://github.com/bitbill/bittool-signer-ios",
+      "docs": "https://github.com/bitbill/bittool-signer-ios/tree/v1.0.0",
+      "stars": 0,
+      "featured": false,
+      "status": "approved",
+      "maintainer": "community",
+      "approvedDate": "2026-11",
+      "reviewedCommit": "f621372",
+      "reviewScope": "Review covered the v1.0.0 source only, not the App Store build. Static checks found no network code, no analytics or tracking, and no Swift package dependencies, and the camera and Face ID permission text matches what the app does. The production dependencies of the JavaScript signing engine audit clean. Not built or run for this review, and not a line-by-line read. No independent security audit exists.",
+      "tags": [
+        "offline signing",
+        "cryptocurrency",
+        "QR code",
+        "key protection",
+        "iOS",
+        "Swift"
+      ],
+      "reviewNotes": "Reviewed November 2026 at v1.0.0 (commit f621372). Source scanned for network calls, trackers and permissions, with nothing found beyond what the maker described. Six dependency advisories exist in the engine's test-only tooling and none in the code that ships. The maker published a SECURITY.md with a private reporting contact and agreed that this listing states there is no independent audit and that the tool does not make transactions private or anonymous."
     }
   ],
   "communityProjects": [
