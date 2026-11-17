@@ -9,13 +9,14 @@
  * GitHub label conventions expected in github.com/odipa/odipa-privacy-tools:
  *   tool-review      → tools under initial review
  *   security-audit   → tools in the security audit stage
- *   approved         → closed issue per approved tool (a record, no longer used for the count)
+ *   approved         → tools approved and live in the directory (closed issues)
  *
- * The Approved count is not read from GitHub. It is the number of Approved
- * tools in the directory itself, so the widget always agrees with the cards
- * on the same page, including a tool that was approved before its issue in
- * the pipeline repo was closed. The review queues come from GitHub and fall
- * back to static values if the API is unavailable.
+ * Every number here is read from the public issues in the pipeline repo, so a
+ * visitor can count the same issues there. The link at the bottom opens the
+ * closed approved issues, and the open queues are one click away. Approved
+ * is the closed ledger: each approved tool has one closed issue carrying the
+ * approved label. If the API is unavailable the widget shows static values,
+ * with the Approved and needs-help numbers taken from the directory itself.
  */
 
 import { useEffect, useState } from 'react'
@@ -43,7 +44,7 @@ type Status = 'loading' | 'live' | 'fallback' | 'error'
 
 // ─── GitHub API helper ───────────────────────────────────────────────────────
 async function fetchLabelCount(label: string, state: 'open' | 'closed' = 'open'): Promise<number> {
-  // GitHub search API counts open issues with a given label
+  // GitHub search API counts issues with a given label in the given state (open by default)
   const url = `https://api.github.com/search/issues?q=repo:${GITHUB_OWNER}/${GITHUB_REPO}+label:"${encodeURIComponent(label)}"+is:issue+is:${state}&per_page=1`
   const res = await fetch(url, {
     headers: { Accept: 'application/vnd.github.v3+json' },
@@ -66,14 +67,16 @@ export default function ToolReviewStatus() {
 
     async function load() {
       try {
-        // Open issues are the working queues. Approved comes from the directory.
-        const [review, audit, needsHelp] = await Promise.all([
+        // Open issues are the working queues. Approved is the closed ledger,
+        // every approved tool's issue is closed carrying the approved label.
+        const [review, audit, needsHelp, approved] = await Promise.all([
           fetchLabelCount('tool-review'),
           fetchLabelCount('security-audit'),
           fetchLabelCount('needs-help'),
+          fetchLabelCount('approved', 'closed'),
         ])
         if (cancelled) return
-        setCounts({ review, audit, needsHelp, approved: APPROVED_TOOL_COUNT })
+        setCounts({ review, audit, needsHelp, approved })
         setStatus('live')
         setUpdated(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
       } catch {
@@ -140,16 +143,17 @@ export default function ToolReviewStatus() {
 
       {/* Footer */}
       <div className="mt-4 pt-4 border-t border-white/10 space-y-2">
+        {/* The Approved number counts closed issues, so link to them. The open queues are one click away from there. */}
         <a
-          href={`https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/issues`}
+          href={`https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/issues?q=is%3Aissue+state%3Aclosed+label%3Aapproved`}
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-1.5 font-mono text-[10px] text-white/30 hover:text-white/60 transition-colors no-underline"
         >
-          <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor">
+          <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false">
             <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
           </svg>
-          View pipeline on GitHub
+          View the approved tools on GitHub
         </a>
         {status === 'fallback' && (
           <p className="font-mono text-[9px] text-amber-400/60 leading-relaxed">
