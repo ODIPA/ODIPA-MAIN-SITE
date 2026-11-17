@@ -9,13 +9,13 @@
  * GitHub label conventions expected in github.com/odipa/odipa-privacy-tools:
  *   tool-review      → tools under initial review
  *   security-audit   → tools in the security audit stage
- *   approved         → closed issue per approved tool (a record, no longer used for the count)
+ *   approved         → tools approved and live in the directory (closed issues)
  *
- * The Approved count is not read from GitHub. It is the number of Approved
- * tools in the directory itself, so the widget always agrees with the cards
- * on the same page, including a tool that was approved before its issue in
- * the pipeline repo was closed. The review queues come from GitHub and fall
- * back to static values if the API is unavailable.
+ * Every number here is read from the public issues in the pipeline repo, so a
+ * visitor can click the link at the bottom and count the same issues. Approved
+ * is the closed ledger: each approved tool has one closed issue carrying the
+ * approved label. If the API is unavailable the widget shows static values,
+ * with the Approved and needs-help numbers taken from the directory itself.
  */
 
 import { useEffect, useState } from 'react'
@@ -66,14 +66,16 @@ export default function ToolReviewStatus() {
 
     async function load() {
       try {
-        // Open issues are the working queues. Approved comes from the directory.
-        const [review, audit, needsHelp] = await Promise.all([
+        // Open issues are the working queues. Approved is the closed ledger,
+        // every approved tool's issue is closed carrying the approved label.
+        const [review, audit, needsHelp, approved] = await Promise.all([
           fetchLabelCount('tool-review'),
           fetchLabelCount('security-audit'),
           fetchLabelCount('needs-help'),
+          fetchLabelCount('approved', 'closed'),
         ])
         if (cancelled) return
-        setCounts({ review, audit, needsHelp, approved: APPROVED_TOOL_COUNT })
+        setCounts({ review, audit, needsHelp, approved })
         setStatus('live')
         setUpdated(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
       } catch {
