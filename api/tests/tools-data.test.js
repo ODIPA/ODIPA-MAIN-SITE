@@ -45,7 +45,7 @@ t('no em dashes in any text the public sees', () => {
     for (const k of ['name', 'tagline', 'desc', 'reviewScope']) assert(!/—/.test(x[k] || ''), `${x.id}.${k}`)
 })
 t('the status widget counts Approved from the public pipeline repo, not from this file', () => {
-  const src = require('fs').readFileSync(path.join(api, '..', 'components/ToolReviewStatus.tsx'), 'utf8')
+  const src = fs.readFileSync(path.join(api, '..', 'components/ToolReviewStatus.tsx'), 'utf8')
   assert(/fetchLabelCount\('approved', 'closed'\)/.test(src), 'Approved must be the closed approved issues in odipa-privacy-tools')
   assert(/setCounts\(\{ review, audit, needsHelp, approved \}\)/.test(src), 'the live Approved number must be the one read from GitHub')
   assert(!/approved: APPROVED_TOOL_COUNT \}\)/.test(src.replace(/const FALLBACK[^\n]*/, '')), 'APPROVED_TOOL_COUNT is only the fallback when GitHub is unreachable')
