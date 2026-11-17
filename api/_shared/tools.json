@@ -1,5 +1,5 @@
 {
-  "_comment": "Single source of truth for the Community Privacy Tools directory. Read by components/CommunityTools.tsx (the directory and the status panel fallback) and by api/newsletter-generate (which may recommend approved tools only). Add a tool here after it clears review. Lives under api/ because Azure deploys that folder on its own and functions cannot read files outside it.",
+  "_comment": "Single source of truth for the Community Privacy Tools directory. Read by components/CommunityTools.tsx (the directory and the status panel fallback) and by api/newsletter-generate (which may recommend approved tools only). Add a tool here after it clears review. The Tool Review Status widget does NOT take its counts from this file. It counts the public issues in github.com/ODIPA/odipa-privacy-tools (Approved is the closed issues labelled approved), so a visitor can check the numbers at the link. When an Approved tool is added here, also add and close its approved issue in that repo (see HOL Guard #9 and BitTool Signer #10), or the widget and the directory will disagree. Lives under api/ because Azure deploys that folder on its own and functions cannot read files outside it.",
   "approved": [
     {
       "id": "cookie-harvester",
