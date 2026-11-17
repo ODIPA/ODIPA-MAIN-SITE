@@ -132,7 +132,7 @@ export default function ToolReviewStatus() {
               {item.label}
             </div>
             <span className={`font-mono font-bold text-[13px] transition-all ${item.color} ${status === 'loading' ? 'opacity-30' : ''}`}>
-              {status === 'loading' ? '—' : item.count}
+              {status === 'loading' ? '...' : item.count}
             </span>
           </div>
         ))}
