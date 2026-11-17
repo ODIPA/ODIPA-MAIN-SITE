@@ -49,8 +49,10 @@ const COMMUNITY_PROJECTS: Tool[] = toolsData.communityProjects as Tool[]
 
 const ALL_TOOLS: Tool[] = [...APPROVED_TOOLS, ...COMMUNITY_PROJECTS]
 
-// Read by the review status panel as its fallback when GitHub is unreachable,
-// so the "Approved & live" count can never drift from the directory itself.
+// Read by the review status panel ONLY as its fallback when GitHub is unreachable.
+// The live Approved count comes from the closed 'approved' issues in the pipeline repo
+// (odipa/odipa-privacy-tools), so visitors can check it at the link. Adding an approved
+// tool here also means adding its closed issue there.
 export const APPROVED_TOOL_COUNT = APPROVED_TOOLS.length
 export const COMMUNITY_PROJECT_COUNT = COMMUNITY_PROJECTS.length
 
