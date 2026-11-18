@@ -79,7 +79,7 @@ export default function CookieConsent() {
             >
               Plausible
             </a>{' '}
-            is <strong className="text-white font-semibold">cookieless</strong>, collects no personal data, and is designed to meet GDPR and CCPA requirements.
+            is <strong className="text-white font-semibold">cookieless</strong>, collects no personal data, and is fully GDPR &amp; CCPA compliant.
           </p>
 
           {/* Details toggle */}

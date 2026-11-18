@@ -14,7 +14,7 @@ const roles = [
     icon: <Award className="w-5 h-5" />,
     title: 'Certification Assessor',
     commitment: '8–12 hrs/engagement',
-    desc: 'Conduct structured privacy assessments against ODIPA\'s published criteria for organizations applying for the ODIPA Trust Seal. Review documentation, conduct assessment interviews, prepare gap analysis reports, and participate in the two-assessor certification decision panel. Requires active credential in at least one recognized framework.',
+    desc: 'Conduct structured privacy compliance assessments for organizations applying for the ODIPA Trust Seal. Review documentation, conduct assessment interviews, prepare gap analysis reports, and participate in the two-assessor certification decision panel. Requires active credential in at least one recognized framework.',
     skills: ['CIPP/US or CIPP/E', 'CISA · CISSP · QSA · CHPC or CAMS', 'Privacy audit experience'],
   },
   {
