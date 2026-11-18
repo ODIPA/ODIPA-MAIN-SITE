@@ -132,11 +132,11 @@ export default function Page() {
       tag: 'Fee-based',
       tagColor: 'text-gold border-gold/30 bg-gold/10',
       image: '/images/corporate-certification.jpg',
-      imageAlt: 'Business professionals reviewing compliance documentation together',
+      imageAlt: 'Business professionals reviewing privacy documentation together',
       hero: `Consumers are skeptical of self-declared privacy commitments. ODIPA's Corporate Certification program provides independent, rigorous verification — giving privacy-committed organizations a seal that actually means something.`,
       overview: `ODIPA's Corporate Privacy Certification is a structured conformity assessment of an organization's data practices against ODIPA's published certification criteria. Our criteria draw on established frameworks, including CCPA/CPRA and the emerging state privacy laws, GDPR, the NIST Privacy Framework, ISO 27001, and SOC 2, with sector-specific rules such as HIPAA, GLBA, COPPA, and BIPA applied where they govern an applicant's industry. Unlike self-certification or checkbox compliance, the process involves documentation review, staff training verification, breach response evaluation, and structured interviews conducted by ODIPA-qualified assessors. Organizations receive written findings, remediate them, and are certified only when the criteria are met. Certification attests that an organization met ODIPA's published criteria on the assessment date. It is not a legal determination of compliance, which only regulators and courts can make. Certified organizations receive the ODIPA Trust Seal, a verifiable, annually renewed mark that signals genuine commitment to consumer privacy. The program is accepting inquiries for its founding cohort, and revenue from certifications directly funds ODIPA's free consumer programs.`,
       whatWeDo: [
-        { icon: <ClipboardCheck className="w-5 h-5" />, title: 'Privacy Compliance Assessment', desc: 'Fee-based structured review of your organization\'s data collection, processing, retention, and sharing practices against ODIPA\'s published certification criteria. Fees are set at cost to sustain program operations.' },
+        { icon: <ClipboardCheck className="w-5 h-5" />, title: 'Privacy Practices Assessment', desc: 'Fee-based structured review of your organization\'s data collection, processing, retention, and sharing practices against ODIPA\'s published certification criteria. Fees are set at cost to sustain program operations.' },
         { icon: <Search className="w-5 h-5" />, title: 'Policy & Documentation Review', desc: 'Fee-based evaluation of your privacy policy, consent mechanisms, data subject request processes, and internal data governance documentation.' },
         { icon: <Users className="w-5 h-5" />, title: 'Employee Training Verification', desc: 'Fee-based assessment of staff privacy training programs, including frequency, content coverage, and completion rates.' },
         { icon: <ShieldAlert className="w-5 h-5" />, title: 'Breach Response Evaluation', desc: 'Fee-based review of your incident response plan, breach notification procedures, and historical response track record.' },
@@ -147,7 +147,7 @@ export default function Page() {
         { group: 'Privacy-Committed Businesses', desc: 'Organizations that take consumer privacy seriously and want independent verification to distinguish themselves from competitors.' },
         { group: 'Consumer-Facing Companies', desc: 'Businesses that collect significant personal data and want to demonstrate trustworthiness to privacy-aware consumers.' },
         { group: 'Regulated Industries', desc: 'Healthcare, financial services, and technology companies seeking a credible third-party assessment alongside regulatory compliance.' },
-        { group: 'B2B Vendors', desc: 'Service providers who need to demonstrate privacy compliance to enterprise customers with vendor due diligence requirements.' },
+        { group: 'B2B Vendors', desc: 'Service providers who need independent evidence of their privacy practices for enterprise customers with vendor due diligence requirements.' },
       ],
       outcomes: [
         { metric: 'Annual', label: 'Renewal cycle' },
