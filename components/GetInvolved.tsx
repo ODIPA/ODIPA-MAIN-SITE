@@ -53,12 +53,12 @@ const cards = [
   },
   {
     title: 'Get Certified',
-    desc: "Earn ODIPA certification and demonstrate your business's compliance with state and federal privacy laws to your customers.",
+    desc: "Earn ODIPA certification and show your customers that your business met ODIPA's published privacy criteria in an independent assessment.",
     link: '/get-involved/get-certified',
     external: false,
     linkText: 'Start certification',
     image: '/images/photo-1568992687947-868a62a9f521_800.jpg',
-    imageAlt: 'Professional reviewing compliance certification documents',
+    imageAlt: 'Professional reviewing certification documents',
   },
 ]
 
