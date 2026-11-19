@@ -226,6 +226,41 @@
         "Swift"
       ],
       "reviewNotes": "Reviewed November 2026 at v1.0.0 (commit f621372). Source scanned for network calls, trackers and permissions, with nothing found beyond what the maker described. Six dependency advisories exist in the engine's test-only tooling and none in the code that ships. The maker published a SECURITY.md with a private reporting contact and agreed that this listing states there is no independent audit and that the tool does not make transactions private or anonymous."
+    },
+    {
+      "id": "metadataremover-ai-toolkit",
+      "name": "MetadataRemover.ai Toolkit",
+      "tagline": "Command line tools that show, edit and remove hidden metadata in your files, all on your own computer.",
+      "desc": "A set of Node.js command line tools for viewing, editing and removing hidden details such as location, device and author information in images, PDFs, Word documents, videos and MP3 files. Our source review found no network code, no analytics and no tracking in the toolkit, and the maker's own tests pass. The tools write a new output file and refuse to overwrite the original. We did not test how completely they remove hidden details beyond running those tests, so check a cleaned file before you share it. The toolkit has not had an independent security audit. Its help text prints links to the maker's website, MetadataRemover.ai, which is a separate hosted product and is not part of this listing.",
+      "category": "File and Metadata Privacy",
+      "author": "MetadataRemover.ai",
+      "authorHandle": "@songwenlei",
+      "lang": "JavaScript",
+      "platform": [
+        "Node.js",
+        "Cross-platform",
+        "CLI"
+      ],
+      "license": "MIT",
+      "github": "https://github.com/songwenlei/metadataremover.ai",
+      "docs": "https://github.com/songwenlei/metadataremover.ai/tree/0066d7829a492b64d344249132194e74d8567796",
+      "stars": 0,
+      "featured": false,
+      "status": "approved",
+      "maintainer": "community",
+      "approvedDate": "2026-11",
+      "reviewedCommit": "0066d78",
+      "reviewScope": "Review covered the open source Node.js toolkit at one pinned commit, not the MetadataRemover.ai website or any hosted product. Static checks found no network modules, no analytics or tracking and no hard coded keys in the source, and the lockfile audit reports no known advisories for the three dependencies. The maker's own 58 tests pass in an isolated session. Not a line by line read of every module, and the tools were not run against real personal files. No independent security audit exists.",
+      "tags": [
+        "metadata",
+        "EXIF",
+        "file privacy",
+        "PDF",
+        "DOCX",
+        "command line",
+        "JavaScript"
+      ],
+      "reviewNotes": "Reviewed November 2026 at commit 0066d78, which the maker published on November 17 to upgrade the XML parser dependency after our earlier scan flagged advisories in the version before it. The repository has no release tag, so approval attaches to this pinned commit. The code reads local files, writes only a separate output file and has no network imports. One dependency, pdf-lib, has not been updated since 2022, and the maker has not said whether it will be replaced. The command line help prints referral links to the maker's website, and ODIPA does not promote tools or companies. The maker was told that the hosted website is not covered by this listing."
     }
   ],
   "communityProjects": [
