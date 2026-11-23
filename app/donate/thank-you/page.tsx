@@ -129,7 +129,7 @@ export default function ThankYouPage() {
               { label: 'LinkedIn',  href: 'https://linkedin.com/company/odipa' },
               { label: 'X',        href: 'https://twitter.com/odipa_org' },
               { label: 'Facebook', href: 'https://facebook.com/odipa.org' },
-              { label: 'Instagram',href: 'https://instagram.com/odipa_org' },
+              { label: 'Instagram',href: 'https://www.instagram.com/odipafoundation' },
               { label: 'YouTube',  href: 'https://youtube.com/@odipa_org' },
             ].map((s) => (
               <a
