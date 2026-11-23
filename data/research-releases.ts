@@ -48,6 +48,63 @@ export interface ResearchRelease {
 export const releases: ResearchRelease[] = [
   // Add new releases at the top.
   {
+    slug: 'privacy-digest-2026-11',
+    title: 'Privacy Digest, November 2026 Edition',
+    type: 'Privacy Digest',
+    date: '2026-11-23',
+    author: 'Nicholas Davis',
+    summary:
+      'Delaware signed HB 380 on September 2, 2026. Starting January 1, 2027 it covers more businesses, adds rules for sharing data with third parties, and expands protections for sensitive data and automated decisions.',
+    sections: [
+      {
+        heading: "Delaware's Expansion of Consumer Privacy Coverage",
+        paragraphs: [
+          "On September 2, 2026, Delaware Governor Matt Meyer signed House Bill 380 (HB 380) into law. The bill substantially amends the state's existing data privacy law, the Delaware Personal Data Privacy Act (DPDPA). The DPDPA was enacted on September 11, 2023, and took effect on January 1, 2025. It gave Delaware residents the right to access, correct, and delete their personal information, and the ability to opt out of certain data sales and targeted advertising. However, the DPDPA applied only to organizations that process the personal information of at least 35,000 Delaware consumers each year. Smaller organizations stayed outside the law, even when they collected, processed, or sold consumers' personal information. That left a gap in coverage and limited residents' ability to use the protections the law gave them.",
+          "HB 380 addresses this gap by expanding the DPDPA's scope beginning January 1, 2027. It lowers the threshold from 35,000 consumers to 10,000, a decrease of approximately 71%. It also lowers the threshold for organizations that earn more than 20% of their gross revenue from selling personal data, from 10,000 consumers to 5,000.",
+          "These changes matter because of Delaware's relatively small population. Lowering the number of consumers an organization must process before the DPDPA applies extends the privacy framework to smaller businesses that may not have qualified before. This is especially true for online businesses, which can collect and process the personal information of Delaware residents without a physical presence in the state. Businesses outside Delaware may now be covered by the DPDPA. For Delaware residents, the lower threshold means more organizations are subject to the rights to request access, request deletion, and opt out of certain data processing.",
+        ],
+        links: [
+          { label: 'Delaware Governor, signed legislation listing for HB 380', href: 'https://governor.delaware.gov/?p=25979' },
+          { label: 'IAPP, Delaware enacts HB 380', href: 'https://iapp.org/news/a/delaware-enacts-hb-380-key-updates-to-the-delaware-personal-data-privacy-act' },
+        ],
+      },
+      {
+        heading: 'Strengthening Third-Party Accountability and Data Sharing Protections',
+        paragraphs: [
+          'HB 380 also adds new requirements for how covered organizations share consumers\' personal information with third parties. Under the original DPDPA, a data controller (an organization that decides how and why personal information is processed) had to set up contractual safeguards with data processors (organizations that handle information on another organization\'s behalf). The original law had no matching contract or due diligence requirements for disclosures to independent third parties. That meant personal information collected by one organization could be passed to a third party for a wide range of commercial or analytical purposes.',
+          'To close this gap, HB 380 requires data controllers to have binding contracts with third parties that receive consumers\' personal information. These contracts must state the purposes for which the information may be used, require the recipient to follow applicable privacy protections, and give the controller a way to address unauthorized uses. HB 380 also adds mandatory due diligence. Controllers must evaluate a third party\'s privacy policies and its technical and organizational safeguards. At a minimum, this review must include questionnaires and a review of relevant documents, with scrutiny that matches the sensitivity of the information being shared.',
+          'The bill also places direct obligations on third parties. Under the new section 12D-107A of the Delaware Code, a third party may not process personal information without a contract that meets the DPDPA\'s requirements. HB 380 also builds on the DPDPA\'s existing liability protection for organizations that disclose personal information, by requiring reasonable due diligence and oversight of whether recipients keep their contract obligations.',
+          'For Delaware residents, these provisions mean their personal information stays subject to privacy protections after it moves from the original organization to an outside party. The bill extends accountability beyond the point of collection and across later data-sharing relationships.',
+        ],
+        links: [
+          { label: 'WilmerHale, new requirements for sensitive data and third-party contracts', href: 'https://www.wilmerhale.com/en/insights/blogs/wilmerhale-privacy-and-cybersecurity-law/20261006-delaware-adds-new-requirements-for-sensitive-data-third-party-contracts' },
+          { label: 'ZwillGen, new third-party due diligence requirements', href: 'https://www.zwillgen.com/privacy/delaware-expands-privacy-law-new-third-party-due-diligence-requirements/' },
+        ],
+      },
+      {
+        heading: 'Expanding Sensitive Data Protections and Automated Decision-Making Safeguards',
+        paragraphs: [
+          'HB 380 also adds protections for sensitive information. Under the original DPDPA, sensitive information included racial or ethnic origin, health conditions, biometric information, and precise geolocation data. HB 380 broadens the definition to include neural data, government-issued identification numbers, certain financial account credentials, and inferences that reveal sensitive personal characteristics.',
+          'The bill also tightens the rules for processing and selling sensitive information. The original DPDPA required consent before processing sensitive personal information. HB 380 adds that the processing must be reasonably necessary and proportionate to its disclosed purposes. Organizations may not sell sensitive personal information unless the disclosure is strictly necessary to provide or maintain a product the consumer asked for. Even then, the organization must give the consumer advance notice that names the specific sensitive information being sold and its recipients. It must also get the consumer\'s express consent before the transfer and keep a record of that consent for at least five years.',
+          'HB 380 also strengthens safeguards around automated decision-making and profiling. The original DPDPA let consumers opt out of profiling used in solely automated decisions that produce legal or similarly significant effects. HB 380 broadens this to profiling used in automated decisions more generally, including decisions about employment, housing, insurance, and financial services. It also lowers the threshold for certain mandatory data protection assessments from 100,000 consumers to 50,000, so more organizations must assess the risks of certain profiling and automated decisions.',
+          'These changes come as automated technologies play a larger role in decisions that affect everyday life. By widening residents\' ability to opt out of certain profiling and requiring more organizations to assess the risks of consequential automated decisions, HB 380 adds safeguards against the misuse of personal information.',
+        ],
+        links: [
+          { label: 'Future of Privacy Forum, updating the Delaware Personal Data Privacy Act', href: 'https://fpf.org/blog/updating-the-delaware-personal-data-privacy-act-the-first-state-becomes-the-latest-to-get-a-privacy-refresh/' },
+          { label: 'OneTrust, what changes under the DPDPA in 2027', href: 'https://www.onetrust.com/blog/delaware-hb-380-amendments-what-changes-under-the-dpdpa-in-2027/' },
+        ],
+      },
+    ],
+    sources: [
+      { label: 'Delaware Governor, signed legislation listing for HB 380', href: 'https://governor.delaware.gov/?p=25979' },
+      { label: 'IAPP, Delaware enacts HB 380', href: 'https://iapp.org/news/a/delaware-enacts-hb-380-key-updates-to-the-delaware-personal-data-privacy-act' },
+      { label: 'Future of Privacy Forum, updating the Delaware Personal Data Privacy Act', href: 'https://fpf.org/blog/updating-the-delaware-personal-data-privacy-act-the-first-state-becomes-the-latest-to-get-a-privacy-refresh/' },
+      { label: 'WilmerHale, Delaware adds new requirements for sensitive data and third-party contracts', href: 'https://www.wilmerhale.com/en/insights/blogs/wilmerhale-privacy-and-cybersecurity-law/20261006-delaware-adds-new-requirements-for-sensitive-data-third-party-contracts' },
+      { label: 'ZwillGen, Delaware expands privacy law with new third-party due diligence requirements', href: 'https://www.zwillgen.com/privacy/delaware-expands-privacy-law-new-third-party-due-diligence-requirements/' },
+      { label: 'OneTrust, Delaware HB 380 amendments', href: 'https://www.onetrust.com/blog/delaware-hb-380-amendments-what-changes-under-the-dpdpa-in-2027/' },
+    ],
+  },
+  {
     slug: 'privacy-digest-2026-10',
     title: 'Privacy Digest, October 2026 Edition',
     type: 'Privacy Digest',
