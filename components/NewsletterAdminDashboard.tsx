@@ -20,6 +20,7 @@ type Stats = {
   signupsByMonth: Record<string, number>
   confirmedByMonth: Record<string, number>
   sources: Record<string, number>
+  volunteers?: { total: number; confirmed: number; pending: number; unsubscribed: number; notSubscribed: number }
   members?: { confirmed: number; pending: number; unsubscribed: number; total: number; newLast30Days: number; newsletterOnlyConfirmed: number }
   issues?: Issue[]
 }
@@ -373,6 +374,14 @@ export default function NewsletterAdminDashboard() {
               <p className="text-[13px] text-navy">
                 {stats.totals.confirmed} will receive it (confirmed). {stats.totals.pending} are left out because they have not confirmed yet, and {stats.totals.unsubscribed} are left out because they unsubscribed. {stats.totals.confirmed} + {stats.totals.pending} + {stats.totals.unsubscribed} = {stats.totals.allTimeSignups} sign ups in all.
               </p>
+              {stats.volunteers && stats.volunteers.total > 0 && (
+                <p className="text-[13px] text-slate-600 mt-2">
+                  Volunteers: {stats.volunteers.confirmed} of {stats.volunteers.total} are on the confirmed list.
+                  {stats.volunteers.pending ? ` ${stats.volunteers.pending} signed up but have not confirmed.` : ''}
+                  {stats.volunteers.unsubscribed ? ` ${stats.volunteers.unsubscribed} unsubscribed.` : ''}
+                  {stats.volunteers.notSubscribed ? ` ${stats.volunteers.notSubscribed} never signed up for the newsletter, and they are not added without their say so.` : ''}
+                </p>
+              )}
               {(() => {
                 const latest = (stats.issues || [])[0]
                 if (!latest) return null

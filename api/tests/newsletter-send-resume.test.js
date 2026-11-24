@@ -138,6 +138,16 @@ async function seed(n) {
     assert.strictEqual(issue.status, 'incomplete'); assert.strictEqual(issue.remaining, 1); assert.strictEqual(issue.sent, 3)
   })
 
+  await t('stats count volunteers against the list, counts only', async () => {
+    await seed(2)
+    const vol = require(path.join(api, '_shared/volunteers.js'))
+    for (const e of ['p0@example.com', 'pending@example.com', 'gone@example.com', 'nobody@example.com']) await vol.addIfMissing({ email: e, name: 'V', roles: '', hours: '', status: 'applied', appliedAt: new Date().toISOString() })
+    const ctx = { log }; await statsFn(ctx, { method: 'GET', headers: KEY, query: {} })
+    const v = ctx.res.body.volunteers
+    assert.deepStrictEqual([v.total, v.confirmed, v.pending, v.unsubscribed, v.notSubscribed], [4, 1, 1, 1, 1])
+    assert(!JSON.stringify(v).includes('@'))
+  })
+
   await t('test send does not start an issue', async () => {
     await seed(2)
     const r = (await send({ subject: 's', html: '<p>x</p>', testTo: 'me@example.com' })).body
