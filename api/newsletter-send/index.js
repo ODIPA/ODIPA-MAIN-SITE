@@ -54,6 +54,9 @@ module.exports = async function handler(context, req) {
     let id = issueId
 
     if (id) {
+      // Issue ids are generated here from an ISO timestamp. Anything else is refused before
+      // it reaches a Table Storage query.
+      if (!/^[0-9TZ-]+$/.test(id)) return respond(context, 400, { error: 'That issue id is not valid.' })
       const issue = await subs.getIssue(id)
       if (!issue) return respond(context, 404, { error: 'That issue was not found.' })
       if (!subject && !html) {
@@ -79,7 +82,9 @@ module.exports = async function handler(context, req) {
       const results = await Promise.allSettled(batch.map(async s => {
         const wrapped = wrapEmail(html, subs.unsubscribeLink(s.email))
         await sendHtmlEmail({ to: s.email, subject, html: wrapped, plainText: toPlainText(wrapped) })
-        await subs.markSent(id, s.email)
+        // The email has gone out, so try the ledger write twice. If it is not recorded this
+        // person would be sent the issue again on resume.
+        try { await subs.markSent(id, s.email) } catch (e) { await subs.markSent(id, s.email) }
       }))
       results.forEach((r, idx) => {
         if (r.status === 'fulfilled') sentNow++

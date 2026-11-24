@@ -394,7 +394,8 @@ export default function NewsletterAdminDashboard() {
                             {issue.failed && !open ? ` · ${issue.failed} failed` : ''}
                           </span>
                           {open && issue.id && (
-                            <button onClick={() => resumeIssue(issue.id as string)} disabled={busy !== ''}
+                            <button type="button" onClick={() => resumeIssue(issue.id as string)} disabled={busy !== ''}
+                              aria-label={`Resume sending "${issue.subject}"`}
                               className="font-semibold text-navy border border-navy rounded px-2 py-1 disabled:opacity-40 hover:bg-navy hover:text-white transition-colors">
                               Resume
                             </button>
@@ -467,7 +468,9 @@ export default function NewsletterAdminDashboard() {
               </button>
             </div>
 
-            {composerMsg && <p className="text-[13px] text-navy bg-gold/10 border border-gold/30 rounded-lg px-4 py-2.5">{composerMsg}</p>}
+            <div role="status" aria-live="polite">
+              {composerMsg && <p className="text-[13px] text-navy bg-gold/10 border border-gold/30 rounded-lg px-4 py-2.5">{composerMsg}</p>}
+            </div>
 
             {hasContent && (
               <div className="pt-3 border-t border-slate-100 space-y-3">
