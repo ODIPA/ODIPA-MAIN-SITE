@@ -145,7 +145,7 @@ const toFull = e => Object.assign(toPublic(e), { blocks: JSON.parse(e.blocks || 
 const toAdmin = e => ({
   slug: e.rowKey, title: e.title, summary: e.summary, author: e.author, body: e.body, sources: e.sources,
   status: e.status, createdAt: e.createdAt, updatedAt: e.updatedAt, publishedAt: e.publishedAt || '',
-  emailedAt: e.emailedAt || '', emailedCount: e.emailedCount || 0,
+  emailedAt: e.emailedAt || '', emailedCount: e.emailedCount || 0, emailRemaining: e.emailRemaining || 0,
 })
 
 async function getArticle(slug) {

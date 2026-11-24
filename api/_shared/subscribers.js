@@ -129,15 +129,102 @@ async function listByStatus(status) {
   return out
 }
 
-async function saveIssue({ subject, html, sent, failed }) {
+/**
+ * Issues and the send ledger.
+ *
+ * An issue row (partition 'issue') holds the subject, the HTML (capped), a hash of
+ * the content, and running totals. The ledger (partition 'sent-<issueId>') holds one
+ * row per recipient who got that issue, keyed by the same SHA-256 of the email that
+ * the subscriber rows use. It stores no address, name or timestamp per person, so a
+ * send can be resumed without keeping any new personal data.
+ */
+const HTML_CAP = 30000
+
+function contentHash(subject, html) {
+  return crypto.createHash('sha256').update(`${subject}\n${html}`).digest('hex')
+}
+
+// A time plus four random digits, so two sends started in the same millisecond never share a
+// ledger. Only digits, T, Z and dashes, which the send functions check before using an id.
+function issueIdNow() {
+  return new Date().toISOString().replace(/[:.]/g, '-') + '-' + String(crypto.randomInt(0, 10000)).padStart(4, '0')
+}
+
+function ledgerPartition(issueId) { return `sent-${issueId}` }
+
+async function beginIssue({ subject, html, confirmedAtStart, kind }) {
   const client = getTable()
   await ensureTable(client)
-  const sentAt = new Date().toISOString()
+  const issueId = issueIdNow()
+  const startedAt = new Date().toISOString()
   await client.upsertEntity({
     partitionKey: 'issue',
-    rowKey: sentAt.replace(/[:.]/g, '-'),
-    subject, html: String(html).slice(0, 30000), sent, failed, sentAt,
+    rowKey: issueId,
+    subject,
+    html: String(html).slice(0, HTML_CAP),
+    htmlTruncated: String(html).length > HTML_CAP,
+    contentHash: contentHash(subject, html),
+    sent: 0, failed: 0, remaining: confirmedAtStart, confirmedAtStart,
+    status: 'sending',
+    kind: kind || 'newsletter',
+    sentAt: startedAt,
   }, 'Replace')
+  return issueId
+}
+
+async function getIssue(issueId) {
+  const client = getTable()
+  await ensureTable(client)
+  try { return await client.getEntity('issue', String(issueId)) } catch (e) { return null }
+}
+
+async function updateIssue(issueId, fields) {
+  const client = getTable()
+  await ensureTable(client)
+  await client.upsertEntity(Object.assign({ partitionKey: 'issue', rowKey: String(issueId) }, fields), 'Merge')
+}
+
+/**
+ * A short lease on an issue, so two rounds of the same issue cannot run at once (two tabs, or a
+ * Resume click while the last round is still going after the gateway cut the browser off).
+ * The lease is a timestamp on the issue row, taken with the row's version tag so only one
+ * caller wins. It expires on its own, so a crashed round never locks the issue for long.
+ */
+const LEASE_MS = 60000
+async function acquireRound(issueId) {
+  const client = getTable()
+  await ensureTable(client)
+  let ent
+  try { ent = await client.getEntity('issue', String(issueId)) } catch (e) { return false }
+  if (ent.roundStartedAt && Date.now() - Date.parse(ent.roundStartedAt) < LEASE_MS) return false
+  const next = { partitionKey: 'issue', rowKey: String(issueId), roundStartedAt: new Date().toISOString() }
+  try {
+    if (ent.etag) await client.updateEntity(next, 'Merge', { etag: ent.etag })
+    else await client.upsertEntity(next, 'Merge')
+  } catch (e) {
+    if (e && e.statusCode === 412) return false
+    throw e
+  }
+  return true
+}
+
+async function releaseRound(issueId) {
+  const client = getTable()
+  try { await client.upsertEntity({ partitionKey: 'issue', rowKey: String(issueId), roundStartedAt: '' }, 'Merge') } catch (e) { /* the lease expires by itself */ }
+}
+
+async function sentKeys(issueId) {
+  const client = getTable()
+  await ensureTable(client)
+  const out = new Set()
+  const iter = client.listEntities({ queryOptions: { filter: `PartitionKey eq '${ledgerPartition(issueId)}'` } })
+  for await (const ent of iter) out.add(ent.rowKey)
+  return out
+}
+
+async function markSent(issueId, email) {
+  const client = getTable()
+  await client.upsertEntity({ partitionKey: ledgerPartition(issueId), rowKey: emailKey(email) }, 'Replace')
 }
 
 async function listIssues() {
@@ -146,9 +233,14 @@ async function listIssues() {
   const out = []
   const iter = client.listEntities({ queryOptions: { filter: "PartitionKey eq 'issue'" } })
   for await (const ent of iter) {
-    out.push({ subject: ent.subject, sent: ent.sent, failed: ent.failed, sentAt: ent.sentAt })
+    if (ent.kind === 'article') continue
+    out.push({
+      id: ent.rowKey, subject: ent.subject, sent: ent.sent, failed: ent.failed, sentAt: ent.sentAt,
+      remaining: ent.remaining == null ? 0 : ent.remaining,
+      status: ent.status || 'complete',
+    })
   }
   return out.sort((a, b) => String(b.sentAt).localeCompare(String(a.sentAt)))
 }
 
-module.exports = { upsertPending, setStatus, getSubscriber, recordMembership, listByStatus, verifyToken, confirmLink, unsubscribeLink, saveIssue, listIssues }
+module.exports = { upsertPending, setStatus, getSubscriber, recordMembership, listByStatus, verifyToken, confirmLink, unsubscribeLink, emailKey, contentHash, beginIssue, getIssue, acquireRound, releaseRound, updateIssue, sentKeys, markSent, listIssues }
