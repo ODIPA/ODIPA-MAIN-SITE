@@ -264,8 +264,14 @@ export default function NewsletterAdminDashboard() {
     if (!window.confirm('Resume this issue? Only people who have not received it yet will be sent it.')) return
     setBusy('send'); setComposerMsg('')
     try {
-      reportSend(await runSend({ issueId }))
-    } catch (e: any) { setComposerMsg(e.message) }
+      let d
+      try { d = await runSend({ issueId }) } catch (e: any) {
+        // Very long issues are not stored in full. If the composer still holds the same content, send it along.
+        if (/too long to resume/.test(e.message) && hasContent) d = await runSend({ issueId, subject, html: bodyHtml })
+        else throw e
+      }
+      reportSend(d)
+    } catch (e: any) { setComposerMsg(/too long to resume/.test(e.message) ? 'This issue is too long to resume on its own. Load the same subject and body in the composer, then click Resume again.' : e.message) }
     load()
     setBusy('')
   }

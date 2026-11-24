@@ -79,10 +79,17 @@ module.exports = async function handler(context, req) {
       if (e && e.statusCode === 412) return respond(context, 409, { error: 'Another send of this article is already under way or just finished.' })
       throw e
     }
-    issueId = await subsLib.beginIssue({ subject, html, confirmedAtStart: confirmed.length, kind: 'article' })
+    // If anything below fails before an email goes out, undo the claim so a plain retry works.
+    const undoClaim = () => A.patchArticle(ent.rowKey, { emailedAt: ent.emailedAt || '', emailedCount: ent.emailedCount || 0 }).catch(() => {})
+    try { issueId = await subsLib.beginIssue({ subject, html, confirmedAtStart: confirmed.length, kind: 'article' }) } catch (e) {
+      context.log.error('issue not started:', e.message)
+      await undoClaim()
+      return respond(context, 500, { error: 'The send could not be started. Nothing was emailed. Try again.' })
+    }
     // The id must be saved before any email goes out, or a later Resume could not find this send.
     try { await A.patchArticle(ent.rowKey, { emailingIssueId: issueId, emailRemaining: confirmed.length }) } catch (e) {
       context.log.error('issue id not saved:', e.message)
+      await undoClaim()
       return respond(context, 500, { error: 'The send could not be started. Nothing was emailed. Try again.' })
     }
     return await finish(context, ent, issueId, confirmed, subject, html, label, started)
