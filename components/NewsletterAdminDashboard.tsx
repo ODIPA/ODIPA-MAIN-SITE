@@ -245,7 +245,7 @@ export default function NewsletterAdminDashboard() {
   function reportSend(d: any) {
     if (!d) return
     if (d.done) setComposerMsg(`Done. Every one of the ${d.total} confirmed subscribers was sent this issue.`)
-    else setComposerMsg(`Stopped with ${d.remaining} of ${d.total} not yet sent${d.failed ? ` (${d.failed} failed on the last try)` : ''}. Nothing was sent twice. Use Resume in Past issues to send to the rest.`)
+    else setComposerMsg(`Stopped with ${d.remaining} of ${d.total} not yet sent${d.failed ? ` (${d.failed} failed on the last try)` : ''}. Anyone already sent is not sent again. Use Resume in Past issues to send to the rest.`)
   }
 
   async function sendAll() {

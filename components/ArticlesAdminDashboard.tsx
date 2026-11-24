@@ -123,7 +123,7 @@ export default function ArticlesAdminDashboard() {
     setRows(list.articles)
     setMsg(d.done
       ? `Sent to all ${d.total} confirmed subscribers.`
-      : `Stopped with ${d.remaining} of ${d.total} not yet sent${d.failed ? ` (${d.failed} failed on the last try)` : ''}. Nothing was sent twice. Use Resume on the article to send to the rest.`)
+      : `Stopped with ${d.remaining} of ${d.total} not yet sent${d.failed ? ` (${d.failed} failed on the last try)` : ''}. Anyone already sent is not sent again. Use Resume on the article to send to the rest.`)
   }
 
   const resumeSend = (slug: string) => run(async () => {
