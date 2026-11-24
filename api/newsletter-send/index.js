@@ -57,6 +57,7 @@ module.exports = async function handler(context, req) {
       if (!/^[0-9TZ-]+$/.test(id)) return respond(context, 400, { error: 'That issue id is not valid.' })
       const issue = await subs.getIssue(id)
       if (!issue || issue.kind === 'article') return respond(context, 404, { error: 'That issue was not found.' })
+      if (issue.status === 'complete') return respond(context, 409, { error: 'This issue was already sent to everyone.' })
       if (!subject && !html) {
         if (issue.htmlTruncated) return respond(context, 409, { error: 'This issue is too long to resume without the content. Send subject and html again.' })
         subject = issue.subject; html = issue.html
@@ -69,7 +70,9 @@ module.exports = async function handler(context, req) {
       id = await subs.beginIssue({ subject, html, confirmedAtStart: confirmed.length })
     }
 
-    const round = await runRound({ issueId: id, confirmed, subject, html, started })
+    if (!(await subs.acquireRound(id))) return respond(context, 409, { error: 'Another round of this send is still running. Wait a minute, then resume.' })
+    let round
+    try { round = await runRound({ issueId: id, confirmed, subject, html, started }) } finally { await subs.releaseRound(id) }
     const { sent, sentNow, remaining, done, failures } = round
     try {
       await subs.updateIssue(id, { sent, remaining, failed: failures.length, status: done ? 'complete' : 'incomplete', updatedAt: new Date().toISOString() })

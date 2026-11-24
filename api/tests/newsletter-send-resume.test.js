@@ -106,6 +106,22 @@ async function seed(n) {
     assert.strictEqual((await send({ issueId: '2020-01-01T00-00-00-000Z-0000' })).status, 404)
   })
 
+  await t('a finished issue cannot be resumed, and two rounds cannot overlap', async () => {
+    await seed(3)
+    const first = (await send({ subject: 'Issue', html: '<p>hi</p>' })).body
+    assert.strictEqual(first.done, true)
+    assert.strictEqual((await send({ issueId: first.issueId })).status, 409)
+    await seed(4); failFor = new Set(['p1@example.com'])
+    const part = (await send({ subject: 'Issue', html: '<p>hi</p>' })).body
+    const row = [...store.entries()].find(([k]) => k.endsWith(`|issue|${part.issueId}`))
+    row[1].roundStartedAt = new Date().toISOString()
+    failFor = new Set(); outbox.length = 0
+    assert.strictEqual((await send({ issueId: part.issueId })).status, 409, 'a round in progress blocks another')
+    assert.strictEqual(outbox.length, 0)
+    row[1].roundStartedAt = new Date(Date.now() - 120000).toISOString()
+    assert.strictEqual((await send({ issueId: part.issueId })).body.done, true, 'an old lease expires')
+  })
+
   await t('the ledger holds no readable email addresses', async () => {
     await seed(3)
     await send({ subject: 'Issue', html: '<p>hi</p>' })

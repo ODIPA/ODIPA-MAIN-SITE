@@ -184,6 +184,35 @@ async function updateIssue(issueId, fields) {
   await client.upsertEntity(Object.assign({ partitionKey: 'issue', rowKey: String(issueId) }, fields), 'Merge')
 }
 
+/**
+ * A short lease on an issue, so two rounds of the same issue cannot run at once (two tabs, or a
+ * Resume click while the last round is still going after the gateway cut the browser off).
+ * The lease is a timestamp on the issue row, taken with the row's version tag so only one
+ * caller wins. It expires on its own, so a crashed round never locks the issue for long.
+ */
+const LEASE_MS = 60000
+async function acquireRound(issueId) {
+  const client = getTable()
+  await ensureTable(client)
+  let ent
+  try { ent = await client.getEntity('issue', String(issueId)) } catch (e) { return false }
+  if (ent.roundStartedAt && Date.now() - Date.parse(ent.roundStartedAt) < LEASE_MS) return false
+  const next = { partitionKey: 'issue', rowKey: String(issueId), roundStartedAt: new Date().toISOString() }
+  try {
+    if (ent.etag) await client.updateEntity(next, 'Merge', { etag: ent.etag })
+    else await client.upsertEntity(next, 'Merge')
+  } catch (e) {
+    if (e && e.statusCode === 412) return false
+    throw e
+  }
+  return true
+}
+
+async function releaseRound(issueId) {
+  const client = getTable()
+  try { await client.upsertEntity({ partitionKey: 'issue', rowKey: String(issueId), roundStartedAt: '' }, 'Merge') } catch (e) { /* the lease expires by itself */ }
+}
+
 async function sentKeys(issueId) {
   const client = getTable()
   await ensureTable(client)
@@ -214,4 +243,4 @@ async function listIssues() {
   return out.sort((a, b) => String(b.sentAt).localeCompare(String(a.sentAt)))
 }
 
-module.exports = { upsertPending, setStatus, getSubscriber, recordMembership, listByStatus, verifyToken, confirmLink, unsubscribeLink, emailKey, contentHash, beginIssue, getIssue, updateIssue, sentKeys, markSent, listIssues }
+module.exports = { upsertPending, setStatus, getSubscriber, recordMembership, listByStatus, verifyToken, confirmLink, unsubscribeLink, emailKey, contentHash, beginIssue, getIssue, acquireRound, releaseRound, updateIssue, sentKeys, markSent, listIssues }

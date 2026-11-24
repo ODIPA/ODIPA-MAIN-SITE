@@ -80,7 +80,11 @@ module.exports = async function handler(context, req) {
       throw e
     }
     issueId = await subsLib.beginIssue({ subject, html, confirmedAtStart: confirmed.length, kind: 'article' })
-    try { await A.patchArticle(ent.rowKey, { emailingIssueId: issueId, emailRemaining: confirmed.length }) } catch (e) { context.log.error('issue id not saved:', e.message) }
+    // The id must be saved before any email goes out, or a later Resume could not find this send.
+    try { await A.patchArticle(ent.rowKey, { emailingIssueId: issueId, emailRemaining: confirmed.length }) } catch (e) {
+      context.log.error('issue id not saved:', e.message)
+      return respond(context, 500, { error: 'The send could not be started. Nothing was emailed. Try again.' })
+    }
     return await finish(context, ent, issueId, confirmed, subject, html, label, started)
   } catch (err) {
     context.log.error('articles-send error:', err.message)
@@ -89,7 +93,10 @@ module.exports = async function handler(context, req) {
 }
 
 async function finish(context, ent, issueId, confirmed, subject, html, label, started) {
-  const { sent, remaining, done, failures } = await runRound({ issueId, confirmed, subject, html, label, started })
+  if (!(await subsLib.acquireRound(issueId))) return respond(context, 409, { error: 'Another round of this send is still running. Wait a minute, then resume.' })
+  let round
+  try { round = await runRound({ issueId, confirmed, subject, html, label, started }) } finally { await subsLib.releaseRound(issueId) }
+  const { sent, remaining, done, failures } = round
   // Only the counts are kept, never who failed.
   try { await subsLib.updateIssue(issueId, { sent, remaining, failed: failures.length, status: done ? 'complete' : 'incomplete', updatedAt: new Date().toISOString() }) } catch (e) { context.log.error('issue totals not saved:', e.message) }
   try { await A.patchArticle(ent.rowKey, { emailedCount: sent, emailRemaining: remaining }) } catch (e) { context.log.error('emailed count not saved:', e.message) }
