@@ -182,7 +182,7 @@ export default function ArticlesAdminDashboard() {
                     <span className={`font-mono text-[10px] uppercase tracking-widest px-2 py-0.5 rounded ${r.status === 'published' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}`}>{r.status}</span>
                     {r.emailedAt && <span className="font-mono text-[11px] text-slate-500">emailed {fmt(r.emailedAt)} to {r.emailedCount}{r.emailRemaining ? `, ${r.emailRemaining} not yet sent` : ''}</span>}
                     {r.emailedAt && !!r.emailRemaining && (
-                      <button onClick={() => resumeSend(r.slug)} disabled={sendingAll} className={`${btn} border border-navy text-navy !py-1.5`}>Resume</button>
+                      <button type="button" onClick={() => resumeSend(r.slug)} disabled={sendingAll} aria-label={`Resume emailing "${r.title}"`} className={`${btn} border border-navy text-navy !py-1.5`}>Resume</button>
                     )}
                     <span className="font-mono text-[11px] text-slate-500 ml-auto">edited {fmt(r.updatedAt)}</span>
                   </li>
