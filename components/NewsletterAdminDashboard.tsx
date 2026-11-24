@@ -11,7 +11,7 @@
 import { useState } from 'react'
 
 type Item = { title: string; summary: string; url: string }
-type Issue = { subject: string; sent: number; failed: number; sentAt: string }
+type Issue = { id?: string; subject: string; sent: number; failed: number; sentAt: string; remaining?: number; status?: 'sending' | 'incomplete' | 'complete' | string }
 type Stats = {
   generatedAt: string
   totals: { pending: number; confirmed: number; unsubscribed: number; allTimeSignups: number }
@@ -224,16 +224,49 @@ export default function NewsletterAdminDashboard() {
     setBusy('')
   }
 
+  // One send can take longer than the 45 second limit on the API, so the server sends for a
+  // short time, reports what is left, and this loop calls it again with the same issue id.
+  // Nobody gets the same issue twice, because the server records each delivery.
+  async function runSend(payload: { subject?: string; html?: string; issueId?: string }) {
+    let issueId = payload.issueId
+    let last: any = null
+    for (let round = 0; round < 60; round++) {
+      const d = await adminPost('/api/newsletter-send', issueId ? { ...payload, issueId } : payload)
+      issueId = d.issueId || issueId
+      const progressed = last == null || d.sent > last.sent
+      last = d
+      setComposerMsg(`Sending. ${d.sent} of ${d.total} delivered${d.remaining ? `, ${d.remaining} to go` : ''}. Keep this page open.`)
+      if (d.done) break
+      if (!progressed) break
+    }
+    return last
+  }
+
+  function reportSend(d: any) {
+    if (!d) return
+    if (d.done) setComposerMsg(`Done. Every one of the ${d.total} confirmed subscribers was sent this issue.`)
+    else setComposerMsg(`Stopped with ${d.remaining} of ${d.total} not yet sent${d.failed ? ` (${d.failed} failed on the last try)` : ''}. Nothing was sent twice. Use Resume in Past issues to send to the rest.`)
+  }
+
   async function sendAll() {
     if (!hasContent) { setComposerMsg('Add content first.'); return }
     const n = stats?.totals.confirmed ?? 0
     if (!window.confirm(`Send "${subject}" to ${n} confirmed subscriber${n === 1 ? '' : 's'}? This cannot be undone.`)) return
     setBusy('send'); setComposerMsg('')
     try {
-      const d = await adminPost('/api/newsletter-send', { subject, html: bodyHtml })
-      setComposerMsg(`Sent to ${d.sent} of ${d.total}. ${d.failed ? `${d.failed} failed.` : 'No failures.'}`)
-      load()
+      reportSend(await runSend({ subject, html: bodyHtml }))
+    } catch (e: any) { setComposerMsg(`${e.message} Check Past issues for how far it got, then use Resume.`) }
+    load()
+    setBusy('')
+  }
+
+  async function resumeIssue(issueId: string) {
+    if (!window.confirm('Resume this issue? Only people who have not received it yet will be sent it.')) return
+    setBusy('send'); setComposerMsg('')
+    try {
+      reportSend(await runSend({ issueId }))
     } catch (e: any) { setComposerMsg(e.message) }
+    load()
     setBusy('')
   }
 
@@ -329,18 +362,47 @@ export default function NewsletterAdminDashboard() {
               </div>
             </div>
 
+            <div className="bg-white rounded-xl border border-slate-200 p-5">
+              <div className="font-mono text-[10px] uppercase tracking-[2px] text-slate-400 mb-2">List check for the next send</div>
+              <p className="text-[13px] text-navy">
+                {stats.totals.confirmed} will receive it (confirmed). {stats.totals.pending} are left out because they have not confirmed yet, and {stats.totals.unsubscribed} are left out because they unsubscribed. {stats.totals.confirmed} + {stats.totals.pending} + {stats.totals.unsubscribed} = {stats.totals.allTimeSignups} sign ups in all.
+              </p>
+              {(() => {
+                const latest = (stats.issues || [])[0]
+                if (!latest) return null
+                return (
+                  <p className="text-[13px] text-slate-600 mt-2">
+                    Last issue, "{latest.subject}": {latest.sent} sent{latest.remaining ? `, ${latest.remaining} not yet sent` : ', none left unsent'}.
+                  </p>
+                )
+              })()}
+            </div>
+
             {(stats.issues || []).length > 0 && (
               <div className="bg-white rounded-xl border border-slate-200 p-5">
                 <div className="font-mono text-[10px] uppercase tracking-[2px] text-slate-400 mb-3">Past issues</div>
                 <div className="space-y-2">
-                  {(stats.issues || []).map(issue => (
-                    <div key={issue.sentAt} className="flex items-center justify-between gap-3 border-b border-slate-100 pb-2 last:border-0">
-                      <span className="text-[13px] text-navy truncate">{issue.subject}</span>
-                      <span className="font-mono text-[11px] text-slate-400 flex-shrink-0">
-                        {new Date(issue.sentAt).toLocaleDateString()} · {issue.sent} sent{issue.failed ? ` · ${issue.failed} failed` : ''}
-                      </span>
-                    </div>
-                  ))}
+                  {(stats.issues || []).map(issue => {
+                    const open = !!issue.remaining && issue.remaining > 0 && issue.status !== 'complete'
+                    return (
+                      <div key={issue.id || issue.sentAt} className="flex items-center justify-between gap-3 border-b border-slate-100 pb-2 last:border-0">
+                        <span className="text-[13px] text-navy truncate">{issue.subject}</span>
+                        <span className="font-mono text-[11px] text-slate-400 flex-shrink-0 flex items-center gap-3">
+                          <span>
+                            {new Date(issue.sentAt).toLocaleDateString()} · {issue.sent} sent
+                            {open ? ` · ${issue.remaining} not yet sent` : ''}
+                            {issue.failed && !open ? ` · ${issue.failed} failed` : ''}
+                          </span>
+                          {open && issue.id && (
+                            <button onClick={() => resumeIssue(issue.id as string)} disabled={busy !== ''}
+                              className="font-semibold text-navy border border-navy rounded px-2 py-1 disabled:opacity-40 hover:bg-navy hover:text-white transition-colors">
+                              Resume
+                            </button>
+                          )}
+                        </span>
+                      </div>
+                    )
+                  })}
                 </div>
               </div>
             )}
