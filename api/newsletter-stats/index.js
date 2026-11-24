@@ -9,6 +9,7 @@ const { isAdminRequest } = require('../_shared/adminAuth')
 const crypto = require('crypto')
 const { TableClient } = require('@azure/data-tables')
 const { listIssues } = require('../_shared/subscribers')
+const { listVolunteers } = require('../_shared/volunteers')
 
 function getTable() {
   const conn = process.env.SUBSCRIBERS_TABLE_CONNECTION || process.env.AzureWebJobsStorage
@@ -39,9 +40,13 @@ module.exports = async function handler(context, req) {
     // subscribers, so the confirmed total here already includes the confirmed members.
     const members = { confirmed: 0, pending: 0, unsubscribed: 0, total: 0, newLast30Days: 0 }
 
+    // Subscriber rows and volunteer ids share one key (a hash of the lowercase address), so volunteers
+    // can be matched to the list without reading or showing any address.
+    const statusByKey = new Map()
     const iter = client.listEntities({ queryOptions: { filter: "PartitionKey eq 'sub'" } })
     for await (const ent of iter) {
       const status = ent.status || 'pending'
+      statusByKey.set(ent.rowKey, status)
       if (totals[status] != null) totals[status]++
 
       signupsByMonth[monthOf(ent.createdAt)] = (signupsByMonth[monthOf(ent.createdAt)] || 0) + 1
@@ -62,6 +67,18 @@ module.exports = async function handler(context, req) {
       }
     }
 
+    // Counts only. Volunteers who are not subscribers are NOT added to the list: they applied to
+    // volunteer, not to get the newsletter, so adding them would need their own consent.
+    const volunteers = { total: 0, confirmed: 0, pending: 0, unsubscribed: 0, notSubscribed: 0 }
+    try {
+      for (const v of await listVolunteers()) {
+        volunteers.total++
+        const st = statusByKey.get(v.id)
+        if (!st) volunteers.notSubscribed++
+        else if (volunteers[st] != null) volunteers[st]++
+      }
+    } catch (e) { context.log.error('volunteer check failed:', e.message) }
+
     const totalSignups = totals.pending + totals.confirmed + totals.unsubscribed
     const everConfirmed = totals.confirmed + totals.unsubscribed
 
@@ -73,6 +90,7 @@ module.exports = async function handler(context, req) {
         unsubscribeRate: everConfirmed ? +(totals.unsubscribed / everConfirmed * 100).toFixed(1) : 0,
       },
       last30Days: last30,
+      volunteers,
       members: { ...members, newsletterOnlyConfirmed: totals.confirmed - members.confirmed },
       signupsByMonth: Object.fromEntries(Object.entries(signupsByMonth).sort()),
       confirmedByMonth: Object.fromEntries(Object.entries(confirmedByMonth).sort()),
