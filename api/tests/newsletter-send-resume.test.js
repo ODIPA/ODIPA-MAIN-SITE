@@ -102,7 +102,8 @@ async function seed(n) {
     const first = (await send({ subject: 'Issue', html: '<p>hi</p>' })).body
     const res = await send({ issueId: first.issueId, subject: 'Issue', html: '<p>changed</p>' })
     assert.strictEqual(res.status, 409)
-    assert.strictEqual((await send({ issueId: 'nope' })).status, 404)
+    assert.strictEqual((await send({ issueId: 'nope' })).status, 400)
+    assert.strictEqual((await send({ issueId: '2020-01-01T00-00-00-000Z-0000' })).status, 404)
   })
 
   await t('the ledger holds no readable email addresses', async () => {

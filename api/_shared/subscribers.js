@@ -144,8 +144,10 @@ function contentHash(subject, html) {
   return crypto.createHash('sha256').update(`${subject}\n${html}`).digest('hex')
 }
 
+// A time plus four random digits, so two sends started in the same millisecond never share a
+// ledger. Only digits, T, Z and dashes, which the send functions check before using an id.
 function issueIdNow() {
-  return new Date().toISOString().replace(/[:.]/g, '-')
+  return new Date().toISOString().replace(/[:.]/g, '-') + '-' + String(crypto.randomInt(0, 10000)).padStart(4, '0')
 }
 
 function ledgerPartition(issueId) { return `sent-${issueId}` }
