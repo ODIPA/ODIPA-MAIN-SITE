@@ -9,7 +9,7 @@ const { isAdminRequest } = require('../_shared/adminAuth')
 const crypto = require('crypto')
 const { TableClient } = require('@azure/data-tables')
 const { listIssues } = require('../_shared/subscribers')
-const { listVolunteers } = require('../_shared/volunteers')
+const { listVolunteers, idFor: volunteerIdFor } = require('../_shared/volunteers')
 
 function getTable() {
   const conn = process.env.SUBSCRIBERS_TABLE_CONNECTION || process.env.AzureWebJobsStorage
@@ -40,13 +40,14 @@ module.exports = async function handler(context, req) {
     // subscribers, so the confirmed total here already includes the confirmed members.
     const members = { confirmed: 0, pending: 0, unsubscribed: 0, total: 0, newLast30Days: 0 }
 
-    // Subscriber rows and volunteer ids share one key (a hash of the lowercase address), so volunteers
-    // can be matched to the list without reading or showing any address.
+    // Volunteer ids are a hash of the trimmed, lowercase address. Hash each subscriber's stored address
+    // the same way (subscriber row keys do not trim), so the match never depends on stray whitespace.
+    // Only the hashes are kept, and no address is returned.
     const statusByKey = new Map()
     const iter = client.listEntities({ queryOptions: { filter: "PartitionKey eq 'sub'" } })
     for await (const ent of iter) {
       const status = ent.status || 'pending'
-      statusByKey.set(ent.rowKey, status)
+      statusByKey.set(ent.email ? volunteerIdFor(ent.email) : ent.rowKey, status)
       if (totals[status] != null) totals[status]++
 
       signupsByMonth[monthOf(ent.createdAt)] = (signupsByMonth[monthOf(ent.createdAt)] || 0) + 1
