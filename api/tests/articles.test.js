@@ -29,7 +29,7 @@ Module._load = function (req, parent, ...rest) {
   }) } }
   if (/_shared\/mailer$/.test(req)) {
     const real = oL.call(this, req, parent, ...rest)
-    return Object.assign({}, real, { sendHtmlEmail: async m => { if (failTo && m.to === failTo) throw new Error('bounce'); sent.push(m) } })
+    return Object.assign({}, real, { sendHtmlEmail: async m => { if (process.env.NEWSLETTER_SEND_BUDGET_MS) await new Promise(r => setTimeout(r, 5)); if (failTo && m.to === failTo) throw new Error('bounce'); sent.push(m) } })
   }
   return oL.call(this, req, parent, ...rest)
 }
@@ -154,6 +154,22 @@ const call = async (fn, method, { query, body, key } = {}) => {
   sent.length = 0
   r = await call(send, 'POST', { key: 'k', body: { slug, resend: true } })
   assert.strictEqual(r.body.sent, 3, 'resend works when asked')
+
+  // Resumable: a round that runs out of time reports what is left, and resume finishes it.
+  sent.length = 0
+  process.env.NEWSLETTER_SEND_BUDGET_MS = '1'
+  sub('d@example.com'); sub('e@example.com'); sub('f@example.com'); sub('g@example.com'); sub('h@example.com'); sub('i@example.com'); sub('j@example.com')
+  r = await call(send, 'POST', { key: 'k', body: { slug, resend: true } })
+  assert.strictEqual(r.status, 200); assert.strictEqual(r.body.done, false, 'a cut off round is not done')
+  assert(r.body.remaining > 0 && r.body.sent > 0 && r.body.sent + r.body.remaining === r.body.total)
+  assert(!JSON.stringify(r.body).includes('@'), 'no address in the response')
+  let rounds = 0
+  while (!r.body.done && rounds++ < 20) r = await call(send, 'POST', { key: 'k', body: { slug, resume: true } })
+  assert.strictEqual(r.body.done, true); assert.strictEqual(r.body.sent, 10)
+  assert.strictEqual(sent.length, 10); assert.strictEqual(new Set(sent.map(m => m.to)).size, 10, 'nobody got the article twice')
+  r = await call(send, 'POST', { key: 'k', body: { slug, resume: true } })
+  assert.strictEqual(r.status, 409, 'a finished send cannot be resumed')
+  delete process.env.NEWSLETTER_SEND_BUDGET_MS
 
   // Social posts: admin only, built from the article, no em dashes, nothing posted anywhere.
   process.env.ANTHROPIC_API_KEY = 'x'

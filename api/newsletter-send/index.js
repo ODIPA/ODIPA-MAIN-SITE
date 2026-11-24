@@ -23,9 +23,7 @@ const { isAdminRequest } = require('../_shared/adminAuth')
 const { sendHtmlEmail, respond, clean } = require('../_shared/mailer')
 const subs = require('../_shared/subscribers')
 const { wrapEmail, toPlainText } = require('../_shared/newsletterEmail')
-
-const CHUNK = 5
-const budgetMs = () => Number(process.env.NEWSLETTER_SEND_BUDGET_MS) || 25000
+const { runRound } = require('../_shared/sendRounds')
 
 module.exports = async function handler(context, req) {
   if (req.method === 'OPTIONS') return respond(context, 200, {})
@@ -58,7 +56,7 @@ module.exports = async function handler(context, req) {
       // it reaches a Table Storage query.
       if (!/^[0-9TZ-]+$/.test(id)) return respond(context, 400, { error: 'That issue id is not valid.' })
       const issue = await subs.getIssue(id)
-      if (!issue) return respond(context, 404, { error: 'That issue was not found.' })
+      if (!issue || issue.kind === 'article') return respond(context, 404, { error: 'That issue was not found.' })
       if (!subject && !html) {
         if (issue.htmlTruncated) return respond(context, 409, { error: 'This issue is too long to resume without the content. Send subject and html again.' })
         subject = issue.subject; html = issue.html
@@ -71,32 +69,8 @@ module.exports = async function handler(context, req) {
       id = await subs.beginIssue({ subject, html, confirmedAtStart: confirmed.length })
     }
 
-    const already = await subs.sentKeys(id)
-    const todo = confirmed.filter(s => !already.has(subs.emailKey(s.email)))
-    let sentNow = 0
-    const failures = []
-
-    for (let i = 0; i < todo.length; i += CHUNK) {
-      if (Date.now() - started > budgetMs()) break
-      const batch = todo.slice(i, i + CHUNK)
-      const results = await Promise.allSettled(batch.map(async s => {
-        const wrapped = wrapEmail(html, subs.unsubscribeLink(s.email))
-        await sendHtmlEmail({ to: s.email, subject, html: wrapped, plainText: toPlainText(wrapped) })
-        // The email has gone out, so try the ledger write twice. If it is not recorded this
-        // person would be sent the issue again on resume.
-        try { await subs.markSent(id, s.email) } catch (e) { await subs.markSent(id, s.email) }
-      }))
-      results.forEach((r, idx) => {
-        if (r.status === 'fulfilled') sentNow++
-        else failures.push({ email: batch[idx].email, error: String(r.reason && r.reason.message || r.reason) })
-      })
-    }
-
-    // Count from the ledger so the totals are true even after a cut off call.
-    const after = await subs.sentKeys(id)
-    const sent = confirmed.filter(s => after.has(subs.emailKey(s.email))).length
-    const remaining = confirmed.length - sent
-    const done = remaining === 0
+    const round = await runRound({ issueId: id, confirmed, subject, html, started })
+    const { sent, sentNow, remaining, done, failures } = round
     try {
       await subs.updateIssue(id, { sent, remaining, failed: failures.length, status: done ? 'complete' : 'incomplete', updatedAt: new Date().toISOString() })
     } catch (e) { context.log.error('updateIssue failed:', e.message) }

@@ -150,7 +150,7 @@ function issueIdNow() {
 
 function ledgerPartition(issueId) { return `sent-${issueId}` }
 
-async function beginIssue({ subject, html, confirmedAtStart }) {
+async function beginIssue({ subject, html, confirmedAtStart, kind }) {
   const client = getTable()
   await ensureTable(client)
   const issueId = issueIdNow()
@@ -164,6 +164,7 @@ async function beginIssue({ subject, html, confirmedAtStart }) {
     contentHash: contentHash(subject, html),
     sent: 0, failed: 0, remaining: confirmedAtStart, confirmedAtStart,
     status: 'sending',
+    kind: kind || 'newsletter',
     sentAt: startedAt,
   }, 'Replace')
   return issueId
@@ -201,6 +202,7 @@ async function listIssues() {
   const out = []
   const iter = client.listEntities({ queryOptions: { filter: "PartitionKey eq 'issue'" } })
   for await (const ent of iter) {
+    if (ent.kind === 'article') continue
     out.push({
       id: ent.rowKey, subject: ent.subject, sent: ent.sent, failed: ent.failed, sentAt: ent.sentAt,
       remaining: ent.remaining == null ? 0 : ent.remaining,

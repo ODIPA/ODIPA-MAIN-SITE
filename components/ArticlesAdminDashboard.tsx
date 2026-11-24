@@ -13,7 +13,7 @@ import { STARTER_ARTICLE } from '@/data/articles-starter'
 
 type Row = {
   slug: string; title: string; summary: string; author: string; body: string; sources: string
-  status: 'draft' | 'published'; updatedAt: string; publishedAt: string; emailedAt: string; emailedCount: number
+  status: 'draft' | 'published'; updatedAt: string; publishedAt: string; emailedAt: string; emailedCount: number; emailRemaining?: number
 }
 type Preview = { blocks: Block[]; sources: { label: string; href: string }[]; problems: string[] }
 
@@ -106,12 +106,30 @@ export default function ArticlesAdminDashboard() {
     const again = !!current?.emailedAt
     if (!window.confirm(`${again ? 'This article was already emailed. Send it AGAIN' : 'Email'} "${form.title}" to every confirmed subscriber? This cannot be undone.`)) return
     setSendingAll(true)
-    try {
-      const d = await call('/api/articles-send', { method: 'POST', body: { slug: form.slug, resend: again } })
-      const list = await call('/api/articles?all=1')
-      setRows(list.articles)
-      setMsg(`Sent to ${d.sent} of ${d.total} confirmed subscribers${d.failed ? `, ${d.failed} failed` : ''}.`)
-    } finally { setSendingAll(false) }
+    try { await sendRounds({ slug: form.slug, resend: again }) } finally { setSendingAll(false) }
+  })
+
+  // The server sends for about 25 seconds at a time because API requests are cut off at 45.
+  // This asks again until everyone is sent. Nobody gets the article twice.
+  async function sendRounds(first: { slug: string; resend?: boolean; resume?: boolean }) {
+    let d = await call('/api/articles-send', { method: 'POST', body: first })
+    let last = -1
+    while (!d.done && d.sent > last) {
+      setMsg(`Sending. ${d.sent} of ${d.total} delivered${d.remaining ? `, ${d.remaining} to go` : ''}. Keep this page open.`)
+      last = d.sent
+      d = await call('/api/articles-send', { method: 'POST', body: { slug: first.slug, resume: true } })
+    }
+    const list = await call('/api/articles?all=1')
+    setRows(list.articles)
+    setMsg(d.done
+      ? `Sent to all ${d.total} confirmed subscribers.`
+      : `Stopped with ${d.remaining} of ${d.total} not yet sent${d.failed ? ` (${d.failed} failed on the last try)` : ''}. Nothing was sent twice. Use Resume on the article to send to the rest.`)
+  }
+
+  const resumeSend = (slug: string) => run(async () => {
+    if (!window.confirm('Resume this send? Only people who have not received the article yet will get it.')) return
+    setSendingAll(true)
+    try { await sendRounds({ slug, resume: true }) } finally { setSendingAll(false) }
   })
 
   const field = 'w-full border border-slate-300 rounded-lg px-3 py-2 text-[14px] focus:outline-none focus:ring-2 focus:ring-gold'
@@ -162,7 +180,10 @@ export default function ArticlesAdminDashboard() {
                   <li key={r.slug} className="py-3 flex flex-wrap items-center gap-3">
                     <button onClick={() => open(r)} className="text-left text-[15px] font-semibold text-navy underline decoration-gold underline-offset-2">{r.title}</button>
                     <span className={`font-mono text-[10px] uppercase tracking-widest px-2 py-0.5 rounded ${r.status === 'published' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}`}>{r.status}</span>
-                    {r.emailedAt && <span className="font-mono text-[11px] text-slate-500">emailed {fmt(r.emailedAt)} to {r.emailedCount}</span>}
+                    {r.emailedAt && <span className="font-mono text-[11px] text-slate-500">emailed {fmt(r.emailedAt)} to {r.emailedCount}{r.emailRemaining ? `, ${r.emailRemaining} not yet sent` : ''}</span>}
+                    {r.emailedAt && !!r.emailRemaining && (
+                      <button onClick={() => resumeSend(r.slug)} disabled={sendingAll} className={`${btn} border border-navy text-navy !py-1.5`}>Resume</button>
+                    )}
                     <span className="font-mono text-[11px] text-slate-500 ml-auto">edited {fmt(r.updatedAt)}</span>
                   </li>
                 ))}
