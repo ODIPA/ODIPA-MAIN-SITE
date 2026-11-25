@@ -68,7 +68,7 @@ export const releases: ResearchRelease[] = [
         heading: 'Finding 1. Incidents that began at a service provider',
         paragraphs: [
           "SEGA disclosed on November 9 that 2,196,044 email addresses were exposed through ARARA, the service provider that delivers its newsletters. ARARA's own breach reached about 380 client companies and roughly 77 million email addresses. A week after SEGA's disclosure, an attacker used a flaw in Optimizely's website testing tool to place malicious code on its customers' websites, and third-party analysis counted 178 organizations whose pages carried that code on November 16.",
-          "Uber is notifying 149,346 people that images of their driver's licenses, with names and license numbers, were taken after attackers stole credentials from one of its service providers and used them to reach Uber data. Cleverbridge, a billing platform that processes payments for online sellers, began telling customers on November 20 that stored payment card data had been copied. Uber and SEGA each learned of the intrusion from the service provider.",
+          "Uber is notifying 149,346 people that images of their driver's licenses, with names, addresses, dates of birth, and license numbers, were taken after attackers stole credentials from one of its service providers and used them to reach Uber data. Cleverbridge, a billing platform that processes payments for online sellers, began telling customers on November 20 that stored payment card data had been copied. Uber and SEGA each learned of the intrusion from the service provider.",
           "The other two incidents described here began in the companies' own systems. At DigiCert, a server migration in February 2025 left an internal system reachable from the internet, and an unauthorized account used that opening in the summer of 2026. The system held archived records from customer identity checks, and in some cases those records included passports, driver's licenses, and utility bills. At Fandango, card details entered at checkout between October 8 and 11 were exposed, and BleepingComputer reports that skimming code on the checkout page captured them.",
         ],
         links: [
@@ -83,11 +83,12 @@ export const releases: ResearchRelease[] = [
         ],
       },
       {
-        heading: 'Finding 2. Notification took between three days and four months',
+        heading: 'Finding 2. Notification took from three days to more than four months',
         paragraphs: [
           'Capcom detected unauthorized access to its CAPCOM ID service on October 19 and published a notice three days later covering 11,774,247 records. Nitori Holdings detected an intrusion on November 6 and announced on November 9, also three days later, that up to 37.62 million customer records may have been exposed.',
-          "DigiCert took the longest, after an unauthorized account read archived customer information between June 25 and July 2, 2026. According to the company's incident report, a review in June concluded that the unauthorized accounts had no access to customer information, and the access was confirmed on October 19. Customers began to be notified in early November, more than four months after the access took place.",
-          "StubHub International, Uber, and Fandango each took between a few weeks and about a month to notify the people affected. StubHub detected unauthorized access between late October and early November and was telling customers by November 18 that names, email addresses, and phone numbers may have been accessed. At Uber, the provider reported the intrusion on October 9 and notices to the people affected began on November 10, and at Fandango the cards were taken in early October and the breach was reported to state regulators on November 13, with two years of credit monitoring offered to the customers affected. Uber's letter to the Iowa Attorney General and Fandango's notice to the California Attorney General state the dates of each incident, and neither explains why notification took about a month.",
+          "DigiCert took the longest. According to the company's incident report, a reviewer who noticed outside accounts on June 18 concluded that they did not have access to data. DigiCert confirmed on October 19 that archived customer information had been accessed, and later dated that access from June 25 to July 2, 2026. Customers began to be notified in early November, more than four months after the access took place. These periods are measured from different starting points: the three-day periods run from detection, while DigiCert's period of more than four months runs from the access itself.",
+          "StubHub International and Uber each took up to about a month to notify the people affected. StubHub detected unauthorized access between late October and early November and was telling customers by November 18 that names, email addresses, and phone numbers may have been accessed. At Uber, the provider reported the intrusion on October 9 and notices to the people affected began on November 10. Uber's letter to the Iowa Attorney General states the dates of the incident and does not explain why notification took about a month.",
+          "At Fandango, the cards were taken in early October. BleepingComputer reported on November 16 that the company had determined on October 30 that customer information may have been affected, and that it was offering two years of credit monitoring.",
         ],
         links: [
           { label: 'Capcom notice', href: 'https://www.capcom.co.jp/ir/english/news/pdf/e261022.pdf' },
@@ -96,6 +97,7 @@ export const releases: ResearchRelease[] = [
           { label: 'Uber filing in Iowa', href: 'https://www.iowaattorneygeneral.gov/media/cms/11102026_Uber_Technologies_Inc_089721E61CBAB.pdf' },
           { label: 'Fandango filing in California', href: 'https://oag.ca.gov/ecrime/databreach/reports/sb24-632866' },
           { label: 'The Register on StubHub International', href: 'https://www.theregister.com/cyber-crime/2026/11/18/stubhub-international-warns-customer-data-may-have-left-the-venue/5310775' },
+          { label: 'BleepingComputer on the Fandango dates', href: 'https://www.bleepingcomputer.com/news/security/fandango-says-hackers-stole-payment-card-details-from-checkout-pages/' },
         ],
       },
       {
@@ -104,7 +106,7 @@ export const releases: ResearchRelease[] = [
           'Regulators in the United States, the European Union, and the United Kingdom acted on the right of individuals to obtain a copy of their own data. In the United States, the Department of Health and Human Services issued a final rule on November 16 that cuts the time providers and health plans have to answer a request for medical records from 30 days to 15. The rule was published in the Federal Register on November 19, takes effect on January 19, 2027, and requires compliance by July 19, 2027.',
           "In Europe, Ireland's Data Protection Commission fined the operator of Tinder EUR 11 million on November 13 for giving users an incomplete copy of their data. The Court of Justice of the European Union ruled on November 5 that a data protection authority handling a complaint is itself a controller, the legal term for an organization responsible for personal data, and must in principle give the complainant access to the personal data it holds. The United Kingdom's Information Commissioner's Office confirmed on November 11 that an access request remains valid when an AI tool helped to write it.",
           "Italy's data protection authority announced a EUR 805 million fine against Meta on November 14 after finding that the Facebook app for Android accessed photos and videos without specific consent, affecting about 20 million users there. Lyft agreed on October 29 to pay USD 1.8 million in California for offering no in-app way to opt out of the sale of personal information. The California privacy agency announced four actions between November 10 and 19 against FedEx, Hertz, Filson, and Polaris over opt-out failures, with penalties ranging from about USD 218,000 to USD 2.975 million. The Polaris case was investigated jointly with the Minnesota Attorney General and produced the first enforcement action under Minnesota's comprehensive privacy law.",
-          "Two regulators also advanced rules on how consent is given. The California privacy agency voted on November 6 to advance proposed amendments on browser opt-out signals (a browser setting that tells websites not to sell or share a person's data), which have yet to be adopted. India opened registration on November 13 for consent managers, registered intermediaries that help people manage their permissions.",
+          "Two regulators also advanced rules on how consent is given. The California privacy agency voted on November 6 to advance proposed amendments on browser opt-out signals (a browser setting that tells websites not to sell or share a person's data), which have yet to be adopted. India's registration framework for consent managers, registered intermediaries that help people manage their permissions, took effect on November 13, and the government announced the online registration portal on November 14.",
         ],
         links: [
           { label: 'HIPAA Privacy Rule in the Federal Register', href: 'https://www.federalregister.gov/documents/2026/11/19/2026-23429/hipaa-privacy-rule-changes-to-support-coordinated-care-and-individual-engagement-and-reduce' },
@@ -141,7 +143,7 @@ export const releases: ResearchRelease[] = [
       {
         heading: 'Service outages in November',
         paragraphs: [
-          "Between November 12 and 17, service failures hit Microsoft 365, JPMorgan Chase, the National Security Agency, and the Federal Aviation Administration, whose ground stop was followed by about 12,462 flight cancellations that day. Each gave a technical explanation. Microsoft's security team documented a high-volume phishing campaign that was observed within a day and used fake service health notices to target organizations in many sectors.",
+          "Between November 12 and 17, service failures hit Microsoft 365, JPMorgan Chase, the National Security Agency, and the Federal Aviation Administration (FAA). The FAA reported about 12,462 flight cancellations on the day of its nationwide ground stop. Microsoft, JPMorgan Chase, and the FAA gave technical explanations, while the National Security Agency cited temporary degradation during scheduled routine maintenance. On November 13, the day after the Microsoft 365 outage began, Microsoft's security team observed a high-volume phishing campaign that used fake service health notices to target organizations in many sectors.",
         ],
         links: [
           { label: 'FAA questions and answers', href: 'https://www.faa.gov/newsroom/nationwide-ground-stop-questions-and-answers' },
@@ -152,7 +154,7 @@ export const releases: ResearchRelease[] = [
       {
         heading: 'Breach notification rules in the United States',
         paragraphs: [
-          'Each state in the United States has its own breach notification law, and the deadlines vary from state to state. In the incidents reviewed here, notification took between three days and four months.',
+          'Each state in the United States has its own breach notification law. In the incidents reviewed here, notification took from three days after detection to more than four months after the access took place.',
         ],
         links: [
           { label: 'NCSL, security breach notification laws', href: 'https://www.ncsl.org/technology-and-communication/security-breach-notification-laws' },
@@ -195,6 +197,7 @@ export const releases: ResearchRelease[] = [
       { label: 'KBTX and The Texas Tribune, Texas suit against OpenAI', href: 'https://www.kbtx.com/2026/10/23/texas-attorney-general-ken-paxton-sues-chatgpt-maker-openai/' },
       { label: 'California Attorney General, Lyft settlement', href: 'https://oag.ca.gov/news/press-releases/privacy-rights-can%E2%80%99t-be-left-rearview-attorney-general-bonta-secures-18-million' },
       { label: 'Press Information Bureau of India, consent manager registration', href: 'https://www.pib.gov.in/PressReleasePage.aspx?PRID=2336151' },
+      { label: 'PPC Land, India consent manager registration', href: 'https://ppc.land/india-opens-consent-manager-registration-with-a-2-crore-net-worth-floor/' },
       { label: 'National Conference of State Legislatures, security breach notification laws', href: 'https://www.ncsl.org/technology-and-communication/security-breach-notification-laws' },
       { label: 'MTR Legal, Court of Justice ruling in Case C-205/25', href: 'https://www.mtrlegal.com/magazin/en/cjeu-strengthens-access-rights-against-data-protection-authorities/' },
       { label: 'Data Protection Commission of Ireland, Tinder decision', href: 'https://www.dataprotection.ie/en/news-media/latest-news/data-protection-commission-fines-mtch-eu11-million-following-inquiry-tinder-users-personal-data' },
