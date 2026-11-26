@@ -27,8 +27,10 @@ module.exports = async function handler(context, req) {
     }
 
 
-    const firstName = clean(body['First Name'] || body.firstName, 100)
-    const lastName  = clean(body['Last Name']  || body.lastName,  100)
+    // A page loaded before the form sent separate names only sends 'Name', so split it.
+    const [fullFirst = '', ...fullRest] = clean(body['Name'], 200).split(/\s+/)
+    const firstName = clean(body['First Name'] || body.firstName || fullFirst, 100)
+    const lastName  = clean(body['Last Name']  || body.lastName  || fullRest.join(' '), 100)
     const email     = clean(body['Email']       || body.email,     200)
     const position  = clean(body['Position Applied'] || body.seat, 100)
     const name      = clean(body['Name'] || `${firstName} ${lastName}`, 200)

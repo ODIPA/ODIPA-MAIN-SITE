@@ -255,6 +255,8 @@ export default function BoardApplicationForm() {
           _replyto: form.email,
           _hp: honeypot,
           'Position Applied':    selectedSeat?.title,
+          'First Name':          form.firstName,
+          'Last Name':           form.lastName,
           'Name':                `${form.firstName} ${form.lastName}`,
           'Email':               form.email,
           'Phone':               form.phone || '—',
